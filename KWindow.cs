@@ -1,19 +1,16 @@
 ﻿namespace KheaiGameEngine
 {
-    public class KWindow : KEngineComponent
+    public class KWindow : KComponent
     {
        
         public KWindow()
         {
-            _window.SetActive(false);
+            
         }
 
-        public override void Init(KApplication app, KEngine engine)
+        public override void Init(KApplication app)
         {
-            _application = app;
-            _application.OnEventDispatch += _window.DispatchEvents;
-            _engine = engine;
-            _engine.Window = _window;
+           
         }
 
         public override void Start()
@@ -23,16 +20,12 @@
 
         public override void End()
         {
-            _application.OnEventDispatch -= DispatchEvents;
+           
         }
 
         public void DispatchEvents()
         {
-            lock (_window)
-            {
-                _window.SetActive(true);
-                _window.DispatchEvents();
-            }
+            
         }
 
         public override void FixedUpdate()
@@ -48,6 +41,16 @@
         public void Draw(object DrawableObject)
         {
 
+        }
+
+        public void Init(KEngine engine)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Init(KApplication app)
+        {
+            throw new NotImplementedException();
         }
     }
 }

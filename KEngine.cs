@@ -1,21 +1,20 @@
 ﻿using SFML.Graphics;
-using System.Collections;
 
 namespace KheaiGameEngine
 {
-    public interface KEngineComponent
+    public abstract class KEngineComponent
     {
         public string ID => GetType().Name;
         public KEngine _engine { get; protected set; } 
 
-        public void Init(KEngine engine);
-        public void Start();
-        public void End();
-        public void FixedUpdate();
-        public void FrameUpdate();
+        public abstract void Init(KEngine engine);
+        public abstract void Start();
+        public abstract void End();
+        public abstract void FixedUpdate();
+        public abstract void FrameUpdate();
     }
 
-    public class KEngine : IKComponent, IKComponentContainer<string, KEngineComponent>
+    public class KEngine : KComponent, IKComponentContainer<string, KEngineComponent>
     {
         public uint UpdatesPerSecond = 30;
         public uint FramesPerSecond = 60;
@@ -29,7 +28,6 @@ namespace KheaiGameEngine
         protected Dictionary<string, KEngineComponent> _engineComponents = new();
 
         public double CurrentTime => DateTime.UtcNow.Ticks;
-        public KApplication Application { get; private set; }
         public RenderWindow Window { get; private set; }
 
         //Threading 
@@ -40,13 +38,13 @@ namespace KheaiGameEngine
             _engineThread = new(Run);
         }
 
-        public void Init(KApplication app)
+        public override void Init(KApplication app)
         {
             KDebug.Log("Initilizing Engine");
             Application = app;
         }
 
-        public void Start()
+        public override void Start()
         {
             KDebug.Log("Retriving Window");
             Application.GetComponent<KWindow>();
@@ -61,7 +59,7 @@ namespace KheaiGameEngine
             _engineThread.Start();
         }
 
-        public void End()
+        public override void End()
         {
             _engineThread.Join();
         }

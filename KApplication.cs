@@ -17,17 +17,19 @@ namespace KheaiGameEngine
         public Value GetComponent<Component>();
     }
 
-    public interface IKComponent
+    public abstract class KComponent
     {
-        string ID => GetType().Name;
-        void Init(KApplication app);
-        void Start();
-        void End();
+        public string ID => GetType().Name;
+        public KApplication Application { get; protected set; }
+
+        public abstract void Init(KApplication app);
+        public abstract void Start();
+        public abstract void End();
     }
 
-    public class KApplication : IKComponentContainer<string, IKComponent>
+    public class KApplication : IKComponentContainer<string, KComponent>
     {
-        private Dictionary<string, IKComponent> _appComponents = new();
+        private Dictionary<string, KComponent> _appComponents = new();
 
         public int EventPollRate { get; set; }
         public bool IsRunning { get; private set; }
@@ -57,7 +59,7 @@ namespace KheaiGameEngine
 
         public void Start()
         {   
-            foreach (IKComponent component in _appComponents.Values)
+            foreach (KComponent component in _appComponents.Values)
             {
                 component.Start();
             }
@@ -72,7 +74,7 @@ namespace KheaiGameEngine
                 Thread.Sleep(1 / EventPollRate);
             }
 
-            foreach (IKComponent component in _appComponents.Values)
+            foreach (KComponent component in _appComponents.Values)
             {
                 component.End();
             }
@@ -92,15 +94,15 @@ namespace KheaiGameEngine
             KDebug.DumpLog();
         }
 
-        public void AddComponent(IKComponent component)
+        public void AddComponent(KComponent component)
         {
             component.Init(this);
             _appComponents.Add(component.ID, component);
         }
 
-        public void AddComponents(IKComponent[] components)
+        public void AddComponents(KComponent[] components)
         {
-            foreach(IKComponent component in components)
+            foreach(KComponent component in components)
             {
                 AddComponent(component);
             }
@@ -122,12 +124,12 @@ namespace KheaiGameEngine
             return _appComponents.ContainsKey(typeof(Component).Name);
         }
 
-        public IKComponent GetComponent(string id)
+        public KComponent GetComponent(string id)
         {
             return _appComponents[id];
         }
 
-        public IKComponent GetComponent<Component>()
+        public KComponent GetComponent<Component>()
         {
             return _appComponents[typeof(Component).Name];
         }
