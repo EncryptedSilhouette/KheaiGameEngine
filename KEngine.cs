@@ -30,7 +30,7 @@ namespace KheaiGameEngine
 
         public double CurrentTime => DateTime.UtcNow.Ticks;
         public KApplication Application { get; private set; }
-        public RenderWindow Window { get; set; }
+        public RenderWindow Window { get; private set; }
 
         //Threading 
         protected Thread _engineThread;
@@ -42,11 +42,22 @@ namespace KheaiGameEngine
 
         public void Init(KApplication app)
         {
+            KDebug.Log("Initilizing Engine");
             Application = app;
         }
 
         public void Start()
         {
+            KDebug.Log("Retriving Window");
+            Application.GetComponent<KWindow>();
+
+            if (Window == null)
+            {
+                KDebug.Log("Window doesnt exist, failed to start engine");
+                return;
+            }
+
+            KDebug.Log("Starting Engine");
             _engineThread.Start();
         }
 
@@ -122,7 +133,7 @@ namespace KheaiGameEngine
         public void AddComponent(KEngineComponent component)
         {
             _engineComponents.Add(component.ID, component);
-            component.Init(_application, this);
+            component.Init(this);
         }
 
         public void AddComponents(KEngineComponent[] components)
@@ -143,7 +154,17 @@ namespace KheaiGameEngine
             throw new NotImplementedException();
         }
 
+        public bool HasComponent<Component>()
+        {
+            throw new NotImplementedException();
+        }
+
         public KEngineComponent GetComponent(string id)
+        {
+            throw new NotImplementedException();
+        }
+
+        public KEngineComponent GetComponent<Component>()
         {
             throw new NotImplementedException();
         }

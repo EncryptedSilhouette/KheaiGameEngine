@@ -3,6 +3,7 @@ using System.Text.Json;
 
 namespace KheaiGameEngine
 {
+    public delegate void KThreadManager();
     public delegate void KAppEventManager();
 
     public interface IKComponentContainer<Key,Value>
@@ -11,7 +12,9 @@ namespace KheaiGameEngine
         public void AddComponents(Value[] components);
         public void RemoveComponent(Key id);
         public bool HasComponent(Key id);
+        public bool HasComponent<Component>();
         public Value GetComponent(Key id);
+        public Value GetComponent<Component>();
     }
 
     public interface IKComponent
@@ -27,7 +30,7 @@ namespace KheaiGameEngine
         private Dictionary<string, IKComponent> _appComponents = new();
 
         public int EventPollRate { get; set; }
-        public bool _isRunning { get; private set; }
+        public bool IsRunning { get; private set; }
         public string PrefsFilePath { get; set; }
         public Hashtable Prefrences { get; set; }
 
@@ -35,6 +38,9 @@ namespace KheaiGameEngine
         public event KAppEventManager OnStart;
         public event KAppEventManager OnEventDispatch;
         public event KAppEventManager OnEnd;
+
+        //Threading
+        private List<Thread> _threads = new();
 
         public KApplication()
         {
@@ -57,7 +63,7 @@ namespace KheaiGameEngine
             }
             OnStart();
 
-            while (_isRunning)
+            while (IsRunning)
             {
                 lock (OnEventDispatch)
                 {
@@ -70,7 +76,20 @@ namespace KheaiGameEngine
             {
                 component.End();
             }
+            End();
+        }
+
+        private void End()
+        {
+            lock (_threads)
+            {
+                foreach (Thread t in _threads)
+                {
+                    t.Join();
+                }
+            }
             OnEnd();
+            KDebug.DumpLog();
         }
 
         public void AddComponent(IKComponent component)
@@ -98,9 +117,19 @@ namespace KheaiGameEngine
             return _appComponents.ContainsKey(id);
         }
 
+        public bool HasComponent<Component>()
+        {
+            return _appComponents.ContainsKey(typeof(Component).Name);
+        }
+
         public IKComponent GetComponent(string id)
         {
             return _appComponents[id];
+        }
+
+        public IKComponent GetComponent<Component>()
+        {
+            return _appComponents[typeof(Component).Name];
         }
 
         public string LoadPrefsFromFile(string filePath)
@@ -122,6 +151,15 @@ namespace KheaiGameEngine
         public void ClearPrefs()
         {
             File.Create(PrefsFilePath);
+        }
+
+        //Threading
+        public void RegisterThread(Thread thread)
+        {
+            lock (thread)
+            {
+                _threads.Add(thread);
+            }
         }
     }
 }
