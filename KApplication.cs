@@ -33,6 +33,7 @@ namespace KheaiGameEngine
 
         public int EventPollRate { get; set; }
         public bool IsRunning { get; private set; }
+        public string AppName { get; private set; }
         public string PrefsFilePath { get; set; }
         public Hashtable Prefrences { get; set; }
 
@@ -44,8 +45,9 @@ namespace KheaiGameEngine
         //Threading
         private List<Thread> _threads = new();
 
-        public KApplication()
+        public KApplication(string appName)
         {
+            AppName = appName;
             EventPollRate = 60;
             PrefsFilePath = "prefs";
             Prefrences = new();

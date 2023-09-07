@@ -24,7 +24,6 @@ namespace KheaiGameEngine
         protected bool _isPaused = false;
         protected uint _tickRate = 0;
         protected uint _frameRate = 0;
-        protected RenderWindow _window;
         protected Dictionary<string, KEngineComponent> _engineComponents = new();
 
         public double CurrentTime => DateTime.UtcNow.Ticks;
@@ -61,6 +60,7 @@ namespace KheaiGameEngine
 
         public override void End()
         {
+            _isRunning = false;
             _engineThread.Join();
         }
 
@@ -120,13 +120,21 @@ namespace KheaiGameEngine
 
         public void FixedUpdate()
         {
-
+            foreach (KEngineComponent component in _engineComponents.Values)
+            {
+                component.FixedUpdate();
+            }
         }
 
         public void FrameUpdate()
         {
-
+            foreach (KEngineComponent component in _engineComponents.Values)
+            {
+                component.FrameUpdate();
+            }
         }
+
+
 
         public void AddComponent(KEngineComponent component)
         {

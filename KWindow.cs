@@ -1,11 +1,14 @@
-﻿namespace KheaiGameEngine
+﻿using SFML.Graphics;
+
+namespace KheaiGameEngine
 {
     public class KWindow : KComponent
     {
-       
+        public RenderWindow window { get; private set; }
+
         public KWindow()
         {
-            
+            window = new(SFML.Window.VideoMode.DesktopMode, Application.AppName);
         }
 
         public override void Init(KApplication app)
@@ -21,21 +24,6 @@
         public override void End()
         {
            
-        }
-
-        public void DispatchEvents()
-        {
-            
-        }
-
-        public override void FixedUpdate()
-        {
-           
-        }
-
-        public override void FrameUpdate()
-        {
-            
         }
 
         public void Draw(object DrawableObject)
