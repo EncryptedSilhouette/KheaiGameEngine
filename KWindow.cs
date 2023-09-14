@@ -2,43 +2,88 @@
 
 namespace KheaiGameEngine
 {
-    public class KWindow : KComponent
+    public interface IKRenderer
     {
-        public RenderWindow window { get; private set; }
+        void Draw(RenderTarget target);
+    }
 
-        public KWindow()
+    public interface IKRenderComponent
+    {
+        Drawable[] SubmitDraw();
+    }
+
+    public class KRenderer : IKRenderer
+    {
+        private List<IKRenderComponent> _kRenderComponents = new();
+
+        public void Draw(RenderTarget target)
         {
-            window = new(SFML.Window.VideoMode.DesktopMode, Application.AppName);
+            foreach (IKRenderComponent renderer in _kRenderComponents)
+            {
+                foreach (Drawable drawable in renderer.SubmitDraw())
+                {
+                    target.Draw(drawable);
+                }               
+            }
         }
+    }
 
-        public override void Init(KApplication app)
+    //make a renderer component or something dumbass idefk what youre doing here
+    public class KWindow : KAppComponent
+    {
+        #region Static
+        public static IKRenderer activeRenderer { get; private set; }
+
+        //events
+        public static event KEventManager ActiveRendererChanged;
+
+        public static void setActiveRenderer(IKRenderer renderer)
         {
-           
+            activeRenderer = renderer;
+            ActiveRendererChanged.Invoke();
+        }
+        #endregion
+
+        //This will absolutely cause threading issues later, dumbass...
+        public RenderWindow Window { get; protected set; }
+
+        //i'll find some reason for these to exist
+        public override void Init()
+        {
+            Application.OnEventDispatch += DispatchEvents;
         }
 
         public override void Start()
         {
-            
+            Window = new(SFML.Window.VideoMode.DesktopMode, Application.AppName);
         }
 
-        public override void End()
+        public void Draw()
         {
-           
+            lock (Window)
+            {
+                Window.SetActive(true);
+                Window.Clear();
+
+                activeRenderer?.Draw(Window);
+
+                Window.Display();
+                Window.SetActive(false);            
+            }
         }
 
-        public void Draw(object DrawableObject)
+        public void DispatchEvents()
         {
-
+            lock (Window)
+            {
+                Window.SetActive(true);
+                Window.DispatchEvents();
+                Window.SetActive(false);
+            }
         }
 
-        public void Init(KEngine engine)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void Init(KApplication app)
-        {
-            throw new NotImplementedException();
-        }
+        #region Ignored
+        public override void End() { }
+        #endregion
     }
 }

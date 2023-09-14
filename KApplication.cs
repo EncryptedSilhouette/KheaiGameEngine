@@ -3,44 +3,59 @@ using System.Text.Json;
 
 namespace KheaiGameEngine
 {
-    public delegate void KThreadManager();
-    public delegate void KAppEventManager();
+    public delegate void KEventManager();
 
     public interface IKComponentContainer<Key,Value>
     {
+        #region Component managemanet
         public void AddComponent(Value component);
         public void AddComponents(Value[] components);
         public void RemoveComponent(Key id);
+        public void RemoveComponent<Component>();
         public bool HasComponent(Key id);
         public bool HasComponent<Component>();
         public Value GetComponent(Key id);
-        public Value GetComponent<Component>();
+        public Value GetComponent<Component>() where Component : Value;
+        #endregion
     }
 
-    public abstract class KComponent
+    public interface IKComponent<Container>
+    {
+        public void Attatch(Container container);
+        public void Init();
+        public void Start();
+        public void End();
+    }
+
+    public abstract class KAppComponent : IKComponent<KApplication>
     {
         public string ID => GetType().Name;
         public KApplication Application { get; protected set; }
 
-        public abstract void Init(KApplication app);
+        public void Attatch(KApplication app)
+        {
+            Application = app;
+        }
+
+        public abstract void Init();
         public abstract void Start();
-        public abstract void End();
+        public abstract void End(); 
     }
 
-    public class KApplication : IKComponentContainer<string, KComponent>
+    public class KApplication : IKComponentContainer<string, KAppComponent>
     {
-        private Dictionary<string, KComponent> _appComponents = new();
-
         public int EventPollRate { get; set; }
         public bool IsRunning { get; private set; }
         public string AppName { get; private set; }
         public string PrefsFilePath { get; set; }
         public Hashtable Prefrences { get; set; }
 
+        private Dictionary<string, KAppComponent> _appComponents = new();
+
         //Events
-        public event KAppEventManager OnStart;
-        public event KAppEventManager OnEventDispatch;
-        public event KAppEventManager OnEnd;
+        public event KEventManager OnStart;
+        public event KEventManager OnEventDispatch;
+        public event KEventManager OnEnd;
 
         //Threading
         private List<Thread> _threads = new();
@@ -53,6 +68,7 @@ namespace KheaiGameEngine
             Prefrences = new();
         }
 
+        #region Logic
         public void Start(string prefsFilePath)
         {
             LoadPrefsFromJson(LoadPrefsFromFile(prefsFilePath));
@@ -61,22 +77,22 @@ namespace KheaiGameEngine
 
         public void Start()
         {   
-            foreach (KComponent component in _appComponents.Values)
+            foreach (KAppComponent component in _appComponents.Values)
             {
                 component.Start();
             }
-            OnStart();
+            OnStart?.Invoke();
 
             while (IsRunning)
             {
-                lock (OnEventDispatch)
+                lock (this)
                 {
-                    OnEventDispatch();
+                    OnEventDispatch?.Invoke();
                 }
                 Thread.Sleep(1 / EventPollRate);
             }
 
-            foreach (KComponent component in _appComponents.Values)
+            foreach (KAppComponent component in _appComponents.Values)
             {
                 component.End();
             }
@@ -92,19 +108,21 @@ namespace KheaiGameEngine
                     t.Join();
                 }
             }
-            OnEnd();
-            KDebug.DumpLog();
+            OnEnd?.Invoke();
         }
+        #endregion
 
-        public void AddComponent(KComponent component)
+        #region Component management
+        public void AddComponent(KAppComponent component)
         {
-            component.Init(this);
+            component.Attatch(this);
+            component.Init();
             _appComponents.Add(component.ID, component);
         }
 
-        public void AddComponents(KComponent[] components)
+        public void AddComponents(KAppComponent[] components)
         {
-            foreach(KComponent component in components)
+            foreach(KAppComponent component in components)
             {
                 AddComponent(component);
             }
@@ -114,6 +132,11 @@ namespace KheaiGameEngine
         {
             _appComponents[id].End();
             _appComponents.Remove(id);
+        }
+
+        public void RemoveComponent<Component>()
+        {
+            _appComponents.Remove(typeof(Component).Name);
         }
 
         public bool HasComponent(string id)
@@ -126,16 +149,18 @@ namespace KheaiGameEngine
             return _appComponents.ContainsKey(typeof(Component).Name);
         }
 
-        public KComponent GetComponent(string id)
+        public KAppComponent GetComponent(string id)
         {
             return _appComponents[id];
         }
 
-        public KComponent GetComponent<Component>()
+        public KAppComponent GetComponent<Component>() where Component : KAppComponent
         {
-            return _appComponents[typeof(Component).Name];
+            return (Component) _appComponents[typeof(Component).Name];
         }
+        #endregion
 
+        #region Serialization
         public string LoadPrefsFromFile(string filePath)
         {
             if (File.Exists(filePath))
@@ -156,8 +181,10 @@ namespace KheaiGameEngine
         {
             File.Create(PrefsFilePath);
         }
+        #endregion
 
-        //Threading
+        //Wtf is even my plan here
+        //Threading fuck me
         public void RegisterThread(Thread thread)
         {
             lock (thread)

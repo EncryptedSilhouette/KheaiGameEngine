@@ -1,4 +1,6 @@
-﻿using System.Text;
+﻿using System.Diagnostics;
+using System.Runtime.Remoting;
+using System.Text;
 
 namespace KheaiGameEngine
 {
@@ -61,26 +63,29 @@ namespace KheaiGameEngine
         public static void Log(string message)
         {
             Log(GENERAL, message);
-
         }
 
         public static void Log(string logID, string message)
         {
-            _logs[logID].Log(message);
+            _logs[logID.ToLower()].Log(message);
         }
 
         public static void DumpLog()
         {
-            string DebugPath = "Logs//Debug0.txt";
+            string DebugPath = $"Logs";
+            Directory.CreateDirectory(DebugPath);
+            DebugPath += $"/Debug0.txt";
+
             for (int i = 1; File.Exists(DebugPath); i++)
             {
-                DebugPath = $"Logs//Debug{i}.txt";
+                DebugPath = $"Logs/Debug{i}.txt";
             };
             StreamWriter writer = new StreamWriter(File.Create(DebugPath));
 
             foreach (KDebugLog log in _logs.Values)
             {
-                writer.WriteLine(log.ToString());
+                writer.WriteLine(log.GetLog());
+                Console.WriteLine($"{log.GetLog()}, {DebugPath}");
             }
         }
     }
