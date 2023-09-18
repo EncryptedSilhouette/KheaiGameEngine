@@ -8,5 +8,4 @@ app.AddComponents(new KAppComponent[]
 });
 
 app.Start();
-KDebug.Log("fsdk");
 KDebug.DumpLog();

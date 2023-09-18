@@ -20,8 +20,13 @@ namespace KheaiGameEngine
 
     public class KEngine : KAppComponent, IKComponentContainer<string, KEngineComponent>
     {
-        public uint UpdatesPerSecond = 30;
-        public uint FramesPerSecond = 60;
+        public uint UpdatesPerSecond = 30, 
+                    MaxUpdatesPerSecond,
+                    MinUpdatesPerSecond;
+        public uint FramesPerSecond = 340,
+                    MaxFramesPerSecond,
+                    MinFramesPerSecond;
+
         public float GameSpeed = 1;
 
         protected uint _tickRate = 0;
@@ -39,18 +44,30 @@ namespace KheaiGameEngine
         public KEngine()
         {
             _engineThread = new(Run);
+            _engineThread.Name = "engine_thread";
+
+            MaxUpdatesPerSecond = 0;
+            MaxFramesPerSecond = 0;
+
+            MinUpdatesPerSecond = UpdatesPerSecond;
+            MinFramesPerSecond = FramesPerSecond;
         }
 
         #region Game logic
+        public override void Init()
+        {
+            Application.RegisterThread(_engineThread);
+            KDebug.AddLog("engine");
+        }
+
         public override void Start()
         {
-            KDebug.Log("Starting Engine");
-            KDebug.Log("Retriving Window");
+            KDebug.Log("engine", "Engine: Retriving Window");
             Window = (KWindow) Application.GetComponent<KWindow>();
 
             if (Window == null)
             {
-                KDebug.Log("Window doesnt exist, failed to start engine");
+                KDebug.Log(KDebug.ERROR, "Window doesnt exist, failed to start engine");
                 return;
             }
             _engineThread.Start();
@@ -58,6 +75,14 @@ namespace KheaiGameEngine
 
         public override void End()
         {
+            KDebug.Log("engine", $"Tickrate: {UpdatesPerSecond}, " +
+                                 $"Max: {MaxUpdatesPerSecond}, " +
+                                 $"Min: {MinUpdatesPerSecond}");
+
+            KDebug.Log("engine", $"Framerate: {FramesPerSecond}, " +
+                                 $"Max: {MaxFramesPerSecond}, " +
+                                 $"Min: {MinFramesPerSecond}");
+
             _isRunning = false;
             _engineThread.Join();
         }
@@ -115,11 +140,11 @@ namespace KheaiGameEngine
                 //Limits frame update to desired FPS
                 if (frameUnprocessedTime >= frameInterval)
                 {
-                    frameUnprocessedTime = 0;
+                    frameUnprocessedTime -= frameInterval;
                     frames++;
 
                     FrameUpdate(deltaTime);
-                    //Window.Draw();
+                    Window.Draw();
                 }
 
                 //The last few lines in this scope are to keep track of debug info.
@@ -127,6 +152,13 @@ namespace KheaiGameEngine
                 {
                     _tickRate = ticks;
                     _frameRate = frames;
+
+                    if (ticks >= MaxUpdatesPerSecond) MaxUpdatesPerSecond = ticks;
+                    if (ticks < MinUpdatesPerSecond) MinUpdatesPerSecond = ticks;
+
+                    if (frames >= MaxFramesPerSecond) MaxFramesPerSecond = frames;
+                    if (frames < MinFramesPerSecond) MinFramesPerSecond = frames;
+
                     ticks = frames = 0;
                     startTime = DateTime.UtcNow.Ticks;
                 }
@@ -179,10 +211,6 @@ namespace KheaiGameEngine
         {
             return _engineComponents[typeof(Component).Name];
         }
-        #endregion
-
-        #region Ignored
-        public override void Init() { }
         #endregion
     }
 }

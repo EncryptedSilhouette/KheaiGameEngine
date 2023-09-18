@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.ComponentModel;
 using System.Text.Json;
 
 namespace KheaiGameEngine
@@ -76,9 +77,13 @@ namespace KheaiGameEngine
         }
 
         public void Start()
-        {   
+        {
+            IsRunning = true;
+
+            KDebug.Log($"Starting App: {AppName}");
             foreach (KAppComponent component in _appComponents.Values)
             {
+                KDebug.Log($"Starting Component: {component.ID}");
                 component.Start();
             }
             OnStart?.Invoke();
@@ -96,11 +101,6 @@ namespace KheaiGameEngine
             {
                 component.End();
             }
-            End();
-        }
-
-        private void End()
-        {
             lock (_threads)
             {
                 foreach (Thread t in _threads)
@@ -108,6 +108,11 @@ namespace KheaiGameEngine
                     t.Join();
                 }
             }
+        }
+
+        public void End()
+        {
+            IsRunning = false;
             OnEnd?.Invoke();
         }
         #endregion
@@ -115,6 +120,7 @@ namespace KheaiGameEngine
         #region Component management
         public void AddComponent(KAppComponent component)
         {
+            KDebug.Log($"Initializing component: {component.ID}");
             component.Attatch(this);
             component.Init();
             _appComponents.Add(component.ID, component);
@@ -130,8 +136,13 @@ namespace KheaiGameEngine
 
         public void RemoveComponent(string id)
         {
+            KDebug.Log($"Removing component: {id}");
             _appComponents[id].End();
-            _appComponents.Remove(id);
+
+            if (!_appComponents.Remove(id))
+            {
+                KDebug.Log("Failed to remove component.");
+            }
         }
 
         public void RemoveComponent<Component>()
@@ -163,6 +174,7 @@ namespace KheaiGameEngine
         #region Serialization
         public string LoadPrefsFromFile(string filePath)
         {
+            KDebug.Log($"Loading prefrences from {filePath}.");
             if (File.Exists(filePath))
             {
                 PrefsFilePath = filePath;
@@ -183,14 +195,15 @@ namespace KheaiGameEngine
         }
         #endregion
 
-        //Wtf is even my plan here
-        //Threading fuck me
+        #region Threading
         public void RegisterThread(Thread thread)
         {
+            KDebug.Log($"Registering thread: {thread.Name}");
             lock (thread)
             {
                 _threads.Add(thread);
             }
         }
+        #endregion
     }
 }

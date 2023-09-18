@@ -44,18 +44,25 @@ namespace KheaiGameEngine
         }
         #endregion
 
-        //This will absolutely cause threading issues later, dumbass...
+        //This will absolutely cause threading issues later, future me problem :D
         public RenderWindow Window { get; protected set; }
 
-        //i'll find some reason for these to exist
         public override void Init()
         {
+            Window = new(SFML.Window.VideoMode.DesktopMode, Application.AppName);
+            Window.Closed += (ignore0, ignore1) => Application.End();
+
             Application.OnEventDispatch += DispatchEvents;
         }
 
-        public override void Start()
+        public override void End()
         {
-            Window = new(SFML.Window.VideoMode.DesktopMode, Application.AppName);
+            lock (Window)
+            {
+                Window.SetActive(true);
+                Window.Close();
+                Window.SetActive(false);
+            }
         }
 
         public void Draw()
@@ -83,7 +90,7 @@ namespace KheaiGameEngine
         }
 
         #region Ignored
-        public override void End() { }
+        public override void Start() { }
         #endregion
     }
 }

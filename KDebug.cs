@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-using System.Runtime.Remoting;
-using System.Text;
+﻿using System.Text;
 
 namespace KheaiGameEngine
 {
@@ -8,7 +6,14 @@ namespace KheaiGameEngine
     {
         public int MaxLogLength = 0;
 
-        private Queue<string> _lines = new();
+        protected Queue<string> _lines = new();
+
+        public string ID {  get; private init; }
+
+        public KDebugLog(string id) 
+        {
+            ID = id;    
+        }
 
         public void Log(string message)
         {
@@ -45,19 +50,24 @@ namespace KheaiGameEngine
 
         private static Dictionary<string, KDebugLog> _logs = new Dictionary<string, KDebugLog>()
         {
-            { "general", new KDebugLog() },
-            { "error", new KDebugLog() }
+            { GENERAL, new KDebugLog(GENERAL) },
+            { ERROR, new KDebugLog(ERROR) }
         };
 
         public static void AddLog(string logID)
         {
-            _logs.Add(logID, new KDebugLog());
+            _logs.Add(logID, new KDebugLog(logID));
         }
 
-        public static void RemoveLog(string logID)
+        public static string GetLog(string id)
         {
-            if (logID == GENERAL || logID == ERROR) return;
-            _logs.Remove(logID);
+            return _logs[id].GetLog();
+        }
+
+        public static void RemoveLog(string id)
+        {
+            if (id == GENERAL || id == ERROR) return;
+            _logs.Remove(id);
         }
 
         public static void Log(string message)
@@ -65,28 +75,27 @@ namespace KheaiGameEngine
             Log(GENERAL, message);
         }
 
-        public static void Log(string logID, string message)
+        public static void Log(string id, string message)
         {
-            _logs[logID.ToLower()].Log(message);
+            _logs[id.ToLower()].Log(message);
         }
 
         public static void DumpLog()
         {
-            string DebugPath = $"Logs";
-            Directory.CreateDirectory(DebugPath);
-            DebugPath += $"/Debug0.txt";
-
+            string DebugPath = $"Logs/Debug0.txt";
+            Directory.CreateDirectory("Logs");
             for (int i = 1; File.Exists(DebugPath); i++)
             {
                 DebugPath = $"Logs/Debug{i}.txt";
             };
-            StreamWriter writer = new StreamWriter(File.Create(DebugPath));
 
+            StreamWriter writer = new StreamWriter(File.Create(DebugPath));
             foreach (KDebugLog log in _logs.Values)
             {
-                writer.WriteLine(log.GetLog());
-                Console.WriteLine($"{log.GetLog()}, {DebugPath}");
+                writer.WriteLine($"{log.ID.ToUpper()}-");
+                writer.WriteLine($"{log.GetLog()}");
             }
+            writer.Close();
         }
     }
 }
