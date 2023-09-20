@@ -1,95 +1,76 @@
-﻿using SFML.Graphics;
-using System.ComponentModel;
-
-namespace KheaiGameEngine
+﻿namespace KheaiGameEngine
 {
-    public abstract class KEngineComponent : IKComponent<KEngine>
+    public abstract class KEngineComponent : KComponent<KEngine>
     {
-        public string ID => GetType().Name;
-        public KEngine _engine { get; protected set; }
-
         #region Game logic
-        public abstract void Attatch(KEngine engine);
-        public abstract void Init();
-        public abstract void Start();
-        public abstract void End();
         public abstract void FixedUpdate();
         public abstract void FrameUpdate(double deltaTIme);
         #endregion
     }
 
-    public class KEngine : KAppComponent, IKComponentContainer<string, KEngineComponent>
+    public class KEngine : KComponent<KApplication>, IKComponentContainer<string, KEngineComponent>
     {
-        public uint UpdatesPerSecond = 30, 
-                    MaxUpdatesPerSecond,
-                    MinUpdatesPerSecond;
-        public uint FramesPerSecond = 340,
-                    MaxFramesPerSecond,
-                    MinFramesPerSecond;
-
-        public float GameSpeed = 1;
-
-        protected uint _tickRate = 0;
-        protected uint _frameRate = 0;
-        protected bool _isRunning = true;
-        protected bool _isPaused = false;
-        protected Dictionary<string, KEngineComponent> _engineComponents = new();
-
-        public double CurrentTime => DateTime.UtcNow.Ticks;
-        public KWindow Window { get; private set; }
+        protected uint tickRate = 0;
+        protected uint maxUpdatesPerSecond = 0;
+        protected uint minUpdatesPerSecond;
+        protected uint frameRate = 0;
+        protected uint maxFramesPerSecond = 0;
+        protected uint minFramesPerSecond;
+        protected bool isRunning = true;
+        protected bool isPaused = false;
+        protected Dictionary<string, KEngineComponent> engineComponents = new();
 
         //Threading 
-        protected Thread _engineThread;
+        protected Thread engineThread;
+
+        public double CurrentTime => DateTime.UtcNow.Ticks;
+        public uint GameSpeed { get; set; } = 1;
+        public uint UpdatesPerSecond { get; set; } = 30;
+        public uint FramesPerSecond { get; set; } = 60;
+        public KWindow Window { get; protected set; }
 
         public KEngine()
         {
-            _engineThread = new(Run);
-            _engineThread.Name = "engine_thread";
-
-            MaxUpdatesPerSecond = 0;
-            MaxFramesPerSecond = 0;
-
-            MinUpdatesPerSecond = UpdatesPerSecond;
-            MinFramesPerSecond = FramesPerSecond;
+            minUpdatesPerSecond = UpdatesPerSecond;
+            minFramesPerSecond = FramesPerSecond;
         }
 
         #region Game logic
         public override void Init()
         {
-            Application.RegisterThread(_engineThread);
+            engineThread = Owner.CreateThread("engine_thread", Run);
             KDebug.AddLog("engine");
         }
 
         public override void Start()
         {
             KDebug.Log("engine", "Engine: Retriving Window");
-            Window = (KWindow) Application.GetComponent<KWindow>();
-
+            Window = Owner.GetComponent<KWindow>();
             if (Window == null)
             {
                 KDebug.Log(KDebug.ERROR, "Window doesnt exist, failed to start engine");
                 return;
             }
-            _engineThread.Start();
+            engineThread.Start();
         }
 
         public override void End()
         {
             KDebug.Log("engine", $"Tickrate: {UpdatesPerSecond}, " +
-                                 $"Max: {MaxUpdatesPerSecond}, " +
-                                 $"Min: {MinUpdatesPerSecond}");
+                                 $"Max: {maxUpdatesPerSecond}, " +
+                                 $"Min: {minUpdatesPerSecond}");
 
             KDebug.Log("engine", $"Framerate: {FramesPerSecond}, " +
-                                 $"Max: {MaxFramesPerSecond}, " +
-                                 $"Min: {MinFramesPerSecond}");
+                                 $"Max: {maxFramesPerSecond}, " +
+                                 $"Min: {minFramesPerSecond}");
 
-            _isRunning = false;
-            _engineThread.Join();
+            isRunning = false;
+            engineThread.Join();
         }
 
         public void FixedUpdate()
         {
-            foreach (KEngineComponent component in _engineComponents.Values)
+            foreach (KEngineComponent component in engineComponents.Values)
             {
                 component.FixedUpdate();
             }
@@ -97,7 +78,7 @@ namespace KheaiGameEngine
 
         public void FrameUpdate(double deltaTime)
         {
-            foreach (KEngineComponent component in _engineComponents.Values)
+            foreach (KEngineComponent component in engineComponents.Values)
             {
                 component.FrameUpdate(deltaTime);
             }
@@ -107,15 +88,22 @@ namespace KheaiGameEngine
         #region Gameloop
         protected void Run()
         {
-            uint ticks = 0, frames = 0;
+            uint ticks = 0;
+            uint frames = 0;
+
+            double startTime;
+            double lastTime;
+            double newTime;
+            double deltaTime = 0;
+            double updateUnprocessedTime = 0;
+            double frameUnprocessedTime = 0;
+
             double updateInterval = 1000d / UpdatesPerSecond * GameSpeed;
             double frameInterval = 1000d / FramesPerSecond;
-            double startTime, lastTime, newTime, deltaTime = 0;
-            double updateUnprocessedTime = 0, frameUnprocessedTime = 0;
 
             lastTime = startTime = DateTime.UtcNow.Ticks;
 
-            while (_isRunning) //Core game-loop
+            while (isRunning) //Core game-loop
             {
                 newTime = DateTime.UtcNow.Ticks;
                 frameUnprocessedTime += (newTime - lastTime) / TimeSpan.TicksPerMillisecond;
@@ -129,7 +117,7 @@ namespace KheaiGameEngine
                     updateUnprocessedTime -= updateInterval;
                     ticks++;
 
-                    if (_isPaused || GameSpeed <= 0)
+                    if (isPaused || GameSpeed <= 0)
                     {
                         updateUnprocessedTime = 0;
                         break;
@@ -147,17 +135,17 @@ namespace KheaiGameEngine
                     Window.Draw();
                 }
 
-                //The last few lines in this scope are to keep track of debug info.
+                //The last few lines are to keep track of debug info.
                 if ((DateTime.UtcNow.Ticks - startTime) / TimeSpan.TicksPerSecond >= 1)
                 {
-                    _tickRate = ticks;
-                    _frameRate = frames;
+                    tickRate = ticks;
+                    frameRate = frames;
 
-                    if (ticks >= MaxUpdatesPerSecond) MaxUpdatesPerSecond = ticks;
-                    if (ticks < MinUpdatesPerSecond) MinUpdatesPerSecond = ticks;
+                    if (ticks >= maxUpdatesPerSecond) maxUpdatesPerSecond = ticks;
+                    if (ticks < minUpdatesPerSecond) minUpdatesPerSecond = ticks;
 
-                    if (frames >= MaxFramesPerSecond) MaxFramesPerSecond = frames;
-                    if (frames < MinFramesPerSecond) MinFramesPerSecond = frames;
+                    if (frames >= maxFramesPerSecond) maxFramesPerSecond = frames;
+                    if (frames < minFramesPerSecond) minFramesPerSecond = frames;
 
                     ticks = frames = 0;
                     startTime = DateTime.UtcNow.Ticks;
@@ -171,7 +159,7 @@ namespace KheaiGameEngine
         {
             component.Attatch(this);
             component.Init();
-            _engineComponents.Add(component.ID, component);
+            engineComponents.Add(component.ID, component);
         }
 
         public void AddComponents(KEngineComponent[] components)
@@ -184,32 +172,27 @@ namespace KheaiGameEngine
 
         public void RemoveComponent(string id)
         {
-            _engineComponents.Remove(id);
+            engineComponents.Remove(id);
         }
 
         public void RemoveComponent<Component>()
         {
-            _engineComponents.Remove(typeof(Component).Name);
+            engineComponents.Remove(typeof(Component).Name);
         }
 
         public bool HasComponent(string id)
         {
-            return _engineComponents.ContainsKey(id);
+            return engineComponents.ContainsKey(id);
         }
 
         public bool HasComponent<Component>()
         {
-            return _engineComponents.ContainsKey(typeof(Component).Name);
+            return engineComponents.ContainsKey(typeof(Component).Name);
         }
 
-        public KEngineComponent GetComponent(string id)
+        public Component GetComponent<Component>() where Component : KEngineComponent
         {
-            return _engineComponents[id];
-        }
-
-        public KEngineComponent GetComponent<Component>() where Component : KEngineComponent
-        {
-            return _engineComponents[typeof(Component).Name];
+            return (Component) engineComponents[typeof(Component).Name];
         }
         #endregion
     }

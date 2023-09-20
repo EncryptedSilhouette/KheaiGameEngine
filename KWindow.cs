@@ -5,59 +5,29 @@ namespace KheaiGameEngine
     public interface IKRenderer
     {
         void Draw(RenderTarget target);
-    }
-
-    public interface IKRenderComponent
-    {
         Drawable[] SubmitDraw();
     }
 
-    public class KRenderer : IKRenderer
+    public class KWindow : KComponent<KApplication>
     {
-        private List<IKRenderComponent> _kRenderComponents = new();
+        public RenderWindow Window { get; protected set; } //This will absolutely cause threading issues later, future me problem :D
+        public IKRenderer ActiveRenderer { get; protected set; }
 
-        public void Draw(RenderTarget target)
-        {
-            foreach (IKRenderComponent renderer in _kRenderComponents)
-            {
-                foreach (Drawable drawable in renderer.SubmitDraw())
-                {
-                    target.Draw(drawable);
-                }               
-            }
-        }
-    }
+        //Events
+        event KEventManager onActiveRendererChange;
 
-    //make a renderer component or something dumbass idefk what youre doing here
-    public class KWindow : KAppComponent
-    {
-        #region Static
-        public static IKRenderer activeRenderer { get; private set; }
-
-        //events
-        public static event KEventManager ActiveRendererChanged;
-
-        public static void setActiveRenderer(IKRenderer renderer)
-        {
-            activeRenderer = renderer;
-            ActiveRendererChanged.Invoke();
-        }
-        #endregion
-
-        //This will absolutely cause threading issues later, future me problem :D
-        public RenderWindow Window { get; protected set; }
-
+        #region Logic
         public override void Init()
         {
-            Window = new(SFML.Window.VideoMode.DesktopMode, Application.AppName);
-            Window.Closed += (ignore0, ignore1) => Application.End();
+            Window = new(SFML.Window.VideoMode.DesktopMode, Owner.AppName);
+            Window.Closed += (x, y) => Owner.End();
 
-            Application.OnEventDispatch += DispatchEvents;
+            Owner.OnEventDispatch += DispatchEvents;
         }
 
         public override void End()
         {
-            lock (Window)
+            lock (this)
             {
                 Window.SetActive(true);
                 Window.Close();
@@ -67,21 +37,31 @@ namespace KheaiGameEngine
 
         public void Draw()
         {
-            lock (Window)
+            lock (this)
             {
                 Window.SetActive(true);
                 Window.Clear();
 
-                activeRenderer?.Draw(Window);
+                ActiveRenderer?.Draw(Window);
 
                 Window.Display();
                 Window.SetActive(false);            
             }
         }
+        #endregion
+
+        public void SetActiveRenderer(IKRenderer renderer)
+        {
+            lock (this)
+            {
+                ActiveRenderer = renderer;
+                onActiveRendererChange?.Invoke();
+            }
+        }
 
         public void DispatchEvents()
         {
-            lock (Window)
+            lock (this)
             {
                 Window.SetActive(true);
                 Window.DispatchEvents();
