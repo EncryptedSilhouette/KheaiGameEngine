@@ -21,7 +21,7 @@ namespace KheaiGameEngine
         protected uint minFramesPerSecond;
         protected bool isRunning = true;
         protected bool isPaused = false;
-        protected SortedSet<KEngineComponent> engineComponents = new(new KComponentComparer<KEngineComponent, KEngine>());
+        protected List<KEngineComponent> engineComponents = new();
 
         //Threading 
         protected Thread engineThread;
@@ -73,7 +73,7 @@ namespace KheaiGameEngine
 
         public void FixedUpdate()
         {
-            foreach (KEngineComponent component in engineComponents.Values)
+            foreach (KEngineComponent component in engineComponents)
             {
                 component.FixedUpdate();
             }
@@ -81,7 +81,7 @@ namespace KheaiGameEngine
 
         public void FrameUpdate(double deltaTime)
         {
-            foreach (KEngineComponent component in engineComponents.Values)
+            foreach (KEngineComponent component in engineComponents)
             {
                 component.FrameUpdate(deltaTime);
             }
@@ -162,7 +162,8 @@ namespace KheaiGameEngine
         {
             component.Attatch(this);
             component.Init();
-            engineComponents.Add(component.ID, component);
+            engineComponents.Sort(SortByID);
+            engineComponents.Add(component);
         }
 
         public void AddComponents(KEngineComponent[] components)
@@ -175,27 +176,62 @@ namespace KheaiGameEngine
 
         public void RemoveComponent(string id)
         {
-            engineComponents.Remove(id);
+            foreach(var component in engineComponents)
+            {
+                if (component.ID.Equals(id))
+                {
+                    engineComponents.Remove(component);
+                    return;
+                }
+            }
+            KDebug.Log($"Failed to remove component {id}.");
         }
 
         public void RemoveComponent<Component>()
         {
-            engineComponents.Remove(typeof(Component).Name);
+            foreach (var component in engineComponents)
+            {
+                if (component is Component)
+                {
+                    engineComponents.Remove(component);
+                    return;
+                }
+            }
+            KDebug.Log($"Failed to remove component {typeof(Component).Name}.");
         }
 
         public bool HasComponent(string id)
         {
-            return engineComponents.ContainsKey(id);
+            foreach (var component in engineComponents)
+            {
+                if (component.ID.Equals(id)) return true;
+            }
+            return false;
         }
 
         public bool HasComponent<Component>()
         {
-            return engineComponents.ContainsKey(typeof(Component).Name);
+            foreach (var component in engineComponents)
+            {
+                if (component is Component) return true;
+            }
+            return false;
         }
 
         public Component GetComponent<Component>() where Component : KEngineComponent
         {
-            return (Component) engineComponents[typeof(Component).Name];
+            foreach (var component in engineComponents)
+            {
+                if (component is Component) return (Component) component;
+            }
+            return null;
+        }
+
+        public int SortByID(KEngineComponent a, KEngineComponent b)
+        {
+            if (a.ID.Equals(b.ID)) return 0;
+            if (a.Order > b.Order) return 1;
+            return -1;
         }
         #endregion
     }

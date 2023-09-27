@@ -4,7 +4,6 @@ using System.Text.Json;
 namespace KheaiGameEngine
 {
     public delegate void KEventManager();
-    public delegate int KSearch<T>(T a, T b);
 
     public interface IKComponentContainer<Key,Value>
     {
@@ -168,10 +167,7 @@ namespace KheaiGameEngine
         {
             foreach (var component in _appComponents)
             {
-                if (component.ID.Equals(id))
-                {
-                    return true;
-                }
+                if (component.ID.Equals(id)) return true;
             }
             return false;
         }
@@ -180,10 +176,7 @@ namespace KheaiGameEngine
         {
             foreach (var component in _appComponents)
             {
-                if (component is Component)
-                {
-                    return true;
-                }
+                if (component is Component) return true;
             }
             return false;
         }
@@ -192,10 +185,7 @@ namespace KheaiGameEngine
         {
             foreach (var component in _appComponents)
             {
-                if (component.ID.Equals(id))
-                {
-                    return component;
-                }
+                if (component.ID.Equals(id)) return component;
             }
             return null;
         }
@@ -204,10 +194,7 @@ namespace KheaiGameEngine
         {
             foreach (var component in _appComponents)
             {
-                if (component is Component)
-                {
-                    return (Component) component;
-                }
+                if (component is Component) return (Component)component;
             }
             return null;
         }
