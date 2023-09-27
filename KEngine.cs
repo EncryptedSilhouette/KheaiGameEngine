@@ -1,4 +1,6 @@
-﻿namespace KheaiGameEngine
+﻿using System.ComponentModel;
+
+namespace KheaiGameEngine
 {
     public abstract class KEngineComponent : KComponent<KEngine>
     {
@@ -7,6 +9,7 @@
         public abstract void FrameUpdate(double deltaTIme);
         #endregion
     }
+
 
     public class KEngine : KComponent<KApplication>, IKComponentContainer<string, KEngineComponent>
     {
@@ -18,7 +21,7 @@
         protected uint minFramesPerSecond;
         protected bool isRunning = true;
         protected bool isPaused = false;
-        protected Dictionary<string, KEngineComponent> engineComponents = new();
+        protected SortedSet<KEngineComponent> engineComponents = new(new KComponentComparer<KEngineComponent, KEngine>());
 
         //Threading 
         protected Thread engineThread;

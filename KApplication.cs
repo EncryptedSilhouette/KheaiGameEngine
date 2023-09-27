@@ -4,16 +4,18 @@ using System.Text.Json;
 namespace KheaiGameEngine
 {
     public delegate void KEventManager();
+    public delegate int KSearch<T>(T a, T b);
 
     public interface IKComponentContainer<Key,Value>
     {
-        #region Component managemanet
+        #region Component management
         public void AddComponent(Value component);
         public void AddComponents(Value[] components);
         public void RemoveComponent(Key id);
         public void RemoveComponent<Component>();
         public bool HasComponent(Key id);
         public bool HasComponent<Component>();
+        public Value GetComponent(Key id);
         public Component GetComponent<Component>() where Component : Value;
         #endregion
     }
@@ -54,7 +56,8 @@ namespace KheaiGameEngine
         public string PrefsFilePath { get; set; } = "prefs";
         public Hashtable Prefrences { get; set; } = new();
 
-        private Dictionary<string, KComponent<KApplication>> _appComponents = new();
+        //Component Management
+        private List<KComponent<KApplication>> _appComponents = new();
 
         //Threading
         private List<Thread> _threads = new();
@@ -81,7 +84,7 @@ namespace KheaiGameEngine
             IsRunning = true;
 
             KDebug.Log($"Starting App: {AppName}");
-            foreach (KComponent<KApplication> component in _appComponents.Values)
+            foreach (KComponent<KApplication> component in _appComponents)
             {
                 KDebug.Log($"Starting Component: {component.ID}");
                 component.Start();
@@ -97,7 +100,7 @@ namespace KheaiGameEngine
                 Thread.Sleep(1 / EventPollRate);
             }
 
-            foreach (KComponent<KApplication> component in _appComponents.Values)
+            foreach (KComponent<KApplication> component in _appComponents)
             {
                 component.End();
             }
@@ -123,7 +126,8 @@ namespace KheaiGameEngine
             KDebug.Log($"Initializing component: {component.ID}");
             component.Attatch(this);
             component.Init();
-            _appComponents.Add(component.ID, component);
+            _appComponents.Add(component);
+            _appComponents.Sort(SortByID);
         }
 
         public void AddComponents(KComponent<KApplication>[] components)
@@ -136,33 +140,83 @@ namespace KheaiGameEngine
 
         public void RemoveComponent(string id)
         {
-            KDebug.Log($"Removing component: {id}");
-            _appComponents[id].End();
-
-            if (!_appComponents.Remove(id))
+            foreach (var component in _appComponents)
             {
-                KDebug.Log("Failed to remove component.");
+                if (component.ID.Equals(id))
+                {
+                    _appComponents.Remove(component);
+                    return;
+                }
             }
+            KDebug.Log($"Failed to remove component {id}.");
         }
 
         public void RemoveComponent<Component>()
         {
-            _appComponents.Remove(typeof(Component).Name);
+            foreach (var component in _appComponents)
+            {
+                if (component is Component)
+                {
+                    _appComponents.Remove(component);
+                    return;
+                }
+            }
+            KDebug.Log($"Failed to remove component {typeof(Component).Name}.");
         }
 
         public bool HasComponent(string id)
         {
-            return _appComponents.ContainsKey(id);
+            foreach (var component in _appComponents)
+            {
+                if (component.ID.Equals(id))
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         public bool HasComponent<Component>()
         {
-            return _appComponents.ContainsKey(typeof(Component).Name);
+            foreach (var component in _appComponents)
+            {
+                if (component is Component)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public KComponent<KApplication> GetComponent(string id)
+        {
+            foreach (var component in _appComponents)
+            {
+                if (component.ID.Equals(id))
+                {
+                    return component;
+                }
+            }
+            return null;
         }
 
         public Component GetComponent<Component>() where Component : KComponent<KApplication>
         {
-            return (Component) _appComponents[typeof(Component).Name];
+            foreach (var component in _appComponents)
+            {
+                if (component is Component)
+                {
+                    return (Component) component;
+                }
+            }
+            return null;
+        }
+
+        public int SortByID(KComponent<KApplication> a, KComponent<KApplication> b)
+        {
+            if (a.ID.Equals(b.ID)) return 0;
+            if (a.Order > b.Order) return 1;
+            return -1;
         }
         #endregion
 
@@ -175,7 +229,7 @@ namespace KheaiGameEngine
                 PrefsFilePath = filePath;
                 return File.ReadAllText(filePath);
             }
-            else return null;
+            return null;
         }
 
         public void LoadPrefsFromJson(string jsonString)
