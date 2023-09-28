@@ -5,6 +5,11 @@ namespace KheaiGameEngine
 {
     public delegate void KEventManager();
 
+    public class KComponentSorter
+    {
+
+    }
+
     public interface IKComponentContainer<Key,Value>
     {
         #region Component management
@@ -56,7 +61,7 @@ namespace KheaiGameEngine
         public Hashtable Prefrences { get; set; } = new();
 
         //Component Management
-        private List<KComponent<KApplication>> _appComponents = new();
+        private SortedSet<KComponent<KApplication>> _appComponents = new();
 
         //Threading
         private List<Thread> _threads = new();
@@ -126,7 +131,6 @@ namespace KheaiGameEngine
             component.Attatch(this);
             component.Init();
             _appComponents.Add(component);
-            _appComponents.Sort(SortByID);
         }
 
         public void AddComponents(KComponent<KApplication>[] components)
