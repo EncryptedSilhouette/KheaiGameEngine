@@ -5,12 +5,7 @@ namespace KheaiGameEngine
 {
     public delegate void KEventManager();
 
-    public class KComponentSorter
-    {
-
-    }
-
-    public interface IKComponentContainer<Key,Value>
+    public interface IComponentManager<Key,Value>
     {
         #region Component management
         public void AddComponent(Value component);
@@ -26,34 +21,31 @@ namespace KheaiGameEngine
 
     public abstract class KComponent<Container>
     {
-        public int Order { get; set; } = 0;
-        public string ID { get; private init; }
-        public Container Owner { get; protected set; }
-
-        public KComponent()
-        {
-            ID = GetType().Name;   
-        }
-
-        public KComponent(int order) : this()
-        {
-            Order = order;
-        }
+        public int Order { get; set; }
+        public string ID { get; init; }
+        public Container Owner { get; set; }
 
         #region Logic
-        public void Attatch(Container container)
-        {
-            Owner = container;
-        }
-
         public abstract void Init();
         public abstract void Start();
         public abstract void End();
         #endregion
     }
 
-    public class KApplication : IKComponentContainer<string, KComponent<KApplication>>
+    public class KApplication : IComponentManager<string, KComponent<KApplication>>
     {
+        #region Comparer
+        protected class KComponentSorter : IComparer<KComponent<KApplication>>
+        {
+            public int Compare(KComponent<KApplication> x, KComponent<KApplication> y)
+            {
+                if (x.ID.Equals(y.ID)) return 0;
+                if (x.Order > y.Order) return 1;
+                return -1;
+            }
+        }
+        #endregion
+
         public int EventPollRate { get; set; } = 60;
         public bool IsRunning { get; private set; }
         public string AppName { get; private set; }
@@ -61,7 +53,7 @@ namespace KheaiGameEngine
         public Hashtable Prefrences { get; set; } = new();
 
         //Component Management
-        private SortedSet<KComponent<KApplication>> _appComponents = new();
+        private SortedSet<KComponent<KApplication>> _appComponents = new(new KComponentSorter());
 
         //Threading
         private List<Thread> _threads = new();
@@ -128,8 +120,10 @@ namespace KheaiGameEngine
         public void AddComponent(KComponent<KApplication> component)
         {
             KDebug.Log($"Initializing component: {component.ID}");
-            component.Attatch(this);
+
+            component.Owner = this;
             component.Init();
+
             _appComponents.Add(component);
         }
 

@@ -11,7 +11,7 @@ namespace KheaiGameEngine
     }
 
 
-    public class KEngine : KComponent<KApplication>, IKComponentContainer<string, KEngineComponent>
+    public class KEngine : KComponent<KApplication>, IComponentManager<string, KEngineComponent>
     {
         protected uint tickRate = 0;
         protected uint maxUpdatesPerSecond = 0;
@@ -160,7 +160,7 @@ namespace KheaiGameEngine
         #region Component management
         public void AddComponent(KEngineComponent component)
         {
-            component.Attatch(this);
+            component.Owner = this;
             component.Init();
             engineComponents.Sort(SortByID);
             engineComponents.Add(component);
@@ -216,6 +216,15 @@ namespace KheaiGameEngine
                 if (component is Component) return true;
             }
             return false;
+        }
+
+        public KEngineComponent GetComponent(string id)
+        {
+            foreach (var component in engineComponents)
+            {
+                if (component.ID.Equals(id)) return component;
+            }
+            return null;
         }
 
         public Component GetComponent<Component>() where Component : KEngineComponent
