@@ -5,45 +5,18 @@ namespace KheaiGameEngine
 {
     public delegate void KEventManager();
 
-    public interface IComponentManager<Key,Value>
+    public abstract class KAppComponent : KComponent
     {
-        #region Component management
-        public void AddComponent(Value component);
-        public void AddComponents(Value[] components);
-        public void RemoveComponent(Key id);
-        public void RemoveComponent<Component>();
-        public bool HasComponent(Key id);
-        public bool HasComponent<Component>();
-        public Value GetComponent(Key id);
-        public Component GetComponent<Component>() where Component : Value;
-        #endregion
+        KApplication Owner { get; set; }
     }
 
-    public abstract class KComponent<Container>
+    public class KApplication : IKComponentManager
     {
-        public int Order { get; set; }
-        public string ID { get; init; }
-        public Container Owner { get; set; }
-
-        #region Logic
-        public abstract void Init();
-        public abstract void Start();
-        public abstract void End();
-        #endregion
-    }
-
-    public class KApplication : IComponentManager<string, KComponent<KApplication>>
-    {
-        #region Comparer
-        protected class KComponentSorter : IComparer<KComponent<KApplication>>
-        {
-            public int Compare(KComponent<KApplication> x, KComponent<KApplication> y)
-            {
-                if (x.ID.Equals(y.ID)) return 0;
-                if (x.Order > y.Order) return 1;
-                return -1;
-            }
-        }
+        #region Static
+        //Events
+        public static event KEventManager OnStart;
+        public static event KEventManager OnEventDispatch;
+        public static event KEventManager OnEnd;
         #endregion
 
         public int EventPollRate { get; set; } = 60;
@@ -53,19 +26,14 @@ namespace KheaiGameEngine
         public Hashtable Prefrences { get; set; } = new();
 
         //Component Management
-        private SortedSet<KComponent<KApplication>> _appComponents = new(new KComponentSorter());
-
-        //Threading
-        private List<Thread> _threads = new();
-
-        //Events
-        public event KEventManager OnStart;
-        public event KEventManager OnEventDispatch;
-        public event KEventManager OnEnd;
+        protected SortedSet<KComponent> appComponents;
+        protected KComponentSorter<KComponent> componentSorter;
 
         public KApplication(string appName)
         {
             AppName = appName;
+            componentSorter = new();
+            appComponents = new(componentSorter);
         }
 
         #region Logic
@@ -80,7 +48,7 @@ namespace KheaiGameEngine
             IsRunning = true;
 
             KDebug.Log($"Starting App: {AppName}");
-            foreach (KComponent<KApplication> component in _appComponents)
+            foreach (KComponent component in appComponents)
             {
                 KDebug.Log($"Starting Component: {component.ID}");
                 component.Start();
@@ -96,17 +64,11 @@ namespace KheaiGameEngine
                 Thread.Sleep(1 / EventPollRate);
             }
 
-            foreach (KComponent<KApplication> component in _appComponents)
+            foreach (KComponent component in appComponents)
             {
                 component.End();
             }
-            lock (_threads)
-            {
-                foreach (Thread t in _threads)
-                {
-                    t.Join();
-                }
-            }
+            KThreadManager.JoinAllThreads();
         }
 
         public void End()
@@ -117,19 +79,19 @@ namespace KheaiGameEngine
         #endregion
 
         #region Component management
-        public void AddComponent(KComponent<KApplication> component)
+        public void AddComponent(KComponent component)
         {
             KDebug.Log($"Initializing component: {component.ID}");
 
             component.Owner = this;
             component.Init();
 
-            _appComponents.Add(component);
+            appComponents.Add(component);
         }
 
-        public void AddComponents(KComponent<KApplication>[] components)
+        public void AddComponents(KComponent[] components)
         {
-            foreach(KComponent<KApplication> component in components)
+            foreach(KComponent component in components)
             {
                 AddComponent(component);
             }
@@ -137,11 +99,11 @@ namespace KheaiGameEngine
 
         public void RemoveComponent(string id)
         {
-            foreach (var component in _appComponents)
+            foreach (var component in appComponents)
             {
                 if (component.ID.Equals(id))
                 {
-                    _appComponents.Remove(component);
+                    appComponents.Remove(component);
                     return;
                 }
             }
@@ -150,11 +112,11 @@ namespace KheaiGameEngine
 
         public void RemoveComponent<Component>()
         {
-            foreach (var component in _appComponents)
+            foreach (var component in appComponents)
             {
                 if (component is Component)
                 {
-                    _appComponents.Remove(component);
+                    appComponents.Remove(component);
                     return;
                 }
             }
@@ -163,7 +125,7 @@ namespace KheaiGameEngine
 
         public bool HasComponent(string id)
         {
-            foreach (var component in _appComponents)
+            foreach (var component in appComponents)
             {
                 if (component.ID.Equals(id)) return true;
             }
@@ -172,36 +134,29 @@ namespace KheaiGameEngine
 
         public bool HasComponent<Component>()
         {
-            foreach (var component in _appComponents)
+            foreach (var component in appComponents)
             {
                 if (component is Component) return true;
             }
             return false;
         }
 
-        public KComponent<KApplication> GetComponent(string id)
+        public KComponent GetComponent(string id)
         {
-            foreach (var component in _appComponents)
+            foreach (var component in appComponents)
             {
                 if (component.ID.Equals(id)) return component;
             }
             return null;
         }
 
-        public Component GetComponent<Component>() where Component : KComponent<KApplication>
+        public Component GetComponent<Component>() where Component : KComponent
         {
-            foreach (var component in _appComponents)
+            foreach (var component in appComponents)
             {
                 if (component is Component) return (Component)component;
             }
             return null;
-        }
-
-        public int SortByID(KComponent<KApplication> a, KComponent<KApplication> b)
-        {
-            if (a.ID.Equals(b.ID)) return 0;
-            if (a.Order > b.Order) return 1;
-            return -1;
         }
         #endregion
 
@@ -226,26 +181,6 @@ namespace KheaiGameEngine
         public void ClearPrefs()
         {
             File.Create(PrefsFilePath);
-        }
-        #endregion
-
-        #region Threading
-        public Thread CreateThread(string name, ThreadStart start)
-        {
-            Thread thread = new Thread(start);
-            thread.Name = name;
-
-            RegisterThread(thread);
-            return thread;
-        }
-
-        public void RegisterThread(Thread thread)
-        {
-            KDebug.Log($"Registering thread: {thread.Name}");
-            lock (thread)
-            {
-                _threads.Add(thread);
-            }
         }
         #endregion
     }

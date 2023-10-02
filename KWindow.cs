@@ -8,7 +8,7 @@ namespace KheaiGameEngine
         Drawable[] SubmitDraw();
     }
 
-    public class KWindow : KComponent<KApplication>
+    public class KWindow : KComponent
     {
         public RenderWindow Window { get; protected set; } //This will absolutely cause threading issues later, future me problem :D
         public IKRenderer ActiveRenderer { get; protected set; }
@@ -20,9 +20,9 @@ namespace KheaiGameEngine
         public override void Init()
         {
             Window = new(SFML.Window.VideoMode.DesktopMode, Owner.AppName);
-            Window.Closed += (x, y) => Owner.End();
+            Window.Closed += (x, y) => KApplication.End();
 
-            Owner.OnEventDispatch += DispatchEvents;
+            KApplication.OnEventDispatch += DispatchEvents;
         }
 
         public override void End()

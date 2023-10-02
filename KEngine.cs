@@ -1,8 +1,6 @@
-﻿using System.ComponentModel;
-
-namespace KheaiGameEngine
+﻿namespace KheaiGameEngine
 {
-    public abstract class KEngineComponent : KComponent<KEngine>
+    public abstract class KEngineComponent : KComponent
     {
         #region Game logic
         public abstract void FixedUpdate();
@@ -11,7 +9,7 @@ namespace KheaiGameEngine
     }
 
 
-    public class KEngine : KComponent<KApplication>, IComponentManager<string, KEngineComponent>
+    public class KEngine : KComponent, IKComponentManager
     {
         protected uint tickRate = 0;
         protected uint maxUpdatesPerSecond = 0;
@@ -19,9 +17,12 @@ namespace KheaiGameEngine
         protected uint frameRate = 0;
         protected uint maxFramesPerSecond = 0;
         protected uint minFramesPerSecond;
+
         protected bool isRunning = true;
         protected bool isPaused = false;
-        protected List<KEngineComponent> engineComponents = new();
+
+        //Components
+        protected SortedSet<KEngineComponent> engineComponents = new(new KComponentSorter<KEngineComponent>());
 
         //Threading 
         protected Thread engineThread;
@@ -41,7 +42,7 @@ namespace KheaiGameEngine
         #region Game logic
         public override void Init()
         {
-            engineThread = Owner.CreateThread("engine_thread", Run);
+            engineThread = KThreadManager.CreateThread("engine_thread", Run);
             KDebug.AddLog("engine");
         }
 
@@ -162,7 +163,6 @@ namespace KheaiGameEngine
         {
             component.Owner = this;
             component.Init();
-            engineComponents.Sort(SortByID);
             engineComponents.Add(component);
         }
 
@@ -241,6 +241,21 @@ namespace KheaiGameEngine
             if (a.ID.Equals(b.ID)) return 0;
             if (a.Order > b.Order) return 1;
             return -1;
+        }
+
+        public void AddComponent(KComponent component)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void AddComponents(KComponent[] components)
+        {
+            throw new NotImplementedException();
+        }
+
+        KComponent IKComponentManager.GetComponent(string id)
+        {
+            throw new NotImplementedException();
         }
         #endregion
     }
