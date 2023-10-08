@@ -31,8 +31,8 @@
         public uint GameSpeed { get; set; } = 1;
         public uint UpdatesPerSecond { get; set; } = 30;
         public uint FramesPerSecond { get; set; } = 60;
+        public KApplication Owner { get; protected set; }
         public KWindow Window { get; protected set; }
-
         public KEngine()
         {
             minUpdatesPerSecond = UpdatesPerSecond;
@@ -40,8 +40,9 @@
         }
 
         #region Game logic
-        public override void Init()
+        public override void Init(IKComponentManager owner)
         {
+            Owner = (KApplication) owner;
             engineThread = KThreadManager.CreateThread("engine_thread", Run);
             KDebug.AddLog("engine");
         }
@@ -159,7 +160,7 @@
         #endregion
 
         #region Component management
-        public void AddComponent(KEngineComponent component)
+        public void AddComponent(KComponent component)
         {
             component.Owner = this;
             component.Init();
@@ -227,9 +228,9 @@
             return null;
         }
 
-        public Component GetComponent<Component>() where Component : KEngineComponent
+        public Component GetComponent<Component>() where Component : KComponent
         {
-            foreach (var component in engineComponents)
+            foreach (KComponent component in engineComponents)
             {
                 if (component is Component) return (Component) component;
             }
@@ -241,21 +242,6 @@
             if (a.ID.Equals(b.ID)) return 0;
             if (a.Order > b.Order) return 1;
             return -1;
-        }
-
-        public void AddComponent(KComponent component)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void AddComponents(KComponent[] components)
-        {
-            throw new NotImplementedException();
-        }
-
-        KComponent IKComponentManager.GetComponent(string id)
-        {
-            throw new NotImplementedException();
         }
         #endregion
     }

@@ -20,9 +20,9 @@ namespace KheaiGameEngine
         public override void Init()
         {
             Window = new(SFML.Window.VideoMode.DesktopMode, Owner.AppName);
-            Window.Closed += (x, y) => KApplication.End();
+            Window.Closed += (x, y) => Owner.End();
 
-            KApplication.OnEventDispatch += DispatchEvents;
+            Owner.OnEventDispatch += DispatchEvents;
         }
 
         public override void End()
@@ -71,6 +71,11 @@ namespace KheaiGameEngine
 
         #region Ignored
         public override void Start() { }
+
+        public override void Init(IKComponentManager owner)
+        {
+            throw new NotImplementedException();
+        }
         #endregion
     }
 }

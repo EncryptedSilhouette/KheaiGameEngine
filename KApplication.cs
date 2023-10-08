@@ -5,20 +5,8 @@ namespace KheaiGameEngine
 {
     public delegate void KEventManager();
 
-    public abstract class KAppComponent : KComponent
-    {
-        KApplication Owner { get; set; }
-    }
-
     public class KApplication : IKComponentManager
     {
-        #region Static
-        //Events
-        public static event KEventManager OnStart;
-        public static event KEventManager OnEventDispatch;
-        public static event KEventManager OnEnd;
-        #endregion
-
         public int EventPollRate { get; set; } = 60;
         public bool IsRunning { get; private set; }
         public string AppName { get; private set; }
@@ -28,6 +16,11 @@ namespace KheaiGameEngine
         //Component Management
         protected SortedSet<KComponent> appComponents;
         protected KComponentSorter<KComponent> componentSorter;
+
+        //Events
+        public static event KEventManager OnStart;
+        public static event KEventManager OnEventDispatch;
+        public static event KEventManager OnEnd;
 
         public KApplication(string appName)
         {
@@ -82,10 +75,7 @@ namespace KheaiGameEngine
         public void AddComponent(KComponent component)
         {
             KDebug.Log($"Initializing component: {component.ID}");
-
-            component.Owner = this;
-            component.Init();
-
+            component.Init(this);
             appComponents.Add(component);
         }
 
@@ -141,20 +131,20 @@ namespace KheaiGameEngine
             return false;
         }
 
-        public KComponent GetComponent(string id)
-        {
-            foreach (var component in appComponents)
-            {
-                if (component.ID.Equals(id)) return component;
-            }
-            return null;
-        }
-
         public Component GetComponent<Component>() where Component : KComponent
         {
             foreach (var component in appComponents)
             {
-                if (component is Component) return (Component)component;
+                if (component is Component) return (Component) component;
+            }
+            return null;
+        }
+
+        public KComponent GetComponent(string id) 
+        {
+            foreach (var component in appComponents)
+            {
+                if (component.ID == component.ID) return component;
             }
             return null;
         }
