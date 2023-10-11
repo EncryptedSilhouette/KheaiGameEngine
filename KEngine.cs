@@ -1,15 +1,27 @@
 ﻿namespace KheaiGameEngine
 {
-    public abstract class KEngineComponent : KComponent
+    public abstract class KEngineComponent : IKComponent
     {
+        public int Order { get; set; }
+        public string ID { get; init; }
+        public 
+
+        public KEngineComponent()
+        {
+            ID = GetType().Name;
+        }
+
         #region Game logic
         public abstract void FixedUpdate();
         public abstract void FrameUpdate(double deltaTIme);
+        public abstract void Init<Container>(Container container);
+        public abstract void End();
+        public abstract void Start();
         #endregion
     }
 
 
-    public class KEngine : KComponent, IKComponentManager
+    public class KEngine : IKComponent
     {
         protected uint tickRate = 0;
         protected uint maxUpdatesPerSecond = 0;
@@ -160,10 +172,9 @@
         #endregion
 
         #region Component management
-        public void AddComponent(KComponent component)
+        public void AddComponent(IKComponent component)
         {
-            component.Owner = this;
-            component.Init();
+            component.Init(this);
             engineComponents.Add(component);
         }
 
@@ -228,9 +239,9 @@
             return null;
         }
 
-        public Component GetComponent<Component>() where Component : KComponent
+        public Component GetComponent<Component>() where Component : IKComponent
         {
-            foreach (KComponent component in engineComponents)
+            foreach (IKComponent component in engineComponents)
             {
                 if (component is Component) return (Component) component;
             }

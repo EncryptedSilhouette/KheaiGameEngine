@@ -8,7 +8,7 @@ namespace KheaiGameEngine
         Drawable[] SubmitDraw();
     }
 
-    public class KWindow : KComponent
+    public class KWindow : IKComponent
     {
         public RenderWindow Window { get; protected set; } //This will absolutely cause threading issues later, future me problem :D
         public IKRenderer ActiveRenderer { get; protected set; }
