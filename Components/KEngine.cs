@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel;
-using KheaiGameEngine.Debug;
 
 namespace KheaiGameEngine
 {
