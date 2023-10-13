@@ -1,79 +1,47 @@
-﻿using System.Collections;
-using System.Text.Json;
+﻿using System.ComponentModel;
+using KheaiGameEngine.Debug;
 
 namespace KheaiGameEngine
 {
     public delegate void KEventManager();
 
-    public abstract class KAppComponent : IKComponent
+    public class KApplication : IKComponentContainer<KComponent>
     {
-        public int Order { get; set; }
-        public string ID { get; init; }
-        public KApplication Owner { get; protected set; }        
+        #region Static
+        public static bool IsRunning;
+        public static string AppName;
+        #endregion
 
-        public KAppComponent()
-        {
-            ID = GetType().Name;
-        }
-
-        public abstract void Init<Container>(Container owner);
-        public abstract void Start();
-        public abstract void End();
-    }
-
-    public class KApplication : IKComponentContainer<KAppComponent>
-    {
         public int EventPollRate { get; set; } = 60;
-        public bool IsRunning { get; private set; }
-        public string AppName { get; private set; }
-        public string PrefsFilePath { get; set; } = "prefs";
-        public Hashtable Prefrences { get; set; } = new();
 
         //Component Management
-        protected SortedSet<KAppComponent> appComponents;
-        protected KComponentSorter<KAppComponent> componentSorter;
-
-        //Events
-        public static event KEventManager OnStart;
-        public static event KEventManager OnEventDispatch;
-        public static event KEventManager OnEnd;
+        protected SortedSet<KComponent> appComponents;
 
         public KApplication(string appName)
         {
             AppName = appName;
-            componentSorter = new();
-            appComponents = new(componentSorter);
+            appComponents = new(new KComponentSorter<KComponent>());
         }
 
         #region Logic
-        public void Start(string prefsFilePath)
-        {
-            LoadPrefsFromJson(LoadPrefsFromFile(prefsFilePath));
-            Start();
-        }
-
         public void Start()
         {
             IsRunning = true;
 
             KDebug.Log($"Starting App: {AppName}");
-            foreach (IKComponent component in appComponents)
+            foreach (KComponent component in appComponents)
             {
                 KDebug.Log($"Starting Component: {component.ID}");
                 component.Start();
             }
-            OnStart?.Invoke();
 
             while (IsRunning)
             {
-                lock (this)
-                {
-                    OnEventDispatch?.Invoke();
-                }
+                
                 Thread.Sleep(1 / EventPollRate);
             }
 
-            foreach (IKComponent component in appComponents)
+            foreach (KComponent component in appComponents)
             {
                 component.End();
             }
@@ -83,74 +51,91 @@ namespace KheaiGameEngine
         public void End()
         {
             IsRunning = false;
-            OnEnd?.Invoke();
         }
         #endregion
 
-        public void AddComponent(KAppComponent component)
+        public void AddComponent(KComponent component)
         {
-            KDebug.Log("");
-            component.Init(component);
-            appComponents.Add(component);
+            component.owner = this;
+            component.Init();
+
+            if (appComponents.Add(component))
+            {
+                KDebug.Log($"{AppName}: Added component- {component.ID}.");
+            }
+            else KDebug.Log($"{AppName}: Failed to add component- {typeof(Component).Name}.");
         }
 
-        public void AddComponents(KAppComponent[] components)
+        public void AddComponents(KComponent[] components)
         {
-            throw new NotImplementedException();
+            foreach (var component in components)
+            {
+                AddComponent(component);
+            }
         }
 
-        public void RemoveComponent<Comp>()
+        public void RemoveComponent<Component>()
         {
-            throw new NotImplementedException();
+            foreach (var component in appComponents)
+            {
+                if (component is Component)
+                {
+                    appComponents.Remove(component);
+                    KDebug.Log($"{AppName}: Removed component- {typeof(Component).Name}.");
+                    return;
+                }
+            }
+            KDebug.Log($"{AppName}: Failed to remove component- {typeof(Component).Name}.");
         }
 
         public void RemoveComponent(string id)
         {
-            throw new NotImplementedException();
-        }
-
-        public void HasComponent<Comp>()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void HasComponent(string id)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void GetComponent<Comp>()
-        {
-            throw new NotImplementedException();
-        }
-
-        public void GetComponent(string id)
-        {
-            throw new NotImplementedException();
-        }
-
-        #region Serialization
-        public string LoadPrefsFromFile(string filePath)
-        {
-            KDebug.Log($"Loading prefrences from {filePath}.");
-            if (File.Exists(filePath))
+            foreach (var component in appComponents)
             {
-                PrefsFilePath = filePath;
-                return File.ReadAllText(filePath);
+                if (component.ID.Equals(id))
+                {
+                    appComponents.Remove(component);
+                    KDebug.Log($"{AppName}: Removed component- {id}.");
+                    return;
+                }
+            }
+            KDebug.Log($"{AppName}: Failed to remove component- {id}.");
+        }
+
+        public bool HasComponent<Component>()
+        {
+            foreach (var component in appComponents)
+            {
+                if (component is Component) return true;
+            }
+            return false;
+        }
+
+        public bool HasComponent(string id)
+        {
+            foreach (var component in appComponents)
+            {
+                if (component.ID.Equals(id)) return true;
+            }
+            return false;
+        }
+
+        public Component GetComponent<Component>() where Component : KComponent
+        {
+            foreach (KComponent component in appComponents)
+            {
+                if (component is Component) return (Component) component;
             }
             return null;
         }
 
-        public void LoadPrefsFromJson(string jsonString)
+        public KComponent GetComponent(string id)
         {
-            if (jsonString == null) return;
-            Prefrences = JsonSerializer.Deserialize<Hashtable>(jsonString);
+            foreach (var component in appComponents)
+            {
+                if (component.ID.Equals(id)) return component;
+            }
+            return null;
         }
-
-        public void ClearPrefs()
-        {
-            File.Create(PrefsFilePath);
-        }
-        #endregion
     }
 }

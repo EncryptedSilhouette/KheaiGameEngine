@@ -1,4 +1,6 @@
-﻿namespace KheaiGameEngine
+﻿using KheaiGameEngine.Debug;
+
+namespace KheaiGameEngine
 {
     public static class KThreadManager
     {

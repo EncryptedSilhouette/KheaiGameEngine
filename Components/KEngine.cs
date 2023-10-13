@@ -1,27 +1,18 @@
-﻿namespace KheaiGameEngine
+﻿using System.ComponentModel;
+using KheaiGameEngine.Debug;
+
+namespace KheaiGameEngine
 {
-    public abstract class KEngineComponent : IKComponent
+    public abstract class KEngineComponent : KComponent
     {
-        public int Order { get; set; }
-        public string ID { get; init; }
-        public 
-
-        public KEngineComponent()
-        {
-            ID = GetType().Name;
-        }
-
         #region Game logic
         public abstract void FixedUpdate();
         public abstract void FrameUpdate(double deltaTIme);
-        public abstract void Init<Container>(Container container);
-        public abstract void End();
-        public abstract void Start();
         #endregion
     }
 
 
-    public class KEngine : IKComponent
+    public class KEngine : KComponent, IKComponentContainer<KEngineComponent>
     {
         protected uint tickRate = 0;
         protected uint maxUpdatesPerSecond = 0;
@@ -43,26 +34,27 @@
         public uint GameSpeed { get; set; } = 1;
         public uint UpdatesPerSecond { get; set; } = 30;
         public uint FramesPerSecond { get; set; } = 60;
-        public KApplication Owner { get; protected set; }
         public KWindow Window { get; protected set; }
+
         public KEngine()
         {
+            ID = GetType().Name;
+            Order = 0;
             minUpdatesPerSecond = UpdatesPerSecond;
             minFramesPerSecond = FramesPerSecond;
+            engineThread = KThreadManager.CreateThread("engine_thread", Run);
         }
 
         #region Game logic
-        public override void Init(IKComponentManager owner)
+        public override void Init()
         {
-            Owner = (KApplication) owner;
-            engineThread = KThreadManager.CreateThread("engine_thread", Run);
             KDebug.AddLog("engine");
         }
 
         public override void Start()
         {
             KDebug.Log("engine", "Engine: Retriving Window");
-            Window = Owner.GetComponent<KWindow>();
+            Window = (KWindow) owner.GetComponent<KWindow>();
             if (Window == null)
             {
                 KDebug.Log(KDebug.ERROR, "Window doesnt exist, failed to start engine");
@@ -172,15 +164,16 @@
         #endregion
 
         #region Component management
-        public void AddComponent(IKComponent component)
+        public void AddComponent(KEngineComponent component)
         {
-            component.Init(this);
+            component.owner = (IKComponentContainer<KComponent>) this;
+            component.Init();
             engineComponents.Add(component);
         }
 
         public void AddComponents(KEngineComponent[] components)
         {
-            foreach (KEngineComponent component in components) 
+            foreach (var component in components) 
             {
                 AddComponent(component);
             }
@@ -212,6 +205,15 @@
             KDebug.Log($"Failed to remove component {typeof(Component).Name}.");
         }
 
+        public bool HasComponent<Component>()
+        {
+            foreach (var component in engineComponents)
+            {
+                if (component is Component) return true;
+            }
+            return false;
+        }
+
         public bool HasComponent(string id)
         {
             foreach (var component in engineComponents)
@@ -221,13 +223,13 @@
             return false;
         }
 
-        public bool HasComponent<Component>()
+        public Component GetComponent<Component>() where Component : KEngineComponent
         {
-            foreach (var component in engineComponents)
+            foreach (KComponent component in engineComponents)
             {
-                if (component is Component) return true;
+                if (component is Component) return (Component) component;
             }
-            return false;
+            return null;
         }
 
         public KEngineComponent GetComponent(string id)
@@ -238,22 +240,10 @@
             }
             return null;
         }
+        #endregion
 
-        public Component GetComponent<Component>() where Component : IKComponent
-        {
-            foreach (IKComponent component in engineComponents)
-            {
-                if (component is Component) return (Component) component;
-            }
-            return null;
-        }
-
-        public int SortByID(KEngineComponent a, KEngineComponent b)
-        {
-            if (a.ID.Equals(b.ID)) return 0;
-            if (a.Order > b.Order) return 1;
-            return -1;
-        }
+        #region Ignored
+        public override void Update() { }
         #endregion
     }
 }
