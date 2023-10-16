@@ -1,6 +1,4 @@
-﻿using System.ComponentModel;
-
-namespace KheaiGameEngine
+﻿namespace KheaiGameEngine
 {
     public abstract class KEngineComponent : KComponent
     {
@@ -11,7 +9,7 @@ namespace KheaiGameEngine
     }
 
 
-    public class KEngine : KComponent, IKComponentContainer<KEngineComponent>
+    public class KEngine : KAppComponent, KComponentContainer<KEngineComponent>
     {
         protected uint tickRate = 0;
         protected uint maxUpdatesPerSecond = 0;
@@ -165,7 +163,7 @@ namespace KheaiGameEngine
         #region Component management
         public void AddComponent(KEngineComponent component)
         {
-            component.owner = (IKComponentContainer<KComponent>) this;
+            component.owner = (KComponentContainer<KComponent>) this;
             component.Init();
             engineComponents.Add(component);
         }

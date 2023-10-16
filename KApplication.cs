@@ -4,22 +4,29 @@ namespace KheaiGameEngine
 {
     public delegate void KEventManager();
 
-    public class KApplication : IKComponentContainer<KComponent>
+    public abstract class KAppComponent : KComponent
+    {
+        #region Game logic
+        public abstract void Update();
+        #endregion
+    }
+
+    public class KApplication : KComponentContainer<KAppComponent>
     {
         #region Static
         public static bool IsRunning;
         public static string AppName;
         #endregion
 
-        public int EventPollRate { get; set; } = 60;
+        public int UpdateRate { get; set; } = 60;
 
         //Component Management
-        protected SortedSet<KComponent> appComponents;
+        protected SortedSet<KAppComponent> appComponents;
 
         public KApplication(string appName)
         {
             AppName = appName;
-            appComponents = new(new KComponentSorter<KComponent>());
+            appComponents = new(new KComponentSorter<KAppComponent>());
         }
 
         #region Logic
@@ -36,8 +43,11 @@ namespace KheaiGameEngine
 
             while (IsRunning)
             {
-                
-                Thread.Sleep(1 / EventPollRate);
+                foreach (var component in appComponents)
+                {
+                    component.Update();
+                }
+                Thread.Sleep(1 / UpdateRate);
             }
 
             foreach (KComponent component in appComponents)
@@ -53,9 +63,9 @@ namespace KheaiGameEngine
         }
         #endregion
 
-        public void AddComponent(KComponent component)
+        public void AddComponent(KAppComponent component)
         {
-            component.owner = this;
+            component.owner = (KComponentContainer<KComponent>) this;
             component.Init();
 
             if (appComponents.Add(component))
@@ -65,7 +75,7 @@ namespace KheaiGameEngine
             else KDebug.Log($"{AppName}: Failed to add component- {typeof(Component).Name}.");
         }
 
-        public void AddComponents(KComponent[] components)
+        public void AddComponents(KAppComponent[] components)
         {
             foreach (var component in components)
             {
@@ -119,7 +129,7 @@ namespace KheaiGameEngine
             return false;
         }
 
-        public Component GetComponent<Component>() where Component : KComponent
+        public Component GetComponent<Component>() where Component : KAppComponent
         {
             foreach (KComponent component in appComponents)
             {
@@ -128,7 +138,7 @@ namespace KheaiGameEngine
             return null;
         }
 
-        public KComponent GetComponent(string id)
+        public KAppComponent GetComponent(string id)
         {
             foreach (var component in appComponents)
             {

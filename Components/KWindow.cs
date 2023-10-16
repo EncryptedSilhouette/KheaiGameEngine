@@ -2,19 +2,33 @@
 
 namespace KheaiGameEngine
 {
-    public interface IKRenderer
+    public abstract class KRenderer : KAppComponent
     {
-        void Draw(RenderTarget target);
-        Drawable[] SubmitDraw();
-    }
-
-    public class KWindow : KComponent
-    {
-        public RenderWindow Window { get; protected set; } //This will absolutely cause threading issues later, future me problem :D
-        public IKRenderer ActiveRenderer { get; protected set; }
+        #region Static 
+        private static KRenderer activeRenderer;
+        public static KRenderer ActiveRenderer
+        {
+            get
+            {
+                return activeRenderer;
+            }
+            set
+            {
+                activeRenderer = value;
+                OnRendererChange?.Invoke();
+            }
+        }
 
         //Events
-        event KEventManager onActiveRendererChange;
+        public static event KEventManager OnRendererChange;
+        #endregion
+
+        public abstract void Draw(RenderTarget target);
+    }
+
+    public class KWindow : KAppComponent
+    {
+        public RenderWindow Window { get; protected set; } //This will absolutely cause threading issues later, future me problem :D
 
         #region Logic
         public override void Init()
@@ -22,7 +36,15 @@ namespace KheaiGameEngine
             Window = new(SFML.Window.VideoMode.DesktopMode, KApplication.AppName);
             Window.Closed += (x, y) => KApplication.IsRunning = false;
 
-            Owner.OnEventDispatch += DispatchEvents;
+            KDebug.AddLog("WINDOW");
+        }
+
+        public override void Start() 
+        {
+            if (KRenderer.ActiveRenderer == null)
+            {
+                KDebug.Log("WINDOW", "No ative renderer");
+            }
         }
 
         public override void Update() 
@@ -47,22 +69,13 @@ namespace KheaiGameEngine
                 Window.SetActive(true);
                 Window.Clear();
 
-                ActiveRenderer?.Draw(Window);
+                KRenderer.ActiveRenderer?.Draw(Window);
 
                 Window.Display();
                 Window.SetActive(false);            
             }
         }
         #endregion
-
-        public void SetActiveRenderer(IKRenderer renderer)
-        {
-            lock (this)
-            {
-                ActiveRenderer = renderer;
-                onActiveRendererChange?.Invoke();
-            }
-        }
 
         public void DispatchEvents()
         {
@@ -73,9 +86,5 @@ namespace KheaiGameEngine
                 Window.SetActive(false);
             }
         }
-
-        #region Ignored
-        public override void Start() { }
-        #endregion
     }
 }
