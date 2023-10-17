@@ -24,6 +24,16 @@ app.AddComponents(new KAppComponent[]
 app.Start();
 KDebug.DumpLog();
 
+#region Handler
+
+public static class Handler
+{
+    public static KApplication ActiveApplication;
+    public static KEngine ActiveEngine;
+}
+
+#endregion
+
 #region Renderer
 class RenderStuff : KRenderer
 {
@@ -51,6 +61,11 @@ class RenderStuff : KRenderer
 #region SceneManager
 class SceneManager : KEngineComponent
 {
+    HashSet<string> names = new();
+    List<string> removeObjects = new();
+    List<GameObject> addObjects = new();
+    Dictionary<string, GameObject> gameObjects = new();
+
     public override void End()
     {
         throw new NotImplementedException();
@@ -79,18 +94,22 @@ class SceneManager : KEngineComponent
 #endregion
 
 #region Entities
-abstract class ObjectComponent : KEngineComponent
+abstract class ObjectComponent : KComponent, IKEngineManaged
 {
-    
+    public GameObject Owner { get; set; }
+
+    public abstract void FixedUpdate();
+    public abstract void FrameUpdate(double deltaTIme);
 }
 
-class GameObject : KComponentContainer<ObjectComponent>
+class GameObject : IKComponentContainer<ObjectComponent>, IKEngineManaged
 {
+    protected SceneManager sceneManager { get; set; }
     protected SortedSet<ObjectComponent> engineComponents = new(new KComponentSorter<ObjectComponent>());
 
     public void AddComponent(ObjectComponent component)
     {
-        component.owner = (KComponentContainer<KComponent>)this;
+        component.Owner = this;
         component.Init();
         engineComponents.Add(component);
     }
@@ -151,7 +170,7 @@ class GameObject : KComponentContainer<ObjectComponent>
     {
         foreach (KComponent component in engineComponents)
         {
-            if (component is Component) return (Component)component;
+            if (component is Component) return (Component) component;
         }
         return null;
     }
@@ -163,6 +182,16 @@ class GameObject : KComponentContainer<ObjectComponent>
             if (component.ID.Equals(id)) return component;
         }
         return null;
+    }
+
+    public void FixedUpdate()
+    {
+        throw new NotImplementedException();
+    }
+
+    public void FrameUpdate(double deltaTIme)
+    {
+        throw new NotImplementedException();
     }
 }
 #endregion 
@@ -206,11 +235,10 @@ class Transform : ObjectComponent
 class SpriteRenderer : ObjectComponent
 {
     Drawable sprite;
-    KEngine engine;
 
     public override void Init()
     {
-        engine = (KEngine) owner;
+        
     }
 
     public override void Start()

@@ -1,15 +1,20 @@
 ﻿namespace KheaiGameEngine
 {
-    public abstract class KEngineComponent : KComponent
+    public interface IKEngineManaged
     {
-        #region Game logic
         public abstract void FixedUpdate();
         public abstract void FrameUpdate(double deltaTIme);
-        #endregion
     }
 
+    public abstract class KEngineComponent : KComponent, IKEngineManaged
+    {
+        public KEngine Engine { get; set; }
 
-    public class KEngine : KAppComponent, KComponentContainer<KEngineComponent>
+        public abstract void FixedUpdate();
+        public abstract void FrameUpdate(double deltaTIme);
+    }
+
+    public class KEngine : KAppComponent, IKComponentContainer<KEngineComponent>, IKEngineManaged
     {
         protected uint tickRate = 0;
         protected uint maxUpdatesPerSecond = 0;
@@ -51,7 +56,7 @@
         public override void Start()
         {
             KDebug.Log("engine", "Engine: Retriving Window");
-            Window = (KWindow) owner.GetComponent<KWindow>();
+            Window = (KWindow) App.GetComponent<KWindow>();
             if (Window == null)
             {
                 KDebug.Log(KDebug.ERROR, "Window doesnt exist, failed to start engine");
@@ -163,7 +168,7 @@
         #region Component management
         public void AddComponent(KEngineComponent component)
         {
-            component.owner = (KComponentContainer<KComponent>) this;
+            component.Engine = this;
             component.Init();
             engineComponents.Add(component);
         }

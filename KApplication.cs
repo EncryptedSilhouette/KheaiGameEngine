@@ -6,12 +6,12 @@ namespace KheaiGameEngine
 
     public abstract class KAppComponent : KComponent
     {
-        #region Game logic
+        public KApplication App { get; set; }
+
         public abstract void Update();
-        #endregion
     }
 
-    public class KApplication : KComponentContainer<KAppComponent>
+    public class KApplication : IKComponentContainer<KAppComponent>
     {
         #region Static
         public static bool IsRunning;
@@ -65,7 +65,7 @@ namespace KheaiGameEngine
 
         public void AddComponent(KAppComponent component)
         {
-            component.owner = (KComponentContainer<KComponent>) this;
+            component.App = this;
             component.Init();
 
             if (appComponents.Add(component))

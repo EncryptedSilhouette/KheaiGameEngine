@@ -4,14 +4,12 @@
     {
         public int Order { get; set; }
         public string ID { get; init; }
-        public KComponentContainer<KComponent> owner { get; set; }    
         public abstract void Init();
         public abstract void Start();
-
         public abstract void End();
     }
 
-    public interface KComponentContainer<Component> : KComponent where Component : KComponent
+    public interface IKComponentContainer<Component> where Component : KComponent
     {
         public void AddComponent(Component component);
         public void AddComponents(Component[] components);
