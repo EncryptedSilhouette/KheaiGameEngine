@@ -4,10 +4,9 @@ namespace KheaiGameEngine
 {
     public delegate void KEventManager();
 
-    public abstract class KAppComponent : KComponent
+    public interface KAppComponent : KComponent
     {
         public KApplication App { get; set; }
-
         public abstract void Update();
     }
 
@@ -129,7 +128,7 @@ namespace KheaiGameEngine
             return false;
         }
 
-        public Component GetComponent<Component>() where Component : KAppComponent
+        public Component GetComponent<Component>() where Component : class, KAppComponent
         {
             foreach (KComponent component in appComponents)
             {

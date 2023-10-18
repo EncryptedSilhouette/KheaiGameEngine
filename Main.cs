@@ -90,6 +90,16 @@ class SceneManager : KEngineComponent
     {
         throw new NotImplementedException();
     }
+
+    public void AddObject()
+    {
+
+    }
+
+    public void RemoveObject()
+    {
+
+    }
 }
 #endregion
 

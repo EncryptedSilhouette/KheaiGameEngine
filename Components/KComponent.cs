@@ -1,6 +1,6 @@
 ﻿namespace KheaiGameEngine
 {
-    public abstract class KComponent
+    public interface KComponent
     {
         public int Order { get; set; }
         public string ID { get; init; }
@@ -17,7 +17,7 @@
         public void RemoveComponent(string id);
         public bool HasComponent<Comp>();
         public bool HasComponent(string id);
-        public Comp GetComponent<Comp>() where Comp : Component;
+        public Comp GetComponent<Comp>() where Comp : class, Component;
         public Component GetComponent(string id);
     }
 
