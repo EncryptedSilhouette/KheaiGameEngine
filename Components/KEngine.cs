@@ -6,15 +6,12 @@
         public abstract void FrameUpdate(double deltaTIme);
     }
 
-    public abstract class KEngineComponent : KComponent, IKEngineManaged
+    public interface IKEngineComponent : IKComponent, IKEngineManaged
     {
         public KEngine Engine { get; set; }
-
-        public abstract void FixedUpdate();
-        public abstract void FrameUpdate(double deltaTIme);
     }
 
-    public class KEngine : KAppComponent, IKComponentContainer<KEngineComponent>, IKEngineManaged
+    public class KEngine : IKAppComponent, IKComponentContainer<IKEngineComponent>, IKEngineManaged
     {
         protected uint tickRate = 0;
         protected uint maxUpdatesPerSecond = 0;
@@ -27,16 +24,19 @@
         protected bool isPaused = false;
 
         //Components
-        protected SortedSet<KEngineComponent> engineComponents = new(new KComponentSorter<KEngineComponent>());
+        protected SortedSet<IKEngineComponent> engineComponents = new(new KComponentSorter<IKEngineComponent>());
 
         //Threading 
         protected Thread engineThread;
 
         public double CurrentTime => DateTime.UtcNow.Ticks;
+        public int Order { get; set; }
         public uint GameSpeed { get; set; } = 1;
         public uint UpdatesPerSecond { get; set; } = 30;
         public uint FramesPerSecond { get; set; } = 60;
+        public string ID { get; init; }
         public KWindow Window { get; protected set; }
+        public KApplication App { get; set; }
 
         public KEngine()
         {
@@ -48,12 +48,12 @@
         }
 
         #region Game logic
-        public override void Init()
+        public void Init()
         {
             KDebug.AddLog("engine");
         }
 
-        public override void Start()
+        public void Start()
         {
             KDebug.Log("engine", "Engine: Retriving Window");
             Window = (KWindow) App.GetComponent<KWindow>();
@@ -65,7 +65,7 @@
             engineThread.Start();
         }
 
-        public override void End()
+        public void End()
         {
             KDebug.Log("engine", $"Tickrate: {UpdatesPerSecond}, " +
                                  $"Max: {maxUpdatesPerSecond}, " +
@@ -81,7 +81,7 @@
 
         public void FixedUpdate()
         {
-            foreach (KEngineComponent component in engineComponents)
+            foreach (IKEngineComponent component in engineComponents)
             {
                 component.FixedUpdate();
             }
@@ -89,7 +89,7 @@
 
         public void FrameUpdate(double deltaTime)
         {
-            foreach (KEngineComponent component in engineComponents)
+            foreach (IKEngineComponent component in engineComponents)
             {
                 component.FrameUpdate(deltaTime);
             }
@@ -166,14 +166,14 @@
         #endregion
 
         #region Component management
-        public void AddComponent(KEngineComponent component)
+        public void AddComponent(IKEngineComponent component)
         {
             component.Engine = this;
             component.Init();
             engineComponents.Add(component);
         }
 
-        public void AddComponents(KEngineComponent[] components)
+        public void AddComponents(IKEngineComponent[] components)
         {
             foreach (var component in components) 
             {
@@ -225,16 +225,16 @@
             return false;
         }
 
-        public Component GetComponent<Component>() where Component : KEngineComponent
+        public Component GetComponent<Component>() where Component : class, IKEngineComponent
         {
-            foreach (KComponent component in engineComponents)
+            foreach (IKComponent component in engineComponents)
             {
                 if (component is Component) return (Component) component;
             }
             return null;
         }
 
-        public KEngineComponent GetComponent(string id)
+        public IKEngineComponent GetComponent(string id)
         {
             foreach (var component in engineComponents)
             {
@@ -245,7 +245,7 @@
         #endregion
 
         #region Ignored
-        public override void Update() { }
+        public void Update() { }
         #endregion
     }
 }

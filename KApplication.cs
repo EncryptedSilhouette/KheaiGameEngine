@@ -4,28 +4,27 @@ namespace KheaiGameEngine
 {
     public delegate void KEventManager();
 
-    public interface KAppComponent : KComponent
+    public interface IKAppComponent : IKComponent
     {
+        #region Game logic
         public KApplication App { get; set; }
         public abstract void Update();
+        #endregion
     }
 
-    public class KApplication : IKComponentContainer<KAppComponent>
+    public class KApplication : IKComponentContainer<IKAppComponent>
     {
-        #region Static
-        public static bool IsRunning;
-        public static string AppName;
-        #endregion
+
+        public bool IsRunning;
+        public string AppName;
+        protected SortedSet<IKAppComponent> appComponents;
 
         public int UpdateRate { get; set; } = 60;
-
-        //Component Management
-        protected SortedSet<KAppComponent> appComponents;
 
         public KApplication(string appName)
         {
             AppName = appName;
-            appComponents = new(new KComponentSorter<KAppComponent>());
+            appComponents = new(new KComponentSorter<IKAppComponent>());
         }
 
         #region Logic
@@ -34,7 +33,7 @@ namespace KheaiGameEngine
             IsRunning = true;
 
             KDebug.Log($"Starting App: {AppName}");
-            foreach (KComponent component in appComponents)
+            foreach (IKComponent component in appComponents)
             {
                 KDebug.Log($"Starting Component: {component.ID}");
                 component.Start();
@@ -49,7 +48,7 @@ namespace KheaiGameEngine
                 Thread.Sleep(1 / UpdateRate);
             }
 
-            foreach (KComponent component in appComponents)
+            foreach (IKComponent component in appComponents)
             {
                 component.End();
             }
@@ -62,19 +61,14 @@ namespace KheaiGameEngine
         }
         #endregion
 
-        public void AddComponent(KAppComponent component)
+        public void AddComponent(IKAppComponent component)
         {
             component.App = this;
             component.Init();
-
-            if (appComponents.Add(component))
-            {
-                KDebug.Log($"{AppName}: Added component- {component.ID}.");
-            }
-            else KDebug.Log($"{AppName}: Failed to add component- {typeof(Component).Name}.");
+            appComponents.Add(component);
         }
 
-        public void AddComponents(KAppComponent[] components)
+        public void AddComponents(IKAppComponent[] components)
         {
             foreach (var component in components)
             {
@@ -89,11 +83,9 @@ namespace KheaiGameEngine
                 if (component is Component)
                 {
                     appComponents.Remove(component);
-                    KDebug.Log($"{AppName}: Removed component- {typeof(Component).Name}.");
                     return;
                 }
             }
-            KDebug.Log($"{AppName}: Failed to remove component- {typeof(Component).Name}.");
         }
 
         public void RemoveComponent(string id)
@@ -103,11 +95,9 @@ namespace KheaiGameEngine
                 if (component.ID.Equals(id))
                 {
                     appComponents.Remove(component);
-                    KDebug.Log($"{AppName}: Removed component- {id}.");
                     return;
                 }
             }
-            KDebug.Log($"{AppName}: Failed to remove component- {id}.");
         }
 
         public bool HasComponent<Component>()
@@ -128,16 +118,16 @@ namespace KheaiGameEngine
             return false;
         }
 
-        public Component GetComponent<Component>() where Component : class, KAppComponent
+        public Component GetComponent<Component>() where Component : class, IKAppComponent
         {
-            foreach (KComponent component in appComponents)
+            foreach (IKComponent component in appComponents)
             {
                 if (component is Component) return (Component) component;
             }
             return null;
         }
 
-        public KAppComponent GetComponent(string id)
+        public IKAppComponent GetComponent(string id)
         {
             foreach (var component in appComponents)
             {

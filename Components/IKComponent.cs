@@ -1,6 +1,6 @@
 ﻿namespace KheaiGameEngine
 {
-    public interface KComponent
+    public interface IKComponent
     {
         public int Order { get; set; }
         public string ID { get; init; }
@@ -9,7 +9,7 @@
         public abstract void End();
     }
 
-    public interface IKComponentContainer<Component> where Component : KComponent
+    public interface IKComponentContainer<Component> where Component : IKComponent
     {
         public void AddComponent(Component component);
         public void AddComponents(Component[] components);
@@ -21,7 +21,7 @@
         public Component GetComponent(string id);
     }
 
-    public class KComponentSorter<Component> : IComparer<Component> where Component : KComponent
+    public class KComponentSorter<Component> : IComparer<Component> where Component : IKComponent
     {
         public int Compare(Component x, Component y)
         {

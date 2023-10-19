@@ -12,7 +12,7 @@ SceneManager sceneManager = new SceneManager();
 engine.AddComponent(sceneManager);
 #endregion
 
-app.AddComponents(new KAppComponent[]
+app.AddComponents(new IKAppComponent[]
 {
     window,
     engine,
@@ -24,15 +24,6 @@ app.AddComponents(new KAppComponent[]
 app.Start();
 KDebug.DumpLog();
 
-#region Handler
-
-public static class Handler
-{
-    public static KApplication ActiveApplication;
-    public static KEngine ActiveEngine;
-}
-
-#endregion
 
 #region Renderer
 class RenderStuff : KRenderer
@@ -59,44 +50,48 @@ class RenderStuff : KRenderer
 #endregion
 
 #region SceneManager
-class SceneManager : KEngineComponent
+class SceneManager : IKEngineComponent
 {
     HashSet<string> names = new();
     List<string> removeObjects = new();
     List<GameObject> addObjects = new();
     Dictionary<string, GameObject> gameObjects = new();
 
-    public override void End()
+    public int Order { get; set; }
+    public string ID { get; init; }
+    public KEngine Engine { get; set; }
+
+    public void Init()
     {
         throw new NotImplementedException();
     }
 
-    public override void FixedUpdate()
+    public void Start()
     {
         throw new NotImplementedException();
     }
 
-    public override void FrameUpdate(double deltaTIme)
+    public void End()
     {
         throw new NotImplementedException();
     }
 
-    public override void Init()
+    public void FixedUpdate()
     {
         throw new NotImplementedException();
     }
 
-    public override void Start()
+    public void FrameUpdate(double deltaTIme)
     {
         throw new NotImplementedException();
-    }
-
-    public void AddObject()
-    {
-
     }
 
     public void RemoveObject()
+    {
+
+    }
+
+    public void AddObject()
     {
 
     }
@@ -104,15 +99,29 @@ class SceneManager : KEngineComponent
 #endregion
 
 #region Entities
-abstract class ObjectComponent : KComponent, IKEngineManaged
+public abstract class ObjectComponent : IKComponent, IKEngineManaged
 {
+    public int Order { get; set; }
+    public string ID { get; init; }
     public GameObject Owner { get; set; }
 
+    public ObjectComponent()
+    {
+        ID = GetType().Name;    
+    }
+
+    public abstract void Init();
+
+    public abstract void Start();
+
+    public abstract void End();
+
     public abstract void FixedUpdate();
+
     public abstract void FrameUpdate(double deltaTIme);
 }
 
-class GameObject : IKComponentContainer<ObjectComponent>, IKEngineManaged
+public class GameObject : IKComponentContainer<ObjectComponent>, IKEngineManaged
 {
     protected SceneManager sceneManager { get; set; }
     protected SortedSet<ObjectComponent> engineComponents = new(new KComponentSorter<ObjectComponent>());
@@ -176,9 +185,9 @@ class GameObject : IKComponentContainer<ObjectComponent>, IKEngineManaged
         return false;
     }
 
-    public Component GetComponent<Component>() where Component : ObjectComponent
+    public Component GetComponent<Component>() where Component : class, ObjectComponent
     {
-        foreach (KComponent component in engineComponents)
+        foreach (IKComponent component in engineComponents)
         {
             if (component is Component) return (Component) component;
         }

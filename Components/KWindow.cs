@@ -2,7 +2,7 @@
 
 namespace KheaiGameEngine
 {
-    public abstract class KRenderer : KAppComponent
+    public abstract class KRenderer : IKAppComponent
     {
         #region Static 
         private static KRenderer activeRenderer;
@@ -26,7 +26,7 @@ namespace KheaiGameEngine
         public abstract void Draw(RenderTarget target);
     }
 
-    public class KWindow : KAppComponent
+    public class KWindow : IKAppComponent
     {
         public RenderWindow Window { get; protected set; } //This will absolutely cause threading issues later, future me problem :D
 
