@@ -1,12 +1,16 @@
 ﻿namespace KheaiGameEngine
 {
-    public interface IKComponent
+    public interface IKContainerManaged
+    {
+        public void Init();
+        public void Start();
+        public void End();
+    }
+
+    public interface IKComponent : IKContainerManaged
     {
         public int Order { get; set; }
         public string ID { get; init; }
-        public abstract void Init();
-        public abstract void Start();
-        public abstract void End();
     }
 
     public interface IKComponentContainer<Component> where Component : IKComponent
@@ -17,7 +21,7 @@
         public void RemoveComponent(string id);
         public bool HasComponent<Comp>();
         public bool HasComponent(string id);
-        public Comp GetComponent<Comp>() where Comp : class, Component;
+        public Comp GetComponent<Comp>() where Comp : Component;
         public Component GetComponent(string id);
     }
 

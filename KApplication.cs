@@ -1,30 +1,33 @@
-﻿using System.ComponentModel;
-
-namespace KheaiGameEngine
+﻿namespace KheaiGameEngine
 {
     public delegate void KEventManager();
 
-    public interface IKAppComponent : IKComponent
+    public abstract class KAppComponent : IKComponent
     {
         #region Game logic
         public KApplication App { get; set; }
+        public int Order { get; set; }
+        public string ID { get; init; }
+
+        public abstract void End();
+        public abstract void Init();
+        public abstract void Start();
         public abstract void Update();
         #endregion
     }
 
-    public class KApplication : IKComponentContainer<IKAppComponent>
+    public class KApplication : IKComponentContainer<KAppComponent>
     {
-
         public bool IsRunning;
         public string AppName;
-        protected SortedSet<IKAppComponent> appComponents;
+        protected SortedSet<KAppComponent> appComponents;
 
         public int UpdateRate { get; set; } = 60;
 
         public KApplication(string appName)
         {
             AppName = appName;
-            appComponents = new(new KComponentSorter<IKAppComponent>());
+            appComponents = new(new KComponentSorter<KAppComponent>());
         }
 
         #region Logic
@@ -61,14 +64,14 @@ namespace KheaiGameEngine
         }
         #endregion
 
-        public void AddComponent(IKAppComponent component)
+        public void AddComponent(KAppComponent component)
         {
             component.App = this;
             component.Init();
             appComponents.Add(component);
         }
 
-        public void AddComponents(IKAppComponent[] components)
+        public void AddComponents(KAppComponent[] components)
         {
             foreach (var component in components)
             {
@@ -118,7 +121,7 @@ namespace KheaiGameEngine
             return false;
         }
 
-        public Component GetComponent<Component>() where Component : class, IKAppComponent
+        public Component GetComponent<Component>() where Component : KAppComponent
         {
             foreach (IKComponent component in appComponents)
             {
@@ -127,7 +130,7 @@ namespace KheaiGameEngine
             return null;
         }
 
-        public IKAppComponent GetComponent(string id)
+        public KAppComponent GetComponent(string id)
         {
             foreach (var component in appComponents)
             {

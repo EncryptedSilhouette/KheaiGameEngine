@@ -2,39 +2,15 @@
 
 namespace KheaiGameEngine
 {
-    public abstract class KRenderer : IKAppComponent
-    {
-        #region Static 
-        private static KRenderer activeRenderer;
-        public static KRenderer ActiveRenderer
-        {
-            get
-            {
-                return activeRenderer;
-            }
-            set
-            {
-                activeRenderer = value;
-                OnRendererChange?.Invoke();
-            }
-        }
-
-        //Events
-        public static event KEventManager OnRendererChange;
-        #endregion
-
-        public abstract void Draw(RenderTarget target);
-    }
-
-    public class KWindow : IKAppComponent
+    public class KWindow : KAppComponent
     {
         public RenderWindow Window { get; protected set; } //This will absolutely cause threading issues later, future me problem :D
 
         #region Logic
         public override void Init()
         {
-            Window = new(SFML.Window.VideoMode.DesktopMode, KApplication.AppName);
-            Window.Closed += (x, y) => KApplication.IsRunning = false;
+            Window = new(SFML.Window.VideoMode.DesktopMode, App.AppName);
+            Window.Closed += (x, y) => App.IsRunning = false;
 
             KDebug.AddLog("WINDOW");
         }

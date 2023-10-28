@@ -6,99 +6,202 @@ KApplication app = new("Debug");
 KWindow window = new KWindow();  
 KEngine engine = new KEngine();
 
-#region Engine
-SceneManager sceneManager = new SceneManager();
-
-engine.AddComponent(sceneManager);
-#endregion
-
-app.AddComponents(new IKAppComponent[]
+app.AddComponents(new KAppComponent[]
 {
     window,
     engine,
+});
 
-    //Test
-    new RenderStuff()
+SceneManager sceneManager = new SceneManager();
+
+engine.AddComponents(new KEngineComponent[]
+{
+    new RenderStuff(),
+    sceneManager
+});
+
+#region Load
+GameObject test = new("debug");
+test.AddComponents(new ObjectComponent[]
+{
+    new Transform(),
+    new DebugRenderer()
+});
+
+sceneManager.AddObjects(new GameObject[]
+{
+    test
 });
 
 app.Start();
 KDebug.DumpLog();
-
+#endregion
 
 #region Renderer
 class RenderStuff : KRenderer
 {
+    List<DebugRenderer> renderers = new();
     Drawable[] Drawables;
 
     public override void Draw(RenderTarget target)
     {
-        
+        foreach (var renderer in renderers)
+        {
+            target.Draw(renderer.sprite);
+        }
     }
-
 
     public override void Init()
     {
         ActiveRenderer = this;
     }
 
+    public void AddEntityRenderer(DebugRenderer renderer)
+    {
+
+    }
+
+    public void AddEntityRenderers()
+    {
+
+    }
+
+    public void RemoveEntityRenderer()
+    {
+
+    }
+
     #region Ignored
     public override void Start() { }
-    public override void Update() { }
     public override void End() { }
+    public override void FixedUpdate() { }
+    public override void FrameUpdate(double deltaTIme) { }
     #endregion
 }
 #endregion
 
 #region SceneManager
-class SceneManager : IKEngineComponent
+public class SceneManager : KEngineComponent
 {
-    HashSet<string> names = new();
     List<string> removeObjects = new();
     List<GameObject> addObjects = new();
     Dictionary<string, GameObject> gameObjects = new();
 
-    public int Order { get; set; }
-    public string ID { get; init; }
-    public KEngine Engine { get; set; }
-
-    public void Init()
-    {
-        throw new NotImplementedException();
-    }
-
-    public void Start()
-    {
-        throw new NotImplementedException();
-    }
-
-    public void End()
-    {
-        throw new NotImplementedException();
-    }
-
-    public void FixedUpdate()
-    {
-        throw new NotImplementedException();
-    }
-
-    public void FrameUpdate(double deltaTIme)
-    {
-        throw new NotImplementedException();
-    }
-
-    public void RemoveObject()
+    public override void Init()
     {
 
     }
 
-    public void AddObject()
+    public override void Start()
     {
 
+    }
+
+    public override void End()
+    {
+        foreach (GameObject gameObject in gameObjects.Values)
+        {
+            gameObject.End();
+        }
+    }
+
+    public override void FixedUpdate()
+    {
+        foreach (GameObject obj in gameObjects.Values)
+        {
+            obj.FixedUpdate();
+        }
+
+        lock (removeObjects)
+        {
+            if (removeObjects.Count > 0)
+            {
+                foreach (string name in removeObjects)
+                {
+                    gameObjects[name].End();
+                    gameObjects.Remove(name);
+                }
+                removeObjects.Clear();
+            }
+        }
+
+        lock (addObjects)
+        {
+            if (addObjects.Count > 0)
+            {
+                foreach (GameObject obj in addObjects)
+                {
+                    gameObjects.Add(GenerateObjectID(obj), obj);
+                    obj.Start();
+                }
+                addObjects.Clear();
+            }
+        }
+    }
+
+    public override void FrameUpdate(double deltaTIme)
+    {
+        foreach (GameObject obj in gameObjects.Values)
+        {
+            obj.FrameUpdate(deltaTIme);
+        }
+    }
+
+    public void Draw(RenderTarget target)
+    {
+
+    }
+
+    public void RemoveObject(string id)
+    {
+        //Locked for insertion
+        lock (removeObjects)
+        {
+            removeObjects.Add(id);
+        }
+    }
+
+    public void AddObject(GameObject gameObject)
+    {
+        gameObject.Init();
+
+        //Locked for insertion
+        lock (addObjects)
+        {
+            addObjects.Add(gameObject);
+        }
+    }
+
+    public void AddObject(GameObject gameObject, string name)
+    {
+        gameObject.Name = name;
+        gameObject.SceneManager = this;
+        AddObject(gameObject);
+    }
+
+    public void AddObjects(GameObject[] gameObjects)
+    {
+        foreach (GameObject gameObject in gameObjects)
+        {
+            AddObject(gameObject);
+        }
+    }
+
+    private string GenerateObjectID(GameObject obj)
+    {
+        string name = obj.Name;
+        for (int i = 0; gameObjects.ContainsKey(name); i++) 
+        {
+            name = obj.Name + i;
+        }
+        return name;
     }
 }
 #endregion
 
 #region Entities
+
+#region ObjectComponent
 public abstract class ObjectComponent : IKComponent, IKEngineManaged
 {
     public int Order { get; set; }
@@ -111,26 +214,55 @@ public abstract class ObjectComponent : IKComponent, IKEngineManaged
     }
 
     public abstract void Init();
-
     public abstract void Start();
-
     public abstract void End();
-
     public abstract void FixedUpdate();
-
     public abstract void FrameUpdate(double deltaTIme);
 }
+#endregion
 
-public class GameObject : IKComponentContainer<ObjectComponent>, IKEngineManaged
+#region GameObject
+public class GameObject : IKComponentContainer<ObjectComponent>, IKContainerManaged, IKEngineManaged
 {
-    protected SceneManager sceneManager { get; set; }
-    protected SortedSet<ObjectComponent> engineComponents = new(new KComponentSorter<ObjectComponent>());
+    public string ID { get; set; }
+    public string Name { get; set; }
+    public SceneManager SceneManager { get; set; }
+
+    protected SortedSet<ObjectComponent> objectComponents = new(new KComponentSorter<ObjectComponent>());
+
+    public GameObject(string id) : this(id, id) { }
+
+    public GameObject(string id, string name)
+    {
+        ID = id;
+        Name = name;
+    }
+
+    public void Init() 
+    {
+    }
+
+    public void Start()
+    {
+        foreach (ObjectComponent component in objectComponents)
+        {
+            component.Start();
+        }
+    }
+
+    public void End() 
+    {
+        foreach (ObjectComponent component in objectComponents)
+        {
+            component.End();
+        }
+    }
 
     public void AddComponent(ObjectComponent component)
     {
         component.Owner = this;
         component.Init();
-        engineComponents.Add(component);
+        objectComponents.Add(component);
     }
 
     public void AddComponents(ObjectComponent[] components)
@@ -143,33 +275,31 @@ public class GameObject : IKComponentContainer<ObjectComponent>, IKEngineManaged
 
     public void RemoveComponent(string id)
     {
-        foreach (var component in engineComponents)
+        foreach (var component in objectComponents)
         {
             if (component.ID.Equals(id))
             {
-                engineComponents.Remove(component);
+                objectComponents.Remove(component);
                 return;
             }
         }
-        KDebug.Log($"Failed to remove component {id}.");
     }
 
     public void RemoveComponent<Component>()
     {
-        foreach (var component in engineComponents)
+        foreach (var component in objectComponents)
         {
             if (component is Component)
             {
-                engineComponents.Remove(component);
+                objectComponents.Remove(component);
                 return;
             }
         }
-        KDebug.Log($"Failed to remove component {typeof(Component).Name}.");
     }
 
     public bool HasComponent<Component>()
     {
-        foreach (var component in engineComponents)
+        foreach (var component in objectComponents)
         {
             if (component is Component) return true;
         }
@@ -178,16 +308,16 @@ public class GameObject : IKComponentContainer<ObjectComponent>, IKEngineManaged
 
     public bool HasComponent(string id)
     {
-        foreach (var component in engineComponents)
+        foreach (var component in objectComponents)
         {
             if (component.ID.Equals(id)) return true;
         }
         return false;
     }
 
-    public Component GetComponent<Component>() where Component : class, ObjectComponent
+    public Component GetComponent<Component>() where Component : ObjectComponent
     {
-        foreach (IKComponent component in engineComponents)
+        foreach (IKComponent component in objectComponents)
         {
             if (component is Component) return (Component) component;
         }
@@ -196,7 +326,7 @@ public class GameObject : IKComponentContainer<ObjectComponent>, IKEngineManaged
 
     public ObjectComponent GetComponent(string id)
     {
-        foreach (var component in engineComponents)
+        foreach (var component in objectComponents)
         {
             if (component.ID.Equals(id)) return component;
         }
@@ -213,7 +343,7 @@ public class GameObject : IKComponentContainer<ObjectComponent>, IKEngineManaged
         throw new NotImplementedException();
     }
 }
-#endregion 
+#endregion
 
 #region EntityCompoents
 
@@ -225,35 +355,18 @@ class Transform : ObjectComponent
 
     public override void End()
     {
-        throw new NotImplementedException();
+        
     }
 
     public override void FixedUpdate()
     {
-        throw new NotImplementedException();
+        
     }
 
     public override void FrameUpdate(double deltaTIme)
     {
-        throw new NotImplementedException();
+        
     }
-
-    public override void Init()
-    {
-        throw new NotImplementedException();
-    }
-
-    public override void Start()
-    {
-        throw new NotImplementedException();
-    }
-}
-#endregion
-
-#region SpriteRenderer
-class SpriteRenderer : ObjectComponent
-{
-    Drawable sprite;
 
     public override void Init()
     {
@@ -262,25 +375,50 @@ class SpriteRenderer : ObjectComponent
 
     public override void Start()
     {
+        
+    }
+}
+#endregion
 
+#region DebugRenderer
+class DebugRenderer : ObjectComponent
+{
+    public Drawable sprite;
+    public KRenderer renderer;
+
+    public override void Init()
+    {
+        CircleShape image = new(64);
+        image.FillColor = Color.Green;
+        image.Position = new(100, 100);
+
+        sprite = image;
+    }
+
+    public override void Start()
+    {
+        renderer = Owner.SceneManager.Engine.GetComponent<RenderStuff>();
     }
 
     public override void FixedUpdate()
     {
-        throw new NotImplementedException();
+        
     }
 
     public override void FrameUpdate(double deltaTIme)
     {
-        throw new NotImplementedException();
+        
     }
 
     public override void End()
     {
-        throw new NotImplementedException();
+
     }
 }
 #endregion
 
 #endregion
+
+#endregion
+
 #endif

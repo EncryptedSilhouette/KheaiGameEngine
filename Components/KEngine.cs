@@ -1,4 +1,6 @@
-﻿namespace KheaiGameEngine
+﻿using SFML.Graphics;
+
+namespace KheaiGameEngine
 {
     public interface IKEngineManaged
     {
@@ -6,12 +8,20 @@
         public abstract void FrameUpdate(double deltaTIme);
     }
 
-    public interface IKEngineComponent : IKComponent, IKEngineManaged
+    public abstract class KEngineComponent : IKComponent, IKEngineManaged
     {
+        public int Order { get; set; }
+        public string ID { get; init; }
         public KEngine Engine { get; set; }
+
+        public abstract void Init();
+        public abstract void Start();
+        public abstract void End();
+        public abstract void FixedUpdate();
+        public abstract void FrameUpdate(double deltaTIme);
     }
 
-    public class KEngine : IKAppComponent, IKComponentContainer<IKEngineComponent>, IKEngineManaged
+    public class KEngine : KAppComponent, IKComponentContainer<KEngineComponent>, IKEngineManaged
     {
         protected uint tickRate = 0;
         protected uint maxUpdatesPerSecond = 0;
@@ -24,19 +34,16 @@
         protected bool isPaused = false;
 
         //Components
-        protected SortedSet<IKEngineComponent> engineComponents = new(new KComponentSorter<IKEngineComponent>());
+        protected SortedSet<KEngineComponent> engineComponents = new(new KComponentSorter<KEngineComponent>());
 
         //Threading 
         protected Thread engineThread;
 
         public double CurrentTime => DateTime.UtcNow.Ticks;
-        public int Order { get; set; }
         public uint GameSpeed { get; set; } = 1;
         public uint UpdatesPerSecond { get; set; } = 30;
         public uint FramesPerSecond { get; set; } = 60;
-        public string ID { get; init; }
         public KWindow Window { get; protected set; }
-        public KApplication App { get; set; }
 
         public KEngine()
         {
@@ -48,24 +55,25 @@
         }
 
         #region Game logic
-        public void Init()
+        public override void Init()
         {
             KDebug.AddLog("engine");
         }
 
-        public void Start()
+        public override void Start()
         {
             KDebug.Log("engine", "Engine: Retriving Window");
             Window = (KWindow) App.GetComponent<KWindow>();
             if (Window == null)
             {
                 KDebug.Log(KDebug.ERROR, "Window doesnt exist, failed to start engine");
+                App.End();  
                 return;
             }
             engineThread.Start();
         }
 
-        public void End()
+        public override void End()
         {
             KDebug.Log("engine", $"Tickrate: {UpdatesPerSecond}, " +
                                  $"Max: {maxUpdatesPerSecond}, " +
@@ -81,7 +89,7 @@
 
         public void FixedUpdate()
         {
-            foreach (IKEngineComponent component in engineComponents)
+            foreach (KEngineComponent component in engineComponents)
             {
                 component.FixedUpdate();
             }
@@ -89,7 +97,7 @@
 
         public void FrameUpdate(double deltaTime)
         {
-            foreach (IKEngineComponent component in engineComponents)
+            foreach (KEngineComponent component in engineComponents)
             {
                 component.FrameUpdate(deltaTime);
             }
@@ -166,14 +174,14 @@
         #endregion
 
         #region Component management
-        public void AddComponent(IKEngineComponent component)
+        public void AddComponent(KEngineComponent component)
         {
             component.Engine = this;
             component.Init();
             engineComponents.Add(component);
         }
 
-        public void AddComponents(IKEngineComponent[] components)
+        public void AddComponents(KEngineComponent[] components)
         {
             foreach (var component in components) 
             {
@@ -191,7 +199,6 @@
                     return;
                 }
             }
-            KDebug.Log($"Failed to remove component {id}.");
         }
 
         public void RemoveComponent<Component>()
@@ -204,7 +211,6 @@
                     return;
                 }
             }
-            KDebug.Log($"Failed to remove component {typeof(Component).Name}.");
         }
 
         public bool HasComponent<Component>()
@@ -225,7 +231,7 @@
             return false;
         }
 
-        public Component GetComponent<Component>() where Component : class, IKEngineComponent
+        public Component GetComponent<Component>() where Component : KEngineComponent
         {
             foreach (IKComponent component in engineComponents)
             {
@@ -234,7 +240,7 @@
             return null;
         }
 
-        public IKEngineComponent GetComponent(string id)
+        public KEngineComponent GetComponent(string id)
         {
             foreach (var component in engineComponents)
             {
@@ -245,7 +251,7 @@
         #endregion
 
         #region Ignored
-        public void Update() { }
+        public override void Update() { }
         #endregion
     }
 }
