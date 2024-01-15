@@ -1,18 +1,20 @@
 ﻿namespace KheaiGameEngine
 {
-    public interface IKContainerManaged
+    ///<summary>
+    ///Interface for components using the KComponent structure.
+    ///</summary>
+    public interface IKComponent
     {
+        public int Order { get; set; }
+        public string ID { get; set; }
         public void Init();
         public void Start();
         public void End();
     }
 
-    public interface IKComponent : IKContainerManaged
-    {
-        public int Order { get; set; }
-        public string ID { get; init; }
-    }
-
+    ///<summary>
+    ///Interface for containers using components that implement the IKComponent interface.
+    ///</summary>
     public interface IKComponentContainer<Component> where Component : IKComponent
     {
         public void AddComponent(Component component);
@@ -25,12 +27,20 @@
         public Component GetComponent(string id);
     }
 
+    ///<summary>
+    ///Class for sorting components that implement the IKComponent interface in an SortedSet
+    ///</summary>
     public class KComponentSorter<Component> : IComparer<Component> where Component : IKComponent
     {
-        public int Compare(Component x, Component y)
+        public int Compare(Component a, Component b)
         {
-            if (x.ID == y.ID) return 0;
-            if (x.Order > y.Order) return 1;
+            //Checks if the components have the same ID.
+            //This prevents multiple components with the same ID.
+            if (a.ID == b.ID) return 0;
+
+            //Sorts the components by order
+            //Only this one check matters since we dont want to check if the order is equal as it will remove it from the set.
+            if (a.Order > b.Order) return 1;
             return -1;
         }
     }

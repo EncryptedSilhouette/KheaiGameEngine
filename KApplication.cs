@@ -7,7 +7,7 @@
         #region Game logic
         public KApplication App { get; set; }
         public int Order { get; set; }
-        public string ID { get; init; }
+        public string ID { get; set; }
 
         public abstract void End();
         public abstract void Init();
@@ -18,16 +18,18 @@
 
     public class KApplication : IKComponentContainer<KAppComponent>
     {
-        public bool IsRunning;
+        public int EventPollRate = 60;
+        public bool IsRunning = false;
         public string AppName;
-        protected SortedSet<KAppComponent> appComponents;
 
-        public int UpdateRate { get; set; } = 60;
+        protected SortedSet<KAppComponent> appComponents;
 
         public KApplication(string appName)
         {
+            KComponentSorter<KAppComponent> compSorter = new KComponentSorter<KAppComponent>();
+
             AppName = appName;
-            appComponents = new(new KComponentSorter<KAppComponent>());
+            appComponents = new(compSorter);
         }
 
         #region Logic
@@ -48,7 +50,7 @@
                 {
                     component.Update();
                 }
-                Thread.Sleep(1 / UpdateRate);
+                Thread.Sleep(1 / EventPollRate);
             }
 
             foreach (IKComponent component in appComponents)
@@ -123,7 +125,7 @@
 
         public Component GetComponent<Component>() where Component : KAppComponent
         {
-            foreach (IKComponent component in appComponents)
+            foreach (var component in appComponents)
             {
                 if (component is Component) return (Component) component;
             }

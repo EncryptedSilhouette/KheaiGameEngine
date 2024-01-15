@@ -1,24 +1,30 @@
 ﻿using SFML.Graphics;
+using SFML.Window;
 
 namespace KheaiGameEngine
 {
     public interface IKEngineManaged
     {
         public abstract void FixedUpdate();
-        public abstract void FrameUpdate(double deltaTIme);
+        public abstract void FrameUpdate(double deltaTIme, RenderTarget target);
     }
 
     public abstract class KEngineComponent : IKComponent, IKEngineManaged
     {
         public int Order { get; set; }
-        public string ID { get; init; }
+        public string ID { get; set; }
         public KEngine Engine { get; set; }
+
+        public KEngineComponent()
+        {
+            ID = GetType().Name;
+        }
 
         public abstract void Init();
         public abstract void Start();
         public abstract void End();
         public abstract void FixedUpdate();
-        public abstract void FrameUpdate(double deltaTIme);
+        public abstract void FrameUpdate(double deltaTIme, RenderTarget target);
     }
 
     public class KEngine : KAppComponent, IKComponentContainer<KEngineComponent>, IKEngineManaged
@@ -29,21 +35,19 @@ namespace KheaiGameEngine
         protected uint frameRate = 0;
         protected uint maxFramesPerSecond = 0;
         protected uint minFramesPerSecond;
-
         protected bool isRunning = true;
         protected bool isPaused = false;
-
-        //Components
-        protected SortedSet<KEngineComponent> engineComponents = new(new KComponentSorter<KEngineComponent>());
+        protected RenderWindow window;
+        protected KComponentSorter<KEngineComponent> componentSorter = new KComponentSorter<KEngineComponent>();
+        protected SortedSet<KEngineComponent> engineComponents = new();
 
         //Threading 
         protected Thread engineThread;
 
         public double CurrentTime => DateTime.UtcNow.Ticks;
-        public uint GameSpeed { get; set; } = 1;
-        public uint UpdatesPerSecond { get; set; } = 30;
-        public uint FramesPerSecond { get; set; } = 60;
-        public KWindow Window { get; protected set; }
+        public uint UpdatesPerSecond { get; private set; } = 30;
+        public uint FramesPerSecond { get; private set; } = 60;
+        public double GameSpeed { get; private set; } = 1;
 
         public KEngine()
         {
@@ -51,6 +55,7 @@ namespace KheaiGameEngine
             Order = 0;
             minUpdatesPerSecond = UpdatesPerSecond;
             minFramesPerSecond = FramesPerSecond;
+            window = new(VideoMode.DesktopMode, App.AppName);
             engineThread = KThreadManager.CreateThread("engine_thread", Run);
         }
 
@@ -63,8 +68,8 @@ namespace KheaiGameEngine
         public override void Start()
         {
             KDebug.Log("engine", "Engine: Retriving Window");
-            Window = (KWindow) App.GetComponent<KWindow>();
-            if (Window == null)
+
+            if (window == null)
             {
                 KDebug.Log(KDebug.ERROR, "Window doesnt exist, failed to start engine");
                 App.End();  
@@ -95,11 +100,11 @@ namespace KheaiGameEngine
             }
         }
 
-        public void FrameUpdate(double deltaTime)
+        public void FrameUpdate(double deltaTime, RenderTarget target)
         {
             foreach (KEngineComponent component in engineComponents)
             {
-                component.FrameUpdate(deltaTime);
+                component.FrameUpdate(deltaTime, target);
             }
         }
         #endregion
@@ -109,14 +114,12 @@ namespace KheaiGameEngine
         {
             uint ticks = 0;
             uint frames = 0;
-
             double startTime;
             double lastTime;
             double newTime;
             double deltaTime = 0;
             double updateUnprocessedTime = 0;
             double frameUnprocessedTime = 0;
-
             double updateInterval = 1000d / UpdatesPerSecond * GameSpeed;
             double frameInterval = 1000d / FramesPerSecond;
 
@@ -134,24 +137,21 @@ namespace KheaiGameEngine
                 while (updateUnprocessedTime >= updateInterval)
                 {
                     updateUnprocessedTime -= updateInterval;
-                    ticks++;
 
-                    if (isPaused || GameSpeed <= 0)
+                    if (!isPaused && GameSpeed > 0)
                     {
-                        updateUnprocessedTime = 0;
-                        break;
+                        FixedUpdate();
+                        ticks++;
                     }
-                    FixedUpdate();
                 }
 
                 //Limits frame update to desired FPS
                 if (frameUnprocessedTime >= frameInterval)
                 {
                     frameUnprocessedTime -= frameInterval;
-                    frames++;
 
-                    FrameUpdate(deltaTime);
-                    Window.Draw();
+                    FrameUpdate(deltaTime, window);
+                    frames++;
                 }
 
                 //The last few lines are to keep track of debug info.
