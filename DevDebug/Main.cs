@@ -1,10 +1,11 @@
 ﻿#if DEBUG
 
+//Test 
+
 using KheaiGameEngine;
 using KheaiGameEngine.EngineComponents;
 
 KApplication app = new("Debug");
-KWindow window = new KWindow();  
 KEngine engine = new KEngine();
 
 app.AddComponents(new KAppComponent[]
