@@ -1,0 +1,76 @@
+public double CurrentTime => DateTime.UtcNow.Ticks;
+public uint UpdateRateTarget { get; protected set; } = 30;
+public uint FrameRateTarget { get; protected set; } = 60;
+public uint TickRate { get; protected set; } = 0;
+public uint FrameRate { get; protected set; } = 0;
+public uint MaxUpdatesPerSecond { get; protected set; } = 0;
+public uint MaxFramesPerSecond { get; protected set; } = 0;
+public uint MinUpdatesPerSecond { get; protected set; } = uint.MaxValue;
+public uint MinFramesPerSecond { get; protected set; } = uint.MaxValue;
+public double GameSpeed { get; protected set; } = 1;
+public bool IsRunning { get; protected set; } = true;
+public bool IsPaused { get; protected set; } = false;
+
+protected void Run()
+{
+    uint ticks = 0;
+    uint frames = 0;
+    double startTime;
+    double lastTime;
+    double newTime;
+    double deltaTime = 0;
+    double updateUnprocessedTime = 0;
+    double frameUnprocessedTime = 0;
+    double updateInterval = 1000d / UpdateRateTarget * GameSpeed;
+    double frameInterval = 1000d / FrameRateTarget;
+
+    lastTime = startTime = DateTime.UtcNow.Ticks;
+
+    while (IsRunning) //Core game-loop
+    {
+        newTime = DateTime.UtcNow.Ticks;
+        frameUnprocessedTime += (newTime - lastTime) / TimeSpan.TicksPerMillisecond;
+        updateUnprocessedTime += (newTime - lastTime) / TimeSpan.TicksPerMillisecond;
+        //deltaTime = (newTime - lastTime) / 1000;
+        lastTime = newTime;
+
+        //Keeps track of time between updates and catches up on updates in case of lag.
+        while (updateUnprocessedTime >= updateInterval)
+        {
+            updateUnprocessedTime -= updateInterval;
+
+            if (!IsPaused && GameSpeed > 0)
+            {
+                //FixedUpdate
+                ticks++;
+            }
+        }
+
+        //Limits frame update to desired FPS
+        if (frameUnprocessedTime >= frameInterval)
+        {
+            frameUnprocessedTime -= frameInterval;
+
+            //FrameUpdate
+            //Draw
+                    
+            frames++;
+        }
+
+        //The last few lines are to keep track of debug info.
+        if ((DateTime.UtcNow.Ticks - startTime) / TimeSpan.TicksPerSecond >= 1)
+        {
+            TickRate = ticks;
+            FrameRate = frames;
+
+            if (ticks >= MaxUpdatesPerSecond) MaxUpdatesPerSecond = ticks;
+            if (ticks < MinUpdatesPerSecond) MinUpdatesPerSecond = ticks;
+
+            if (frames >= MaxFramesPerSecond) MaxFramesPerSecond = frames;
+            if (frames < MinFramesPerSecond) MinFramesPerSecond = frames;
+
+            ticks = frames = 0;
+            startTime = DateTime.UtcNow.Ticks;
+        }
+    }
+}

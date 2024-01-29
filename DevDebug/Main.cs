@@ -1,41 +1,27 @@
 ﻿#if DEBUG
 
-//Test 
+using KheaiGameEngine.Core;
+using System.Collections;
 
-using KheaiGameEngine;
-using KheaiGameEngine.EngineComponents;
+Application application = new Application();
+application.Start();
 
-KApplication app = new("Debug");
-KEngine engine = new KEngine();
-
-app.AddComponents(new KAppComponent[]
+public class Application : IKApplication
 {
-    window,
-    engine,
-});
+    public string AppName { get; set; } = "DebugTest";
+    public string configFilePath { get; set; }
+    public Hashtable appConfig { get; set; }
+    public KEngine Engine { get; set; }
+    
+    public Application()
+    {
+        Engine = new(this);
+    }
 
-KSceneHandler sceneManager = new KSceneHandler();
-
-engine.AddComponents(new KEngineComponent[]
-{
-    new KSceneRenderer(),
-    sceneManager
-});
-
-#region Load
-KGameObject test = new("debug");
-test.AddComponents(new KObjectComponent[]
-{
-    new KSpriteRenderer()
-});
-
-sceneManager.AddObjects(new KGameObject[]
-{
-    test
-});
-
-app.Start();
-KDebug.DumpLog();
-#endregion
+    public void Start()
+    {
+        Engine.Start();
+    }
+}
 
 #endif

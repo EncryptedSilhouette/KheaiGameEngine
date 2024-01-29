@@ -1,14 +1,15 @@
-﻿using KheaiGameEngine.EngineComponents;
+﻿using KheaiGameEngine.Core;
+using KheaiGameEngine.Data;
 
-namespace KheaiGameEngine
+namespace KheaiGameEngine.GameObjects
 {
     #region ObjectComponent
     public abstract class KObjectComponent : IKComponent, IKEngineManaged
     {
-        public int Order { get; set; }
-        public string ID { get; init; }
+        public byte Order { get; set; }
+        public string ID { get; set; }
         public KGameObject Owner { get; set; }
-
+        
         public KObjectComponent()
         {
             ID = GetType().Name;
@@ -17,17 +18,27 @@ namespace KheaiGameEngine
         public abstract void Init();
         public abstract void Start();
         public abstract void End();
-        public abstract void FixedUpdate();
-        public abstract void FrameUpdate(double deltaTIme);
+        public abstract void Update(ulong currentTick);
+        public abstract void FrameUpdate(ulong currentFrame);
+    }
+    #endregion
+
+    #region ObjectData
+    public class KObjectData
+    {
+        public string ID { get; set; }
+        public string Name { get; set; }
+        public List<string> Components { get; set; }
     }
     #endregion
 
     #region GameObject
-    public class KGameObject : IKComponentContainer<KObjectComponent>, IKContainerManaged, IKEngineManaged
+    public class KGameObject : IKComponentContainer<KObjectComponent>, IKEngineManaged
     {
-        public string ID { get; set; }
+        public string ID { get; protected set; }
         public string Name { get; set; }
-        public KSceneHandler SceneManager { get; set; }
+        public KGameObject Parent { get; set; }
+        public KSceneHandler Handler { get; set; }
 
         protected SortedSet<KObjectComponent> objectComponents = new(new KComponentSorter<KObjectComponent>());
 
@@ -134,14 +145,20 @@ namespace KheaiGameEngine
             return null;
         }
 
-        public void FixedUpdate()
+        public void Update(ulong currentTick)
         {
-            //throw new NotImplementedException();
+            foreach (var component in objectComponents)
+            {
+                component.Update(currentTick);
+            }
         }
 
-        public void FrameUpdate(double deltaTIme)
+        public void FrameUpdate(ulong currentFrame)
         {
-            //throw new NotImplementedException();
+            foreach (var component in objectComponents)
+            {
+                component.FrameUpdate(currentFrame);
+            }
         }
     }
     #endregion

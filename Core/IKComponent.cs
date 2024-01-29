@@ -1,11 +1,11 @@
-﻿namespace KheaiGameEngine
+﻿namespace KheaiGameEngine.Core
 {
     ///<summary>
     ///Interface for components using the KComponent structure.
     ///</summary>
     public interface IKComponent
     {
-        public int Order { get; set; }
+        public byte Order { get; set; }
         public string ID { get; set; }
         public void Init();
         public void Start();
