@@ -7,28 +7,22 @@ namespace KheaiGameEngine.DevDebug
     {
         KEngine _engine;
         Texture _texture;
-        Sprite _sprite;
         Text _debugText;
 
         public DebugRenderer(KEngine engine)
         {
             _engine = engine;
-            _texture = new("Res\\DebugImage.png");
-
-            _sprite = new Sprite(_texture);
-            _sprite.Position = new(50, 50);
-
+            _texture = new("res\\debug.png");
             _debugText = new Text();
-            _debugText.Font = new();
-            _debugText.Position = new(100, 100);
+            _debugText.Font = new("res\\font.ttf");
+            _debugText.Position = new(0, 0);
             _debugText.Color = Color.White; 
-            _debugText.DisplayedString = $"CurrentTick:{engine.CurrentTick.ToString()}" +
-                                         $"\nUPS: {engine.UpdateRate} "; 
         }
 
         public void Draw(RenderTarget renderer)
         {
-            renderer.Draw(_sprite);
+            _debugText.DisplayedString = $"CurrentTick:{_engine.CurrentTick.ToString()}" +
+                                         $"\nUPS: {_engine.UpdateRate} ";
             renderer.Draw(_debugText);
         }
     }
