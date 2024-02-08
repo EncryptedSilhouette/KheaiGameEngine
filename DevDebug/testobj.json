@@ -1,0 +1,15 @@
+{
+  "id": "",
+  "components": [
+    {
+      "id": "transform",
+      "pos_x": "5",
+      "pos_y": "10"
+    },
+
+    {
+      "id": "sprite",
+      "file_path": "dev.png"
+    }
+  ]
+}

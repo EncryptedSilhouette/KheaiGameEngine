@@ -1,6 +1,7 @@
 ﻿#if DEBUG
 
 using KheaiGameEngine.Core;
+using KheaiGameEngine.DevDebug;
 using System.Collections;
 
 Application application = new Application();
@@ -20,6 +21,7 @@ public class Application : IKApplication
 
     public void Start()
     {
+        DevTest.GenerateScene();
         Engine.Start();
     }
 }

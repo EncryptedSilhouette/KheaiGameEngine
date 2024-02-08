@@ -3,22 +3,32 @@ using SFML.Graphics;
 
 namespace KheaiGameEngine.GameManagement.ObjectComponents
 {
-    public class KSpriteRenderer : KObjectComponent
+    public interface IKDrawable 
     {
-        private Sprite sprite;
-        private KTransform transform;
+        public short Layer { get; protected set; }
+        public Drawable Drawable { get; protected set; }
 
-        public string TexturePath = "DebugImage.png";
+        public void Draw(RenderTarget target); 
+    }
+
+    public class KSpriteRenderer : KObjectComponent, IKDrawable
+    {
+        private Sprite _sprite;
+        private KTransform _transform;
+
+        public short Layer { get; set; }
+        public Drawable Drawable { get; set; }
+        public string TexturePath { get; set; } = "DebugImage.png";
 
         public override void Init()
         {
             Texture texture = new(TexturePath);
-            sprite = new Sprite(texture);
+            _sprite = new Sprite(texture);
         }
 
         public override void Start()
         {
-            transform = Owner.GetComponent<KTransform>();
+            _transform = Owner.GetComponent<KTransform>();
         }
 
         public override void End()
@@ -33,13 +43,13 @@ namespace KheaiGameEngine.GameManagement.ObjectComponents
 
         public override void FrameUpdate(ulong currentFrame)
         {
-            sprite.Position = new(transform.Left, transform.Top);
-            sprite.Rotation = transform.rotation;
+            _sprite.Position = new(_transform.Left, _transform.Top);
+            _sprite.Rotation = _transform.rotation;
         }
 
         public void Draw(RenderTarget target)
         {
-            target.Draw(sprite);
+            target.Draw(_sprite);
         }
     }
 }

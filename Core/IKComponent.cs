@@ -5,7 +5,7 @@
     ///</summary>
     public interface IKComponent
     {
-        public byte Order { get; set; }
+        public ushort Order { get; set; }
         public string ID { get; set; }
         public void Init();
         public void Start();
@@ -28,7 +28,7 @@
     }
 
     ///<summary>
-    ///Class for sorting components that implement the IKComponent interface in an SortedSet
+    ///Class for sorting components that implement the IKComponent interface for a SortedSet
     ///</summary>
     public class KComponentSorter<Component> : IComparer<Component> where Component : IKComponent
     {

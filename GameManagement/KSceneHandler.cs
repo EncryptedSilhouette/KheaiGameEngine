@@ -1,6 +1,8 @@
 ﻿using KheaiGameEngine.Core;
 using KheaiGameEngine.DevDebug;
+using KheaiGameEngine.GameManagement.ObjectComponents;
 using KheaiGameEngine.GameObjects;
+using System.Security.Cryptography;
 
 namespace KheaiGameEngine.Data
 {
@@ -24,7 +26,9 @@ namespace KheaiGameEngine.Data
         protected Dictionary<string, KGameObject> aliveGameObjects = new(0);
         protected Dictionary<string, int> entityCounts = new();
 
-        public KRenderManager renderManager { get; protected set; }
+        protected SortedList<short, IKDrawable> drawables = new();
+
+        //public KRenderManager renderManager { get; protected set; }
 
         public KSceneHandler() 
         {
@@ -33,12 +37,12 @@ namespace KheaiGameEngine.Data
 
         public override void Init()
         {
-            defaultScene = (string) Engine.Application.appConfig["default_scene"];
+            //defaultScene = (string) Engine.Application.appConfig["default_scene"];
         }
 
         public override void Start()
         {
-            renderManager = Engine.GetComponent<KRenderManager>();
+            //renderManager = Engine.GetComponent<KRenderManager>();
         }
 
         public override void End()
@@ -76,6 +80,14 @@ namespace KheaiGameEngine.Data
 
         }
 
+        public void LoadScene(KSceneData sceneData)
+        {
+            foreach (var obj in sceneData.GameObjects)
+            {
+
+            }
+        }
+
         public void SaveScene()
         {
 
@@ -87,6 +99,7 @@ namespace KheaiGameEngine.Data
             addObjects.Clear();
             aliveGameObjects.Clear();
             entityCounts.Clear();
+            drawables.Clear();
         }
 
         public void Addobject(KGameObject gameObject)
@@ -122,6 +135,11 @@ namespace KheaiGameEngine.Data
             {
                 RemoveObject(id);
             }
+        }
+
+        public void InitDrawable(IKDrawable drawable)
+        {
+            drawables.Add(drawable.Layer, drawable);
         }
     }
 }

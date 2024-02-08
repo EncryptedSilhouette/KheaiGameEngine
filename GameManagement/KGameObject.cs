@@ -1,12 +1,13 @@
 ﻿using KheaiGameEngine.Core;
 using KheaiGameEngine.Data;
+using System.Collections;
 
 namespace KheaiGameEngine.GameObjects
 {
     #region ObjectComponent
     public abstract class KObjectComponent : IKComponent, IKEngineManaged
     {
-        public byte Order { get; set; }
+        public ushort Order { get; set; }
         public string ID { get; set; }
         public KGameObject Owner { get; set; }
         
@@ -27,8 +28,24 @@ namespace KheaiGameEngine.GameObjects
     public class KObjectData
     {
         public string ID { get; set; }
-        public string Name { get; set; }
-        public List<string> Components { get; set; }
+        public List<Hashtable> Components { get; set; }
+
+        public KGameObject CreateObject()
+        {
+            return CreateObject(ID);
+        }
+
+        public KGameObject CreateObject(string name)
+        {
+            KGameObject gameObject = new(ID, name);
+
+            foreach (var component in Components)
+            {
+
+            }
+
+            return gameObject;
+        }
     }
     #endregion
 
