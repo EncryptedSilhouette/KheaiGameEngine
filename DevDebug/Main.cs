@@ -4,9 +4,12 @@ using KheaiGameEngine.Core;
 using KheaiGameEngine.DevDebug;
 using System.Collections;
 
+ResourceManager.RegisterComponent("Transform");
+
+/*
 Application application = new Application();
 application.Start();
-
+*/
 public class Application : IKApplication
 {
     public string AppName { get; set; } = "DebugTest";

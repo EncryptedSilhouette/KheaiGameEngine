@@ -2,18 +2,41 @@
 
 namespace KheaiGameEngine.Core
 {
-    internal class ResourceManager
+    public static class ResourceManager
     {
-        void Load()
+        //Component Registry
+        private static Dictionary<string, Type> componentRegistry = new();
+
+        public static void RegisterComponent(string componentID)
         {
-            Type type = Type.GetType("");
+            string path = $"KheaiGameEngine.KheaiGameEngine.ObjectComponents.{componentID}";
+            Type type = Type.GetType(path);
 
-            if (type != null) 
+            if (type == null)
             {
-
+                Console.WriteLine($"{componentID}, not found.");
             }
+            else 
+            {
+                Console.WriteLine($"Registering component: {componentID}.");
+            }
+        }
 
-            JsonSerializer.Deserialize("", type);
+        static void Load()
+        {
+            //Load entitydata
+            string[] files = { };
+
+            foreach (var componentID in files) 
+            {
+                Type type = Type.GetType(componentID);
+
+                if (type != null)
+                {
+                    KDebugger.ErrorLog($"");
+                }
+                JsonSerializer.Deserialize("", type);
+            }
         }
     }
 }

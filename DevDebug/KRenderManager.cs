@@ -1,10 +1,9 @@
-﻿#if false
+﻿
 using KheaiGameEngine.Core;
 using SFML.Graphics;
 
 namespace KheaiGameEngine.DevDebug
 {
-    public interface
     public interface IKRenderer
     {
         public int DrawLayer { get; set; }
@@ -73,4 +72,3 @@ namespace KheaiGameEngine.DevDebug
         }
     }
 }
-#endif

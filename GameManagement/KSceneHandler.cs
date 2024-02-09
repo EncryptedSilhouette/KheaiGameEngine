@@ -1,6 +1,6 @@
 ﻿using KheaiGameEngine.Core;
 using KheaiGameEngine.DevDebug;
-using KheaiGameEngine.GameManagement.ObjectComponents;
+using KheaiGameEngine.ObjectComponents;
 using KheaiGameEngine.GameObjects;
 using System.Security.Cryptography;
 

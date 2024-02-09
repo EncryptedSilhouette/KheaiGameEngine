@@ -1,7 +1,7 @@
 ﻿using KheaiGameEngine.GameObjects;
 using SFML.System;
 
-namespace KheaiGameEngine.GameManagement.ObjectComponents
+namespace KheaiGameEngine.ObjectComponents
 {
     //TODO Apply positional math for parent rotation.
     public class KTransform : KObjectComponent 

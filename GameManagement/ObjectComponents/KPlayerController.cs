@@ -1,7 +1,7 @@
 ﻿using KheaiGameEngine.GameObjects;
 using SFML.Window;
 
-namespace KheaiGameEngine.GameManagement.ObjectComponents
+namespace KheaiGameEngine.ObjectComponents
 {
     public class KPlayerController : KObjectComponent
     {

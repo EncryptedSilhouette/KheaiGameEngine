@@ -1,7 +1,7 @@
 ﻿using KheaiGameEngine.GameObjects;
 using SFML.Graphics;
 
-namespace KheaiGameEngine.GameManagement.ObjectComponents
+namespace KheaiGameEngine.ObjectComponents
 {
     public interface IKDrawable 
     {
