@@ -17,7 +17,7 @@ namespace KheaiGameEngine.ObjectComponents
             transform = Owner.GetComponent<KTransform>();
         }
 
-        public override void Update(ulong currentTick)
+        public override void Update(uint currentTick)
         {
             if (Keyboard.IsKeyPressed(Keyboard.Key.W)) transform.PosY -= 1;
             if (Keyboard.IsKeyPressed(Keyboard.Key.S)) transform.PosY += 1;
@@ -25,7 +25,7 @@ namespace KheaiGameEngine.ObjectComponents
             if (Keyboard.IsKeyPressed(Keyboard.Key.D)) transform.PosX += 1;
         }
 
-        public override void FrameUpdate(ulong currentFrame)
+        public override void FrameUpdate(uint currentFrame)
         {
             throw new NotImplementedException();
         }

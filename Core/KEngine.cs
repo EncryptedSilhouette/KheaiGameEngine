@@ -1,5 +1,4 @@
-﻿using KheaiGameEngine.DevDebug;
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SFML.Window;
 
 namespace KheaiGameEngine.Core
@@ -7,8 +6,8 @@ namespace KheaiGameEngine.Core
     public interface IKEngineManaged
     {
         public void Start();
-        public void Update(ulong currentTick);
-        public void FrameUpdate(ulong currentFrame);
+        public void Update(uint currentTick);
+        public void FrameUpdate(uint currentFrame);
     }
 
     public abstract class KEngineComponent : IKComponent, IKEngineManaged
@@ -26,8 +25,8 @@ namespace KheaiGameEngine.Core
         public abstract void Init();
         public abstract void Start();
         public abstract void End();
-        public abstract void Update(ulong currentTick);
-        public abstract void FrameUpdate(ulong currentFrame);
+        public abstract void Update(uint currentTick);
+        public abstract void FrameUpdate(uint currentFrame);
     }
 
     public sealed class KEngine : IKComponentContainer<KEngineComponent>
@@ -35,12 +34,12 @@ namespace KheaiGameEngine.Core
         public const byte UpdateRateTarget = 60;
 
         private KComponentSorter<KEngineComponent> _componentSorter;
-        private SortedSet<KEngineComponent> _engineComponents = new();
+        private SortedSet<KEngineComponent> _engineComponents;
 
         public byte TicksInASecond => UpdateRateTarget;
         public byte updateInterval { get; } = UpdateRateTarget / 1000;
-        public ulong CurrentTick { get; private set; } = 0;
-        public ulong CurrentFrame { get; private set; } = 0;
+        public uint CurrentTick { get; private set; } = 0;
+        public uint CurrentFrame { get; private set; } = 0;
         public bool IsRunning { get; private set; } = true;
         public bool IsPaused { get; private set; } = false;
         public RenderWindow Window { get; private set; }
@@ -56,15 +55,13 @@ namespace KheaiGameEngine.Core
             Window.Closed += (ignoreA, ignoreB) => End();
 
             _componentSorter = new KComponentSorter<KEngineComponent>();
+            _engineComponents = new(_componentSorter);
         }
 
         #region Game logic
         public void Init()
         {
-            if (!HasComponent<KDebugger>())
-            {
-                AddComponent(new KDebugger());
-            }
+            AddComponent(new KDrawHandler());
             foreach (KEngineComponent component in _engineComponents)
             {
                 component.Start();
@@ -74,17 +71,24 @@ namespace KheaiGameEngine.Core
         #region Gameloop
         public void Start()
         {
-            long lastTime;
-            long newTime;
+            long lastTime, newTime;
             double updateUnprocessedTime = 0;
-            KRenderManager renderer;
+            KDebugger debugger;
+            KDrawHandler drawHandler;
 
             Init();
-            renderer = GetComponent<KRenderManager>();
 
-            if (renderer == null)
+            debugger = GetComponent<KDebugger>();
+            if (debugger == null)
             {
-                KDebugger.ErrorLog("Renderer is null");
+                AddComponent(new KDebugger());
+            }
+
+            drawHandler = GetComponent<KDrawHandler>();
+            if (drawHandler == null)
+            {
+                KDebugger.ErrorLog("Draw handler is null");
+                return;
             }
 
             lastTime = DateTime.UtcNow.Ticks;
@@ -108,7 +112,7 @@ namespace KheaiGameEngine.Core
                     FrameUpdate();
 
                     Window.Clear(Color.Black);
-                    renderer.Draw(Window);
+                    drawHandler.Draw();
                     Window.Display();
 
                     CurrentFrame++;

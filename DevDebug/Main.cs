@@ -1,30 +1,24 @@
 ﻿#if DEBUG
 
 using KheaiGameEngine.Core;
-using KheaiGameEngine.DevDebug;
 using System.Collections;
 
-ResourceManager.RegisterComponent("Transform");
-
-/*
-Application application = new Application();
-application.Start();
-*/
 public class Application : IKApplication
 {
-    public string AppName { get; set; } = "DebugTest";
+    public string AppName { get; set; }
     public string configFilePath { get; set; }
     public Hashtable appConfig { get; set; }
     public KEngine Engine { get; set; }
-    
-    public Application()
+
+    public static void Main()
     {
-        Engine = new(this);
+        Application application = new();
+        application.Engine = new(application);
+        application.Start();
     }
 
     public void Start()
     {
-        DevTest.GenerateScene();
         Engine.Start();
     }
 }

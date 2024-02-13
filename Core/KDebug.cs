@@ -73,12 +73,12 @@ namespace KheaiGameEngine
             }
         }
 
-        public override void Update(ulong currentTick)
+        public override void Update(uint currentTick)
         {
 
         }
 
-        public override void FrameUpdate(ulong currentFrame)
+        public override void FrameUpdate(uint currentFrame)
         {
             _updatesThisCycle++;
 

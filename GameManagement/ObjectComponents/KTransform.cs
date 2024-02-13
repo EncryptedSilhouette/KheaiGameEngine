@@ -1,5 +1,6 @@
 ﻿using KheaiGameEngine.GameObjects;
 using SFML.System;
+using System.Text.Json.Serialization;
 
 namespace KheaiGameEngine.ObjectComponents
 {
@@ -9,9 +10,13 @@ namespace KheaiGameEngine.ObjectComponents
         private Vector2f _truePos = new(0, 0);
         private KTransform _parent;
 
+        [JsonInclude]
         public int GameUnit = 1;
+        [JsonInclude]
         public float rotation = 0.0f;
+        [JsonInclude]
         public Vector2f Dimentions = new(1, 1);
+        [JsonInclude]
         public Vector2f RelativePosition = new(0, 0);
 
         public float Width
@@ -79,7 +84,7 @@ namespace KheaiGameEngine.ObjectComponents
             throw new NotImplementedException();
         }
 
-        public override void FrameUpdate(ulong currentFrame)
+        public override void FrameUpdate(uint currentFrame)
         {
             throw new NotImplementedException();
         }
@@ -94,7 +99,7 @@ namespace KheaiGameEngine.ObjectComponents
             throw new NotImplementedException();
         }
 
-        public override void Update(ulong currentTick)
+        public override void Update(uint currentTick)
         {
             throw new NotImplementedException();
         }

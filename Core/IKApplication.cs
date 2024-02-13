@@ -2,6 +2,8 @@
 
 namespace KheaiGameEngine.Core
 {
+    //public delegate void KEventHandler();
+
     ///<summary>
     ///Interface for a basic application using the standard KEngine.
     ///</summary>
@@ -11,14 +13,17 @@ namespace KheaiGameEngine.Core
         ///The specified name for the app.
         ///</summary>
         public string AppName { get; set; }
+
         ///<summary>
         ///Filepath for the config file.
         ///</summary>
         public string configFilePath { get; set; }
+
         ///<summary>
         ///Stores the config data for the app.
         ///</summary>
         public Hashtable appConfig { get; set; }
+
         ///<summary>
         ///Reference for the KEngine.
         ///</summary>

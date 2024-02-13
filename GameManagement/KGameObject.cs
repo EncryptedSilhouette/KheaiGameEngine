@@ -1,14 +1,19 @@
 ﻿using KheaiGameEngine.Core;
-using KheaiGameEngine.Data;
-using System.Collections;
+using System.Text.Json.Serialization;
 
 namespace KheaiGameEngine.GameObjects
 {
     #region ObjectComponent
+    [JsonPolymorphic(UnknownDerivedTypeHandling = JsonUnknownDerivedTypeHandling.FallBackToNearestAncestor, TypeDiscriminatorPropertyName = "TestComponent")]
     public abstract class KObjectComponent : IKComponent, IKEngineManaged
     {
+        [JsonInclude][JsonPropertyOrder(1)]
         public ushort Order { get; set; }
+
+        [JsonInclude][JsonPropertyOrder(0)]
         public string ID { get; set; }
+
+        [JsonInclude][JsonPropertyOrder(2)]
         public KGameObject Owner { get; set; }
         
         public KObjectComponent()
@@ -19,8 +24,8 @@ namespace KheaiGameEngine.GameObjects
         public abstract void Init();
         public abstract void Start();
         public abstract void End();
-        public abstract void Update(ulong currentTick);
-        public abstract void FrameUpdate(ulong currentFrame);
+        public abstract void Update(uint currentTick);
+        public abstract void FrameUpdate(uint currentFrame);
     }
     #endregion
 
@@ -28,7 +33,7 @@ namespace KheaiGameEngine.GameObjects
     public class KObjectData
     {
         public string ID { get; set; }
-        public List<Hashtable> Components { get; set; }
+        public List<KObjectComponent> Components { get; set; }
 
         public KGameObject CreateObject()
         {
@@ -162,7 +167,7 @@ namespace KheaiGameEngine.GameObjects
             return null;
         }
 
-        public void Update(ulong currentTick)
+        public void Update(uint currentTick)
         {
             foreach (var component in objectComponents)
             {
@@ -170,7 +175,7 @@ namespace KheaiGameEngine.GameObjects
             }
         }
 
-        public void FrameUpdate(ulong currentFrame)
+        public void FrameUpdate(uint currentFrame)
         {
             foreach (var component in objectComponents)
             {

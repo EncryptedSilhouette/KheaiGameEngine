@@ -36,12 +36,12 @@ namespace KheaiGameEngine.ObjectComponents
 
         }
 
-        public override void Update(ulong currentTick)
+        public override void Update(uint currentTick)
         {
             
         }
 
-        public override void FrameUpdate(ulong currentFrame)
+        public override void FrameUpdate(uint currentFrame)
         {
             _sprite.Position = new(_transform.Left, _transform.Top);
             _sprite.Rotation = _transform.rotation;
