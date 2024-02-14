@@ -61,6 +61,7 @@ namespace KheaiGameEngine.ObjectComponents
             }
         }
 
+        [JsonIgnore]
         public KTransform parent
         {
             get

@@ -4,7 +4,6 @@ using System.Text.Json.Serialization;
 namespace KheaiGameEngine.GameObjects
 {
     #region ObjectComponent
-    [JsonPolymorphic(UnknownDerivedTypeHandling = JsonUnknownDerivedTypeHandling.FallBackToNearestAncestor, TypeDiscriminatorPropertyName = "TestComponent")]
     public abstract class KObjectComponent : IKComponent, IKEngineManaged
     {
         [JsonInclude][JsonPropertyOrder(1)]

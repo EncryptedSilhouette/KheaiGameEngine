@@ -2,6 +2,30 @@
 
 using KheaiGameEngine.Core;
 using System.Collections;
+using System.Text.Json.Serialization.Metadata;
+using System.Text.Json.Serialization;
+using System.Text.Json;
+using KheaiGameEngine.GameObjects;
+using KheaiGameEngine.ObjectComponents;
+
+JsonSerializerOptions options = new()
+{
+    WriteIndented = true,
+    TypeInfoResolver = new KPolyTypeResolver()
+};
+
+KObjectData objectData = new()
+{
+    ID = "test",
+    Components = new()
+    {
+        new KTransform()
+    }
+};
+
+string jsonString = JsonSerializer.Serialize(objectData, options);
+
+Console.WriteLine(jsonString);
 
 public class Application : IKApplication
 {
@@ -9,13 +33,6 @@ public class Application : IKApplication
     public string configFilePath { get; set; }
     public Hashtable appConfig { get; set; }
     public KEngine Engine { get; set; }
-
-    public static void Main()
-    {
-        Application application = new();
-        application.Engine = new(application);
-        application.Start();
-    }
 
     public void Start()
     {
