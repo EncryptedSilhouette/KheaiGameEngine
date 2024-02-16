@@ -19,18 +19,21 @@ namespace KheaiGameEngine.ObjectComponents
         [JsonInclude]
         public Vector2f RelativePosition = new(0, 0);
 
+        [JsonIgnore]
         public float Width
         {
             get => Dimentions.X;
             set => Dimentions.X = value;
         }
 
+        [JsonIgnore]
         public float Height
         {
             get => Dimentions.Y;
             set => Dimentions.Y = value;
         }
 
+        [JsonIgnore]
         public float PosX
         {
             get => _truePos.X;
@@ -41,6 +44,7 @@ namespace KheaiGameEngine.ObjectComponents
             }
         }
 
+        [JsonIgnore]
         public float PosY
         {
             get => _truePos.Y;
@@ -51,6 +55,7 @@ namespace KheaiGameEngine.ObjectComponents
             }
         }
 
+        [JsonIgnore]
         public Vector2f Position 
         {
             get => _truePos;
@@ -75,9 +80,16 @@ namespace KheaiGameEngine.ObjectComponents
             set => _parent = value;
         }
 
+        [JsonIgnore]
         public float Left => _truePos.X - Width / 2;
+
+        [JsonIgnore]
         public float Right => _truePos.X + Width / 2;
+
+        [JsonIgnore]
         public float Top => _truePos.Y - Height / 2;
+
+        [JsonIgnore]
         public float Bottom => _truePos.Y + Height / 2;
 
         public override void End()

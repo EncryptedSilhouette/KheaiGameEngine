@@ -73,6 +73,7 @@ namespace KheaiGameEngine.GameObjects
 
         public void Init()
         {
+
         }
 
         public void Start()
@@ -112,6 +113,7 @@ namespace KheaiGameEngine.GameObjects
             {
                 if (component.ID.Equals(id))
                 {
+                    component.End();
                     objectComponents.Remove(component);
                     return;
                 }
@@ -152,7 +154,7 @@ namespace KheaiGameEngine.GameObjects
         {
             foreach (IKComponent component in objectComponents)
             {
-                if (component is Component) return (Component)component;
+                if (component is Component) return (Component) component;
             }
             return null;
         }
