@@ -4,12 +4,17 @@ using System.Text.Json.Serialization;
 using System.Text.Json;
 using System.Reflection;
 using KheaiGameEngine.ObjectComponents;
+using System.Security.AccessControl;
 
 namespace KheaiGameEngine.Core
 {
     #region KPolyTypeResolver
     public class KPolyTypeResolver : DefaultJsonTypeInfoResolver
     {
+        ///<summary>
+        ///Dictionary for identifying what types derive form a base type. 
+        ///Uses the base type as the key, and a list of derived types as the value.
+        ///</summary>
         private Dictionary<Type, List<Type>> _derivedTypes = new();
 
         public override JsonTypeInfo GetTypeInfo(Type type, JsonSerializerOptions options)
@@ -36,6 +41,12 @@ namespace KheaiGameEngine.Core
             return jsonTypeInfo;
         }
 
+
+        public void AddDerivedType<Base, Derived>() where Derived : Base
+        {
+            AddDerivedType(typeof(Base), typeof(Derived));
+        }
+
         public void AddDerivedType(Type baseType, Type type)
         {
             if (!_derivedTypes.ContainsKey(baseType))
@@ -50,6 +61,7 @@ namespace KheaiGameEngine.Core
     #region KResourceHandler
     public class KResourceHandler : KEngineComponent
     {
+        public string GameDataDirectory = "Dat";
         public static KPolyTypeResolver polyTypeResolver = new();
         public static JsonSerializerOptions serializerOptions = new()
         {
@@ -58,7 +70,7 @@ namespace KheaiGameEngine.Core
             TypeInfoResolver = polyTypeResolver
         };
 
-        public static void LoadResources()
+        public override void Init()
         {
             IEnumerable<Type> componentTypes = Assembly.GetCallingAssembly().GetTypes()
                 .Where((Type t) => t.IsSubclassOf(typeof(KObjectComponent)));
@@ -67,35 +79,6 @@ namespace KheaiGameEngine.Core
             {
                 polyTypeResolver.AddDerivedType(typeof(KObjectComponent), componentType);
             }
-            Test();
-        }
-
-        public static void Test()
-        {
-            KObjectData objectData = new()
-            {
-                ID = "test",
-                Components = new()
-                {
-                    new KTransform(),
-                    new KSpriteRenderer()
-                }
-            };
-
-            Console.WriteLine("Saving Object");
-            string jsonString = JsonSerializer.Serialize(objectData, serializerOptions);
-            Console.WriteLine(jsonString);
-
-            objectData = JsonSerializer.Deserialize<KObjectData>(jsonString, serializerOptions);
-
-            Console.WriteLine("Loading Object");
-            jsonString = JsonSerializer.Serialize(objectData, serializerOptions);
-            Console.WriteLine(jsonString);
-        }
-
-        public override void Init()
-        {
-
         }
 
         public override void Start()
