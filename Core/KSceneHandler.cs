@@ -1,5 +1,4 @@
 ﻿using KheaiGameEngine.GameObjects;
-using System.Runtime.InteropServices.JavaScript;
 using System.Text.Json;
 
 namespace KheaiGameEngine.Core

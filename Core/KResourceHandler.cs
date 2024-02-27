@@ -72,13 +72,7 @@ namespace KheaiGameEngine.Core
 
         public override void Init()
         {
-            IEnumerable<Type> componentTypes = Assembly.GetCallingAssembly().GetTypes()
-                .Where((Type t) => t.IsSubclassOf(typeof(KObjectComponent)));
 
-            foreach (var componentType in componentTypes)
-            {
-                polyTypeResolver.AddDerivedType(typeof(KObjectComponent), componentType);
-            }
         }
 
         public override void Start()
@@ -99,6 +93,17 @@ namespace KheaiGameEngine.Core
         public override void FrameUpdate(uint currentFrame)
         {
             throw new NotImplementedException();
+        }
+
+        public void Load()
+        {
+            IEnumerable<Type> componentTypes = Assembly.GetCallingAssembly().GetTypes()
+               .Where((Type t) => t.IsSubclassOf(typeof(KObjectComponent)));
+
+            foreach (var componentType in componentTypes)
+            {
+                polyTypeResolver.AddDerivedType(typeof(KObjectComponent), componentType);
+            }
         }
     }
     #endregion

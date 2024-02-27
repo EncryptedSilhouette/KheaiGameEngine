@@ -61,7 +61,21 @@ namespace KheaiGameEngine.Core
         #region Game logic
         public void Init()
         {
-            AddComponent(new KDrawHandler());
+            //Add required components if they don't already exist.
+            if (!HasComponent<KDebugger>())
+            {
+                AddComponent(new KDebugger());
+            }
+            if (!HasComponent<KResourceHandler>())
+            {
+                AddComponent(new KResourceHandler())
+                    .Load();
+            }
+            if (!HasComponent<KDrawHandler>())
+            {
+                AddComponent(new KDrawHandler());
+            }
+
             foreach (KEngineComponent component in _engineComponents)
             {
                 component.Start();
@@ -79,17 +93,7 @@ namespace KheaiGameEngine.Core
             Init();
 
             debugger = GetComponent<KDebugger>();
-            if (debugger == null)
-            {
-                AddComponent(new KDebugger());
-            }
-
             drawHandler = GetComponent<KDrawHandler>();
-            if (drawHandler == null)
-            {
-                KDebugger.ErrorLog("Draw handler is null");
-                return;
-            }
 
             lastTime = DateTime.UtcNow.Ticks;
 
@@ -122,7 +126,10 @@ namespace KheaiGameEngine.Core
         }
         #endregion
 
-        public void End() => IsRunning = false;
+        public void End()
+        {
+            IsRunning = false;
+        }
 
         public void Update()
         {
@@ -147,6 +154,11 @@ namespace KheaiGameEngine.Core
             component.Engine = this;
             component.Init();
             _engineComponents.Add(component);
+        }
+
+        public Component AddComponent<Component>(Component component) where Component : KEngineComponent
+        {
+            return AddComponent(component);
         }
 
         public void AddComponents(KEngineComponent[] components)

@@ -1,6 +1,5 @@
-﻿using SFML.Graphics;
-using SFML.Window;
-using System.Text;
+﻿using KheaiGameEngine.ObjectComponents;
+using SFML.Graphics;
 
 namespace KheaiGameEngine.Core
 {
@@ -8,10 +7,9 @@ namespace KheaiGameEngine.Core
     {
         protected RenderWindow window;
         protected KSceneHandler sceneHandler;
-        protected Text text;
         protected KDebugger debugger;
 
-        protected StringBuilder stringBuilder = new();
+        public SortedList<int, IKDrawable> drawables = new();
 
         public KDrawHandler()
         {
@@ -20,12 +18,7 @@ namespace KheaiGameEngine.Core
 
         public override void Init()
         {
-            window = Engine.Window;
-            text = new Text();
-            text.Position = new(50, 50);
-            text.Font = new("res\\font.ttf");
-
-            window.TextEntered += Window_TextEntered;
+           
         }
 
         public override void Start()
@@ -40,7 +33,7 @@ namespace KheaiGameEngine.Core
 
         public override void FrameUpdate(uint currentFrame)
         {
-            text.DisplayedString = stringBuilder.ToString();
+
         }
 
         public override void End()
@@ -50,12 +43,12 @@ namespace KheaiGameEngine.Core
 
         public void Draw()
         {
-            window.Draw(text);
+
         }
 
-        private void Window_TextEntered(object sender, TextEventArgs e)
+        public void AddDrawComponent()
         {
-            stringBuilder.Append(e.Unicode);
+
         }
     }
 }
