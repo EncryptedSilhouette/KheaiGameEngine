@@ -109,6 +109,8 @@ namespace KheaiGameEngine.Core
     #region SceneHander
     public class KSceneHandler : KEngineComponent
     {
+        public KDrawHandler DrawHandler { get; private set; }
+
 #if DEBUG
         protected string defaultScene = "debug";
 #else

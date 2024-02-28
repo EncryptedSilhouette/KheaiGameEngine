@@ -1,23 +1,24 @@
 ﻿using KheaiGameEngine.GameObjects;
+using SFML.Graphics;
 using SFML.System;
 using System.Text.Json.Serialization;
 
-namespace KheaiGameEngine.ObjectComponents
+namespace KheaiGameEngine.GameManagement
 {
     //TODO Apply positional math for parent rotation.
-    public class KTransform : KObjectComponent 
+    public class KTransform
     {
+        public static float GameUnit = 1;
+
         private Vector2f _truePos = new(0, 0);
         private KTransform _parent;
 
         [JsonInclude]
-        public int GameUnit = 1;
-        [JsonInclude]
         public float rotation = 0.0f;
         [JsonInclude]
-        public Vector2f Dimentions = new(1, 1);
+        public Vector2f RelativePos = new(0, 0);
         [JsonInclude]
-        public Vector2f RelativePosition = new(0, 0);
+        public Vector2f Dimentions = new(1, 1);
 
         [JsonIgnore]
         public float Width
@@ -39,7 +40,7 @@ namespace KheaiGameEngine.ObjectComponents
             get => _truePos.X;
             set
             {
-                RelativePosition.X = value - parent.PosX;
+                RelativePos.X = value - parent.PosX;
                 _truePos.X = value;
             }
         }
@@ -50,13 +51,13 @@ namespace KheaiGameEngine.ObjectComponents
             get => _truePos.Y;
             set
             {
-                RelativePosition.Y = value - parent.PosY;
+                RelativePos.Y = value - parent.PosY;
                 _truePos.Y = value;
             }
         }
 
         [JsonIgnore]
-        public Vector2f Position 
+        public Vector2f Position
         {
             get => _truePos;
             set
@@ -91,30 +92,5 @@ namespace KheaiGameEngine.ObjectComponents
 
         [JsonIgnore]
         public float Bottom => _truePos.Y + Height / 2;
-
-        public override void End()
-        {
-            throw new NotImplementedException();
-        }
-
-        public override void FrameUpdate(uint currentFrame)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override void Init()
-        {
-            throw new NotImplementedException();
-        }
-
-        public override void Start()
-        {
-            throw new NotImplementedException();
-        }
-
-        public override void Update(uint currentTick)
-        {
-            throw new NotImplementedException();
-        }
     }
 }

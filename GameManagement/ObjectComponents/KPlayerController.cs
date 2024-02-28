@@ -1,4 +1,5 @@
-﻿using KheaiGameEngine.GameObjects;
+﻿using KheaiGameEngine.GameManagement;
+using KheaiGameEngine.GameObjects;
 using SFML.Window;
 
 namespace KheaiGameEngine.ObjectComponents
