@@ -1,4 +1,5 @@
-﻿using SFML.Graphics;
+﻿using KheaiGameEngine.GameManagement;
+using SFML.Graphics;
 
 namespace KheaiGameEngine.Core
 {
@@ -14,7 +15,36 @@ namespace KheaiGameEngine.Core
 
     public class KSpriteBatch
     {
-        
+        public KSprite sprite;
+
+        private Texture batchedTexture;
+        private List<Image> textures;
+
+        //private Thread batchThread = new(ThreadBatch);
+
+        public KSpriteBatch()
+        {
+
+        }
+
+        void Start() 
+        {
+
+        }
+
+        private void Batch() 
+        {
+        }
+
+        private void ThreadBatch()
+        {
+
+        }
+
+        void Draw(Image spriteTexture) 
+        {
+            
+        }
     }
 
     public class KDrawHandler : KEngineComponent
@@ -53,18 +83,12 @@ namespace KheaiGameEngine.Core
 
         public override void End()
         {
-           
+
         }
 
-        public void Draw(RenderTarget target) 
+        public void Draw(RenderTarget target)
         {
-            foreach (var layer in drawables)
-            {
-                foreach (var drawable in layer.Value)
-                {
-                    target
-                }
-            }
+
         }
 
         public void AddDrawComponent()

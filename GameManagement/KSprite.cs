@@ -2,7 +2,7 @@
 
 namespace KheaiGameEngine.GameManagement
 {
-    internal class KSprite
+    public class KSprite
     {
         Image image;
         KTransform transform;
