@@ -1,6 +1,4 @@
-﻿using KheaiGameEngine.GameObjects;
-using SFML.Graphics;
-using SFML.System;
+﻿using SFML.System;
 using System.Text.Json.Serialization;
 
 namespace KheaiGameEngine.GameManagement

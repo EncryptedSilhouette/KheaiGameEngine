@@ -3,8 +3,6 @@ using System.Text.Json.Serialization.Metadata;
 using System.Text.Json.Serialization;
 using System.Text.Json;
 using System.Reflection;
-using KheaiGameEngine.ObjectComponents;
-using System.Security.AccessControl;
 
 namespace KheaiGameEngine.Core
 {

@@ -1,62 +1,20 @@
-﻿using KheaiGameEngine.GameManagement;
-using SFML.Graphics;
+﻿using SFML.Graphics;
 
 namespace KheaiGameEngine.Core
 {
     public interface IKDrawable
     {
-        public short Layer { get; protected set; }
-        public Image texture { get; protected set; }
-        public Vertex[] vertices { get; protected set; }
+        
+    }
+
+    public class DrawData
+    {
+       
     }
 
     public class KSpriteBatch
     {
-        public Vertex[] Vertices { get; private set; }
-        public Texture CombinedTexture { get; private set; }
-
-        private Queue<Image> images = new();
-        private List<Vertex> vertices = new();
-
-        private Texture texture = new(1024, 1024);
-        Dictionary<uint, uint> offsets = new();
-
-        Thread batchThread;
-
-        public KSpriteBatch() 
-        {
-            batchThread = new(Batch);
-        }
-
-        void Start()
-        {
-            texture = new(1024, 1024);
-        }
-
-        void Draw(IKDrawable drawable)
-        {
-            
-        }
-
-        void End()
-        {
-
-        }
-
-        void Batch() 
-        {
-            Image image;
-            uint offsetY = 0;
-            uint offsetX = 0;
-
-            lock (images) image = images.Dequeue();
-            for (uint i = 4; i < image.Size.Y; i *= 2) offsetY = i;
-
-            if (offsets.ContainsKey(offsetY)) offsetX = offsets[offsetY];
-            else offsets[offsetY] = 0;
-
-            lock (texture) texture.Update(image, offsetX, offsetY);
-        }
+        
     }
 
     public class KDrawHandler : KEngineComponent
