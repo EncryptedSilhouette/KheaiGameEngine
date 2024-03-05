@@ -4,8 +4,10 @@ namespace KheaiGameEngine.GameManagement
 {
     public class KSprite
     {
-        Image image;
-        KTransform transform;
+        public (int x, int y) texIndex;
+        
+        public Image image;
+        public KTransform transform;
 
         void Test() 
         {

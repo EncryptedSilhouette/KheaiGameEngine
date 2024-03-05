@@ -20,6 +20,8 @@ namespace KheaiGameEngine.Core
         private Texture batchedTexture;
         private List<Image> textures;
 
+        private List<KSprite> sprites = new();
+
         //private Thread batchThread = new(ThreadBatch);
 
         public KSpriteBatch()
@@ -32,18 +34,19 @@ namespace KheaiGameEngine.Core
 
         }
 
-        private void Batch() 
+        void Draw(Image spriteTexture, KTransform transform) 
         {
-        }
-
-        private void ThreadBatch()
-        {
+            textures.Add(spriteTexture);
 
         }
 
-        void Draw(Image spriteTexture) 
+        void SubmitSprite(KSprite sprite)
         {
-            
+            sprites.Add(sprite);
+        }
+
+        void BatchTexture() 
+        { 
         }
     }
 
