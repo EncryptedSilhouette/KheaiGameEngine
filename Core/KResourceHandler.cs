@@ -1,8 +1,7 @@
-﻿using KheaiGameEngine.GameObjects;
-using System.Text.Json.Serialization.Metadata;
+﻿using System.Text.Json.Serialization.Metadata;
 using System.Text.Json.Serialization;
 using System.Text.Json;
-using System.Reflection;
+using System.Collections;
 
 namespace KheaiGameEngine.Core
 {
@@ -59,7 +58,7 @@ namespace KheaiGameEngine.Core
     #region KResourceHandler
     public class KResourceHandler : KEngineComponent
     {
-        public string GameDataDirectory = "Dat";
+        public string GameResourceDir = "Dat\\res";
         public static KPolyTypeResolver polyTypeResolver = new();
         public static JsonSerializerOptions serializerOptions = new()
         {
@@ -67,6 +66,8 @@ namespace KheaiGameEngine.Core
             IncludeFields = true,
             TypeInfoResolver = polyTypeResolver
         };
+
+        public Hashtable resourceIDs = new Hashtable();
 
         public override void Init()
         {
@@ -80,20 +81,25 @@ namespace KheaiGameEngine.Core
 
         public override void Update(uint currentTick)
         {
-            throw new NotImplementedException();
+            
         }
 
         public override void End()
         {
-            throw new NotImplementedException();
+            
         }
 
         public override void FrameUpdate(uint currentFrame)
         {
-            throw new NotImplementedException();
+            
         }
 
-        public void Load()
+        public void Load() 
+        {
+            
+        }
+
+        /*public void Load()
         {
             IEnumerable<Type> componentTypes = Assembly.GetCallingAssembly().GetTypes()
                .Where((Type t) => t.IsSubclassOf(typeof(KObjectComponent)));
@@ -102,7 +108,7 @@ namespace KheaiGameEngine.Core
             {
                 polyTypeResolver.AddDerivedType(typeof(KObjectComponent), componentType);
             }
-        }
+        }*/
     }
     #endregion
 }

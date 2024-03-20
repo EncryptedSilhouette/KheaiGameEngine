@@ -3,7 +3,11 @@
 using KheaiGameEngine.Core;
 using System.Collections;
 
-Console.WriteLine(Environment.ProcessorCount);
+Console.WriteLine($"Processors: {Environment.ProcessorCount}");
+
+Application application = new Application();
+application.Start();
+
 class Application : IKApplication
 {
     public string AppName { get; set; }

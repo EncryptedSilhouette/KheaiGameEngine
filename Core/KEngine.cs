@@ -116,7 +116,7 @@ namespace KheaiGameEngine.Core
                     FrameUpdate();
 
                     Window.Clear(Color.Black);
-                    drawHandler.Draw();
+                    drawHandler.Draw(Window);
                     Window.Display();
 
                     CurrentFrame++;

@@ -1,52 +1,56 @@
 ﻿using KheaiGameEngine.GameManagement;
+using KheaiGameEngine.GameObjects;
 using SFML.Graphics;
 
 namespace KheaiGameEngine.Core
 {
-    public interface IKDrawable
+    public class KSprite
     {
+        public Vertex[] vertices { get; private set; }
+
+        private KTransform transform;
         
     }
 
-    public class DrawData
+    public class KSpriteManager : KObjectComponent
     {
-       
+        public List<KSprite> sprites = new();
+
+        public override void Init()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void Start()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void End()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void Update(uint currentTick)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void FrameUpdate(uint currentFrame)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public class KSpriteBatch
     {
-        public KSprite sprite;
-
-        private Texture batchedTexture;
-        private List<Image> textures;
-
-        private List<KSprite> sprites = new();
-
-        //private Thread batchThread = new(ThreadBatch);
-
-        public KSpriteBatch()
-        {
-
-        }
-
-        void Start() 
-        {
-
-        }
-
-        void Draw(Image spriteTexture, KTransform transform) 
-        {
-            textures.Add(spriteTexture);
-
-        }
-
-        void SubmitSprite(KSprite sprite)
-        {
-            sprites.Add(sprite);
-        }
+        //Batching stuff
+        Texture batchedtexture;
+        VertexBuffer vertexBuffer;
 
         void BatchTexture() 
-        { 
+        {
+            //Add Texture to texture batch
         }
     }
 
