@@ -6,6 +6,8 @@ namespace KheaiGameEngine.GameObjects
     #region ObjectComponent
     public abstract class KObjectComponent : IKComponent, IKEngineManaged
     {
+        public bool Enabled { get; set; }
+
         [JsonInclude][JsonPropertyOrder(1)]
         public ushort Order { get; set; }
 
@@ -18,6 +20,7 @@ namespace KheaiGameEngine.GameObjects
         public KObjectComponent()
         {
             ID = GetType().Name;
+            Enabled = true;
         }
 
         public abstract void Init();
@@ -58,6 +61,7 @@ namespace KheaiGameEngine.GameObjects
     {
         public string ID { get; protected set; }
         public string Name { get; set; }
+        public bool Enabled { get; set; }
         public KGameObject Parent { get; set; }
         public KSceneHandler Handler { get; set; }
 
@@ -69,6 +73,7 @@ namespace KheaiGameEngine.GameObjects
         {
             ID = id;
             Name = name;
+            Enabled = true;
         }
 
         public void Init()
@@ -172,7 +177,10 @@ namespace KheaiGameEngine.GameObjects
         {
             foreach (var component in objectComponents)
             {
-                component.Update(currentTick);
+                if (component.Enabled) 
+                {
+                    component.Update(currentTick);
+                }
             }
         }
 
@@ -180,7 +188,10 @@ namespace KheaiGameEngine.GameObjects
         {
             foreach (var component in objectComponents)
             {
-                component.FrameUpdate(currentFrame);
+                if (component.Enabled)
+                {
+                    component.FrameUpdate(currentFrame);
+                }
             }
         }
     }

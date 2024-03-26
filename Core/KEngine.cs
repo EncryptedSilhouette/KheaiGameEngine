@@ -3,11 +3,16 @@ using SFML.Window;
 
 namespace KheaiGameEngine.Core
 {
+    public interface IKEngine 
+    {
+        void Start();
+    }
+
     public interface IKEngineManaged
     {
-        public void Start();
-        public void Update(uint currentTick);
-        public void FrameUpdate(uint currentFrame);
+        void Start();
+        void Update(uint currentTick);
+        void FrameUpdate(uint currentFrame);
     }
 
     public abstract class KEngineComponent : IKComponent, IKEngineManaged
@@ -29,7 +34,7 @@ namespace KheaiGameEngine.Core
         public abstract void FrameUpdate(uint currentFrame);
     }
 
-    public sealed class KEngine : IKComponentContainer<KEngineComponent>
+    public sealed class KEngine : IKComponentContainer<KEngineComponent>, IKEngine
     {
         public const byte UpdateRateTarget = 60;
 

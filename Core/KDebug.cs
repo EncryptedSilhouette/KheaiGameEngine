@@ -9,37 +9,52 @@ namespace KheaiGameEngine
     ///</summary>
     public class KDebugger : KEngineComponent
     {
+        #region LogIDs
         ///<summary>
         ///Constant id for the "debug" log.
         ///</summary>
         public const string DEBUG = "debug";
+
         ///<summary>
         ///Constant id for the "error" log.
         ///</summary>
         public const string ERROR = "error";
+        #endregion
 
+        ///<summary>
+        ///Boolean to decide whether to dump debug information to a .txt file.
+        ///</summary>
         public static bool submitToFile
 #if DEBUG
             = true;
 #else
             = false;
 #endif
+
+        ///<summary>
+        ///The file directory for debug logs.
+        ///</summary>
         public static string FileDirectory = "Debug";
 
-        private static StringBuilder s_stringBuilder = new();
+        ///<summary>
+        ///Dictionary for containing text logs.
+        ///</summary>
         private static Dictionary<string, List<string>> s_logs = new()
         {
             { DEBUG, new() },
             { ERROR, new() }
         };
 
+        //Static properties to get system time in string form.
         public static string CurrentDateTime => DateTime.Now.ToString();
         public static string CurrentDate => DateTime.Now.ToString("MM-dd-yy");
         public static string CurrentTime => DateTime.Now.ToString("HH:mm:ss");
 
-        private byte _updatesThisCycle = 0;
-        private long _timerStart = 0;
+        //Variables to keep track of updates per second
+        protected byte _updatesThisCycle = 0;
+        protected long _timerStart = 0;
 
+        //Time related properties for debugging
         public double SessionTime => (DateTime.Now.Ticks - StartTime) / TimeSpan.TicksPerSecond;
         public double AverageUpdateRate => Engine.CurrentTick / SessionTime;
         public byte UpdateRate { get; private set; } = 0;
@@ -100,42 +115,6 @@ namespace KheaiGameEngine
 
         }
 
-        public void DumpToFile()
-        {
-            int count = 0;
-            string startTime = new DateTime(StartTime).ToString();
-            string endTime = new DateTime(EndTime).ToString();
-            string sessionTime = new DateTime(StartTime - EndTime).ToString("dd:hh:mm:ss");
-            string DebugFilePath;
-            StreamWriter writer;
-
-            Directory.CreateDirectory(FileDirectory);
-            do
-            {
-                DebugFilePath = $"{FileDirectory}\\Debug_{CurrentDate}_{count}.txt";
-                count++;
-            }
-            while (File.Exists(DebugFilePath));
-
-            writer = new StreamWriter(File.Create(DebugFilePath));
-            writer.WriteLine(CurrentDateTime);
-            writer.WriteLine($"Start Time: {startTime}");
-            writer.WriteLine($"End Time: {endTime}");
-            writer.WriteLine($"Session time: {sessionTime}");
-            writer.WriteLine($"Last tick: {Engine.CurrentTick}");
-            writer.WriteLine($"Last Frame: {Engine.CurrentFrame}");
-            writer.WriteLine($"Max Update Rate: {MaxUpdatesPerSecond}");
-            writer.WriteLine($"Min Update Rate: {MinUpdatesPerSecond}");
-            writer.WriteLine($"Average Update Rate: {AverageUpdateRate}");
-
-            foreach (var logID in s_logs.Keys)
-            {
-                writer.WriteLine($"\n{GetLog(logID)}");
-            }
-
-            writer.Close();
-        }
-
         public static void Log(string logID, string message)
         {
             if (!s_logs.ContainsKey(logID))
@@ -193,6 +172,45 @@ namespace KheaiGameEngine
             }
 
             return s_logs[logID].Skip(startIndex).ToList();
+        }
+
+        ///<summary>
+        ///Function to dump debug info to a .txt file. Override for custom implementation.
+        ///</summary>
+        public virtual void DumpToFile()
+        {
+            int count = 0;
+            string startTime = new DateTime(StartTime).ToString();
+            string endTime = new DateTime(EndTime).ToString();
+            string sessionTime = new DateTime(StartTime - EndTime).ToString("dd:hh:mm:ss");
+            string DebugFilePath;
+            StreamWriter writer;
+
+            Directory.CreateDirectory(FileDirectory);
+            do
+            {
+                DebugFilePath = $"{FileDirectory}\\Debug_{CurrentDate}_{count}.txt";
+                count++;
+            }
+            while (File.Exists(DebugFilePath));
+
+            writer = new StreamWriter(File.Create(DebugFilePath));
+            writer.WriteLine(CurrentDateTime);
+            writer.WriteLine($"Start Time: {startTime}");
+            writer.WriteLine($"End Time: {endTime}");
+            writer.WriteLine($"Session time: {sessionTime}");
+            writer.WriteLine($"Last tick: {Engine.CurrentTick}");
+            writer.WriteLine($"Last Frame: {Engine.CurrentFrame}");
+            writer.WriteLine($"Max Update Rate: {MaxUpdatesPerSecond}");
+            writer.WriteLine($"Min Update Rate: {MinUpdatesPerSecond}");
+            writer.WriteLine($"Average Update Rate: {AverageUpdateRate}");
+
+            foreach (var logID in s_logs.Keys)
+            {
+                writer.WriteLine($"\n{GetLog(logID)}");
+            }
+
+            writer.Close();
         }
     }
 }

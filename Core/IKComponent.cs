@@ -5,8 +5,16 @@
     ///</summary>
     public interface IKComponent
     {
+        ///<summary>
+        ///The order which the component will be updated.
+        ///</summary>
         public ushort Order { get; set; }
+
+        ///<summary>
+        ///The ID for the component. 
+        ///</summary>
         public string ID { get; set; }
+
         public void Init();
         public void Start();
         public void End();

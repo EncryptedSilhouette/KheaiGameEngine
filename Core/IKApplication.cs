@@ -2,12 +2,13 @@
 
 namespace KheaiGameEngine.Core
 {
+    ///<summary>
+    ///A basic interface for a KApplication.
+    ///</summary>
     public interface IKApplication
     {
         public string AppName { get; set; }
-        public string configFilePath { get; set; }
-        public Hashtable appConfig { get; set; }
-        public KEngine Engine { get; set; }
+        public IKEngine Engine { get; set; }
 
         public void Load();
 
