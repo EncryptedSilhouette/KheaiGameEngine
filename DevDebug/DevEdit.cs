@@ -1,12 +1,6 @@
 ﻿#if DEBUG
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace KheaiGameEngine.DevDebug
+namespace KheaiGameEngine.Debug
 {
     public static class DevEdit
     {

@@ -5,6 +5,34 @@ using System.Collections;
 
 namespace KheaiGameEngine.Core
 {
+    public interface IKLoader 
+    {
+        void Load();
+    }
+
+    public class KDefaultLoader : IKLoader
+    {
+        public string GameDataDir = "data";
+        public string GameResourceFilePath => $"{GameDataDir}\\res-Pth";
+
+        public void Init() 
+        {
+            if (!Directory.Exists(GameDataDir)) 
+            {
+                Directory.CreateDirectory(GameDataDir);
+            }
+            if (File.Exists(GameResourceFilePath)) 
+            {
+
+            }
+        }
+
+        public void Load()
+        {
+           
+        }
+    }
+
     #region KPolyTypeResolver
     public class KPolyTypeResolver : DefaultJsonTypeInfoResolver
     {
@@ -58,7 +86,6 @@ namespace KheaiGameEngine.Core
     #region KResourceHandler
     public class KResourceHandler : KEngineComponent
     {
-        public string GameResourceDir = "Dat\\res";
         public static KPolyTypeResolver polyTypeResolver = new();
         public static JsonSerializerOptions serializerOptions = new()
         {
@@ -67,7 +94,13 @@ namespace KheaiGameEngine.Core
             TypeInfoResolver = polyTypeResolver
         };
 
+        public IKLoader loader;
         public Hashtable resourceIDs = new Hashtable();
+
+        public KResourceHandler(IKLoader loader) 
+        {
+
+        }
 
         public override void Init()
         {
@@ -84,19 +117,19 @@ namespace KheaiGameEngine.Core
             
         }
 
-        public override void End()
-        {
-            
-        }
-
         public override void FrameUpdate(uint currentFrame)
         {
             
         }
 
+        public override void End()
+        {
+
+        }
+
         public void Load() 
         {
-            
+            loader.Load();
         }
 
         /*public void Load()

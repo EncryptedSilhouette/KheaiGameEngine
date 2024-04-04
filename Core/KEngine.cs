@@ -1,4 +1,5 @@
-﻿using SFML.Graphics;
+﻿using KheaiGameEngine.Debug;
+using SFML.Graphics;
 using SFML.Window;
 
 namespace KheaiGameEngine.Core
@@ -38,6 +39,7 @@ namespace KheaiGameEngine.Core
     {
         public const byte UpdateRateTarget = 60;
 
+        private IKLoader _loader;
         private KComponentSorter<KEngineComponent> _componentSorter;
         private SortedSet<KEngineComponent> _engineComponents;
 
@@ -48,12 +50,12 @@ namespace KheaiGameEngine.Core
         public bool IsRunning { get; private set; } = true;
         public bool IsPaused { get; private set; } = false;
         public RenderWindow Window { get; private set; }
-        public IKApplication Application { get; private set; }
+        public IKApplication Application { get; private set; } 
 
         public KEngineComponent this[string id] => GetComponent(id);
-        public KEngineComponent this[Type id] => GetComponent(id.ToString());
+        public KEngineComponent this[Type id] => GetComponent(id.Name);
 
-        public KEngine(IKApplication app)
+        public KEngine(IKApplication app, IKLoader resourceloader)
         {
             Application = app;
             Window = new(VideoMode.DesktopMode, app.AppName);
@@ -67,14 +69,13 @@ namespace KheaiGameEngine.Core
         public void Init()
         {
             //Add required components if they don't already exist.
+            if (!HasComponent<KResourceHandler>())
+            {
+                AddComponent(new KResourceHandler(new KDefaultLoader()));
+            }
             if (!HasComponent<KDebugger>())
             {
                 AddComponent(new KDebugger());
-            }
-            if (!HasComponent<KResourceHandler>())
-            {
-                AddComponent(new KResourceHandler())
-                    .Load();
             }
             if (!HasComponent<KDrawHandler>())
             {

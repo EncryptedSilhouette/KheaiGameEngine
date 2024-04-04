@@ -7,7 +7,6 @@ namespace KheaiGameEngine.Core
     {
         protected RenderWindow window;
         protected KSceneHandler sceneHandler;
-        protected KDebugger debugger;
 
         public override void Init()
         {
@@ -16,7 +15,7 @@ namespace KheaiGameEngine.Core
 
         public override void Start()
         {
-            debugger = Engine.GetComponent<KDebugger>();
+
         }
 
         public override void Update(uint currentTick)

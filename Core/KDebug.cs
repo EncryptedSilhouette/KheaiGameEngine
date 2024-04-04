@@ -1,8 +1,7 @@
 ﻿using KheaiGameEngine.Core;
 using SFML.Graphics;
-using System.Text;
 
-namespace KheaiGameEngine
+namespace KheaiGameEngine.Debug
 {
     ///<summary>
     ///Debug component for the KEngine. Contains static methods for managing debug logs.

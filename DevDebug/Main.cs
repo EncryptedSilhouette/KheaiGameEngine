@@ -1,5 +1,6 @@
 ﻿#if DEBUG
 
+using KheaiGameEngine;
 using KheaiGameEngine.Core;
 using System.Collections;
 

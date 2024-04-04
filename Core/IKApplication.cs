@@ -1,6 +1,7 @@
 ﻿using System.Collections;
+using KheaiGameEngine.Core;
 
-namespace KheaiGameEngine.Core
+namespace KheaiGameEngine
 {
     ///<summary>
     ///A basic interface for a KApplication.

@@ -1,4 +1,4 @@
-﻿namespace KheaiGameEngine.Core
+﻿namespace KheaiGameEngine
 {
     ///<summary>
     ///Interface for components using the KComponent structure.
