@@ -1,5 +1,4 @@
-﻿using KheaiGameEngine.Debug;
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SFML.Window;
 
 namespace KheaiGameEngine.Core
@@ -39,7 +38,6 @@ namespace KheaiGameEngine.Core
     {
         public const byte UpdateRateTarget = 60;
 
-        private IKLoader _loader;
         private KComponentSorter<KEngineComponent> _componentSorter;
         private SortedSet<KEngineComponent> _engineComponents;
 

@@ -6,7 +6,7 @@
     public interface IKComponent
     {
         ///<summary>
-        ///The order which the component will be updated.
+        ///The order the component will be updated.
         ///</summary>
         public ushort Order { get; set; }
 

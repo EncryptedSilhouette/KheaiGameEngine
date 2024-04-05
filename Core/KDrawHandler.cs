@@ -1,4 +1,6 @@
 ﻿using SFML.Graphics;
+using SFML.System;
+using System.Numerics;
 
 namespace KheaiGameEngine.Core
 {
@@ -46,6 +48,41 @@ namespace KheaiGameEngine.Core
         public void AddReference()
         {
 
+        }
+
+        Texture GenerateTextureAtlas() 
+        {
+            Texture texture = null;
+            return texture;
+        }
+
+        Texture GenerateTextureAtlas(string[] texturePaths) 
+        {
+            uint currentX = 0, currentY = 0;
+            uint xOffset = 0, yOffset = 0;
+            uint rowHeight, rowStart;
+
+            Texture combinedTexture;
+            List<Image> images = new();
+
+            foreach (var path in texturePaths) images.Add(new(path));
+
+            images.Sort((a, b) => 
+            {
+                if (a.Size.Y > b.Size.Y) return 1;
+                else return -1;
+            });
+
+            rowHeight = images[0].Size.Y;
+
+            for (int i = 0; i < images.Count; i++)
+            {
+                if (images[i].Size < ) 
+                {
+                }
+            }
+
+            return combinedTexture;
         }
     }
 }
