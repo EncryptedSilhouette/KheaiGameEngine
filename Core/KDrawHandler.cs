@@ -1,6 +1,5 @@
-﻿using SFML.Graphics;
-using SFML.System;
-using System.Numerics;
+﻿using SFML;
+using SFML.Graphics;
 
 namespace KheaiGameEngine.Core
 {
@@ -58,31 +57,54 @@ namespace KheaiGameEngine.Core
 
         Texture GenerateTextureAtlas(string[] texturePaths) 
         {
-            uint currentX = 0, currentY = 0;
-            uint xOffset = 0, yOffset = 0;
-            uint rowHeight, rowStart;
+            uint count = 0;
+            uint largestSize = 0;
 
-            Texture combinedTexture;
+            uint rowHeight;
+
+            Texture textureAtlas;
+            List<(uint, uint)> sizes = new();   
             List<Image> images = new();
-
-            foreach (var path in texturePaths) images.Add(new(path));
-
-            images.Sort((a, b) => 
+            
+            foreach (var texturePath in texturePaths)
             {
-                if (a.Size.Y > b.Size.Y) return 1;
-                else return -1;
-            });
-
-            rowHeight = images[0].Size.Y;
-
-            for (int i = 0; i < images.Count; i++)
-            {
-                if (images[i].Size < ) 
+                try
                 {
+                    Image image = new(texturePath);
+                    images.Add(image);  
+                }
+                catch (LoadingFailedException)
+                {
+
+                    throw;
                 }
             }
 
-            return combinedTexture;
+            images.Sort((a, b) =>
+            {
+                //The one with the greater Y should always be 1st
+                if (a.Size.Y < b.Size.Y) return 1;
+                else
+                if (a.Size.Y > b.Size.Y) return -1;
+
+                //If the Y is equal the one with the bigger X will be 1st
+                if (a.Size.Y == b.Size.Y)
+                {
+                    if (a.Size.X < b.Size.X) return 1;
+                    else
+                    if (a.Size.X > b.Size.X) return -1;
+                }
+
+                //Only remaining case is they are equal (both X and Y)
+                return 0;
+            });
+
+            for (int i = 0; i < images.Count; i++)
+            {
+                textureAtlas.Update();
+            }   
+
+            return textureAtlas;
         }
     }
 }
