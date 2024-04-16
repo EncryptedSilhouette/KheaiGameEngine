@@ -1,13 +1,20 @@
-﻿using SFML;
+﻿using KheaiGameEngine.Debug;
+using SFML;
 using SFML.Graphics;
+using SFML.System;
+using System.Reflection.Metadata;
 
 namespace KheaiGameEngine.Core
 {
 
     public class KDrawHandler : KEngineComponent
     {
+        protected Texture textureAtlas;
         protected RenderWindow window;
         protected KSceneHandler sceneHandler;
+        protected Dictionary<string, Vector2f[]> textureCoords = new();
+
+        protected Vector2f[] this[string textureID] => textureCoords[textureID];
 
         public override void Init()
         {
@@ -49,60 +56,96 @@ namespace KheaiGameEngine.Core
 
         }
 
-        Texture GenerateTextureAtlas() 
+        protected Texture GenerateTextureAtlas() 
         {
             Texture texture = null;
             return texture;
         }
 
-        Texture GenerateTextureAtlas(string[] texturePaths) 
+        protected Texture GenerateTextureAtlas(string[] texturePaths) 
         {
-            uint count = 0;
-            uint largestSize = 0;
-
-            uint rowHeight;
+            uint rowHeight = 0;
+            uint xOffset = 0;
+            uint sectionYOffset = 0;
+            uint sectionXOffset = 0;
 
             Texture textureAtlas;
-            List<(uint, uint)> sizes = new();   
-            List<Image> images = new();
+            List<(string id, Image image)> images = new();
             
-            foreach (var texturePath in texturePaths)
+            //Load textures in path
+            foreach (var path in texturePaths)
             {
                 try
                 {
-                    Image image = new(texturePath);
-                    images.Add(image);  
+                    string textureID = path.Substring(0, path.IndexOf('.'));
+                    Image image = new(path);
+                    images.Add((textureID, image));  
                 }
-                catch (LoadingFailedException)
+                catch (SFML.LoadingFailedException exception)
                 {
-
-                    throw;
+                    KDebugger.ErrorLog($"Failed loading resource: {path}");
+                    KDebugger.ErrorLog(exception.Message);
                 }
             }
 
+            //Sort textures by height and then by width
             images.Sort((a, b) =>
             {
-                //The one with the greater Y should always be 1st
-                if (a.Size.Y < b.Size.Y) return 1;
+                //The one with the greater height should always be 1st
+                if (a.image.Size.Y < b.image.Size.Y) return 1;
                 else
-                if (a.Size.Y > b.Size.Y) return -1;
+                if (a.image.Size.Y > b.image.Size.Y) return -1;
 
-                //If the Y is equal the one with the bigger X will be 1st
-                if (a.Size.Y == b.Size.Y)
-                {
-                    if (a.Size.X < b.Size.X) return 1;
-                    else
-                    if (a.Size.X > b.Size.X) return -1;
-                }
+                //If the height is equal 
+                //The one with the greater width will be 1st
+                if (a.image.Size.X < b.image.Size.X) return 1;
+                else
+                if (a.image.Size.X > b.image.Size.X) return -1;
 
-                //Only remaining case is they are equal (both X and Y)
+                //Only remaining case is both dimentions are equal to the other's
                 return 0;
             });
 
+            //Minimize empty space by stacking images where possible
+            //Use the first image in the order to set the size for the row
+            rowHeight = images[0].image.Size.Y;
+
+            //Iterate over sorted images
             for (int i = 0; i < images.Count; i++)
             {
-                textureAtlas.Update();
-            }   
+                //Define a base image to stack upon
+                Image baseImage = images[i].image;
+
+                textureCoords.Add(images[i].id, 
+                    new Vector2f[] 
+                    {
+                        new(xOffset, 0),                  new(xOffset + baseImage.Size.X, 0),
+                        new(xOffset, baseImage.Size.Y),   new(xOffset + baseImage.Size.X, baseImage.Size.Y)
+                    });
+                 
+                //Set the offsets
+                sectionYOffset = baseImage.Size.Y;      
+                sectionXOffset += images[i - 1].Size.X;
+
+                //If current image height is less than the row height, create a section
+                if (baseImage.Size.Y < rowHeight) 
+                {
+                    //Go through images starting at the one after the base image
+                    for (int j = i + 1; j < images.Count; j++)
+                    {
+                        Image imageJ = images[i];
+
+                        //Check if image can stack and be within bounds 
+                        //The height of the section cannot exceed the row height
+                        //The length of the stacked image cannot exceed the base width
+                        if (baseImage.Size.Y + imageJ.Size.Y <= rowHeight &&
+                            baseImage.Size.X >= imageJ.Size.X) 
+                        {
+                            
+                        }
+                    } 
+                }
+            }
 
             return textureAtlas;
         }
