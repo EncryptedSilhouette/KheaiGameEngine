@@ -1,8 +1,6 @@
 ﻿using KheaiGameEngine.Debug;
-using SFML;
 using SFML.Graphics;
 using SFML.System;
-using System.Reflection.Metadata;
 
 namespace KheaiGameEngine.Core
 {
@@ -65,9 +63,8 @@ namespace KheaiGameEngine.Core
         protected Texture GenerateTextureAtlas(string[] texturePaths) 
         {
             uint rowHeight = 0;
+            uint yOffset = 0;
             uint xOffset = 0;
-            uint sectionYOffset = 0;
-            uint sectionXOffset = 0;
 
             Texture textureAtlas;
             List<(string id, Image image)> images = new();
@@ -93,13 +90,11 @@ namespace KheaiGameEngine.Core
             {
                 //The one with the greater height should always be 1st
                 if (a.image.Size.Y < b.image.Size.Y) return 1;
-                else
                 if (a.image.Size.Y > b.image.Size.Y) return -1;
 
                 //If the height is equal 
                 //The one with the greater width will be 1st
                 if (a.image.Size.X < b.image.Size.X) return 1;
-                else
                 if (a.image.Size.X > b.image.Size.X) return -1;
 
                 //Only remaining case is both dimentions are equal to the other's
@@ -117,15 +112,15 @@ namespace KheaiGameEngine.Core
                 Image baseImage = images[i].image;
 
                 textureCoords.Add(images[i].id, 
-                    new Vector2f[] 
-                    {
-                        new(xOffset, 0),                  new(xOffset + baseImage.Size.X, 0),
-                        new(xOffset, baseImage.Size.Y),   new(xOffset + baseImage.Size.X, baseImage.Size.Y)
-                    });
+                new Vector2f[] 
+                {
+                    new(xOffset, 0),                  new(xOffset + baseImage.Size.X, 0),
+                    new(xOffset, baseImage.Size.Y),   new(xOffset + baseImage.Size.X, baseImage.Size.Y)
+                });
                  
                 //Set the offsets
-                sectionYOffset = baseImage.Size.Y;      
-                sectionXOffset += images[i - 1].Size.X;
+                yOffset = baseImage.Size.Y;      
+                xOffset += images[i].image.Size.X;
 
                 //If current image height is less than the row height, create a section
                 if (baseImage.Size.Y < rowHeight) 
