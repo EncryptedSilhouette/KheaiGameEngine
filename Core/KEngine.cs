@@ -1,4 +1,5 @@
-﻿using SFML.Graphics;
+﻿using KheaiGameEngine.Debug;
+using SFML.Graphics;
 using SFML.Window;
 
 namespace KheaiGameEngine.Core
@@ -53,7 +54,7 @@ namespace KheaiGameEngine.Core
         public KEngineComponent this[string id] => GetComponent(id);
         public KEngineComponent this[Type id] => GetComponent(id.Name);
 
-        public KEngine(IKApplication app, IKLoader resourceloader)
+        public KEngine(IKApplication app)
         {
             Application = app;
             Window = new(VideoMode.DesktopMode, app.AppName);
@@ -158,11 +159,6 @@ namespace KheaiGameEngine.Core
             component.Engine = this;
             component.Init();
             _engineComponents.Add(component);
-        }
-
-        public Component AddComponent<Component>(Component component) where Component : KEngineComponent
-        {
-            return AddComponent(component);
         }
 
         public void AddComponents(KEngineComponent[] components)
