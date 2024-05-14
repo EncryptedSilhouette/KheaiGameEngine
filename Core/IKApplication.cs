@@ -1,11 +1,8 @@
-﻿using System.Collections;
-using KheaiGameEngine.Core;
+﻿using KheaiGameEngine.Core;
 
 namespace KheaiGameEngine
 {
-    ///<summary>
-    ///A basic interface for a KApplication.
-    ///</summary>
+    ///<summary>A basic interface for creating a KApplication.</summary>
     public interface IKApplication
     {
         public string AppName { get; set; }

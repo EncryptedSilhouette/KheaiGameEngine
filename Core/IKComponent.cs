@@ -1,46 +1,68 @@
-﻿namespace KheaiGameEngine
+﻿namespace KheaiGameEngine.Components
 {
-    ///<summary>
-    ///Interface for components using the KComponent structure.
-    ///</summary>
+    ///<summary>Interface for creating components using the KComponent structure.</summary>
     public interface IKComponent
     {
         ///<summary>
-        ///The order the component will be updated.
+        ///The order the component will be updated in the default game loop.
+        ///Components are ordered from least to greatest based on their order, with the greatest value being updated last.
         ///</summary>
         public ushort Order { get; set; }
 
         ///<summary>
         ///The ID for the component. 
+        ///This is normally utilized by a IKComponentContainer that uses a hashset or some form of one.
+        ///The general idea is there cannot be 2 or more components with the same ID. 
+        ///However, the implementation is not limited to that idea, and is open to an alternative implementation.
         ///</summary>
         public string ID { get; set; }
 
+        ///<summary>Handle any initilization for the component</summary>
         public void Init();
+
+        ///<summary>Handle any pre-run tasks.</summary>
         public void Start();
+
+        ///<summary>Handle any tasks for the end of execution.</summary>
         public void End();
     }
 
-    ///<summary>
-    ///Interface for containers using components that implement the IKComponent interface.
-    ///</summary>
-    public interface IKComponentContainer<Component> where Component : IKComponent
+    ///<summary>Interface for a component container that implements the IKComponent interface.</summary>
+    public interface IKComponentContainer<KComponent> where KComponent : IKComponent
     {
-        public void AddComponent(Component component);
-        public void AddComponents(Component[] components);
-        public void RemoveComponent<Comp>();
+        ///<summary>Add a component to a collection.</summary>
+        public void AddComponent(KComponent component);
+
+        ///<summary>Add an array of components to a collection.</summary>
+        public void AddComponents(KComponent[] components);
+
+        ///<summary>Remove an array of components to a collection.</summary>
         public void RemoveComponent(string id);
-        public bool HasComponent<Comp>();
+
+        ///<summary>Remove a component of a specified type from a collection.</summary>
+        public void RemoveComponent<Component>();
+
+        ///<summary>Check if a component id exists in a collection.</summary>
         public bool HasComponent(string id);
-        public Comp GetComponent<Comp>() where Comp : Component;
-        public Component GetComponent(string id);
+
+        ///<summary>Check if a component with a specified type exists in a collection.</summary>
+        public bool HasComponent<Component>();
+
+        ///<summary>Retrieve a component from a collection.</summary>
+        public KComponent GetComponent(string id);
+
+        ///<summary>Remove an array of components to a collection.</summary>
+        public Component GetComponent<Component>() where Component : KComponent;
     }
 
-    ///<summary>
-    ///Class for sorting components that implement the IKComponent interface for a SortedSet
-    ///</summary>
-    public class KComponentSorter<Component> : IComparer<Component> where Component : IKComponent
+    ///<summary>A class for sorting components that implement the IKComponent interface for a SortedSet.</summary>
+    public class KComponentSorter<KComponent> : IComparer<KComponent> where KComponent : IKComponent
     {
-        public int Compare(Component a, Component b)
+        ///<summary>
+        ///A comparer for sorting KComponents. 
+        ///Components are sorted by their Order. Components with the same ID are considered the same.
+        ///</summary>
+        public int Compare(KComponent a, KComponent b)
         {
             //Checks if the components have the same ID.
             //This prevents multiple components with the same ID.
@@ -48,8 +70,8 @@
 
             //Sorts the components by order
             //Only this one check matters since we dont want to check if the order is equal as it will remove it from the set.
-            if (a.Order > b.Order) return 1;
-            return -1;
+            if (a.Order < b.Order) return -1;
+            return 1;
         }
     }
 }

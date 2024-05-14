@@ -3,211 +3,180 @@ using SFML.Graphics;
 
 namespace KheaiGameEngine.Debug
 {
-    ///<summary>
-    ///Debug component for the KEngine. Contains static methods for managing debug logs.
-    ///</summary>
+    ///<summary>/Debug component for the KEngine. Contains static methods for managing debug logs.</summary>
     public class KDebugger : KEngineComponent
     {
-        #region LogIDs
-        ///<summary>
-        ///Constant id for the "debug" log.
-        ///</summary>
-        public const string DEBUG = "debug";
+        #region Static 
 
-        ///<summary>
-        ///Constant id for the "error" log.
-        ///</summary>
-        public const string ERROR = "error";
+        #region LogIDs
+
+        ///<summary>Constant id for the "debug" log.</summary>
+        public static readonly string DEBUG = "debug";
+
+        ///<summary>Constant id for the "error" log.</summary>
+        public static readonly string ERROR = "error";
+
         #endregion
 
-        ///<summary>
-        ///Boolean to decide whether to dump debug information to a .txt file.
-        ///</summary>
-        public static bool submitToFile
-#if DEBUG
-            = true;
-#else
-            = false;
-#endif
+        ///<summary>Whether or not to dump debug information to a .txt file when the end method is called.</summary>
+        public static bool SubmitToFile = true;
 
-        ///<summary>
-        ///The file directory for debug logs.
-        ///</summary>
+        ///<summary>The file directory for debug text files.</summary>
         public static string FileDirectory = "Debug";
 
-        ///<summary>
-        ///Dictionary for containing text logs.
-        ///</summary>
-        private static Dictionary<string, List<string>> s_logs = new()
+        ///<summary>Dictionary for containing text logs.</summary>
+        protected static Dictionary<string, List<string>> logs = new()
         {
             { DEBUG, new() },
             { ERROR, new() }
         };
 
-        //Static properties to get system time in string form.
-        public static string CurrentDateTime => DateTime.Now.ToString();
-        public static string CurrentDate => DateTime.Now.ToString("MM-dd-yy");
-        public static string CurrentTime => DateTime.Now.ToString("HH:mm:ss");
+        ///<summary>Get the current date and time as a string.</summary>
+        public static string CurrentDateTime => DateTime.UtcNow.ToString();
+
+        ///<summary>Get the current date as a formatted string ("MM-dd-yy").</summary>
+        public static string CurrentDate => DateTime.UtcNow.ToString("MM-dd-yy");
+
+        ///<summary>Get the current time as a formatted string ("HH:mm:ss").</summary>
+        public static string CurrentTime => DateTime.UtcNow.ToString("HH:mm:ss");
+
+        #endregion
+
+        #region ClassData
 
         //Variables to keep track of updates per second
-        protected byte _updatesThisCycle = 0;
-        protected long _timerStart = 0;
+        private byte updatesThisCycle = 0;
+        private long timerStart = 0;
 
-        //Time related properties for debugging
-        public double SessionTime => (DateTime.Now.Ticks - StartTime) / TimeSpan.TicksPerSecond;
-        public double AverageUpdateRate => Engine.CurrentTick / SessionTime;
+        //Time related properties for debugging.
+        ///<summary>Get the current time in ticks.</summary>
+        public double SessionTime => DateTime.UtcNow.Ticks - StartTime;
+        ///<summary>Gets the average updates per second.</summary>
+        public double AverageFrameRate => Engine.CurrentFrame / (SessionTime / TimeSpan.TicksPerSecond);
+        ///<summary>Get the current update rate.</summary>
         public byte UpdateRate { get; private set; } = 0;
-        public byte MaxUpdatesPerSecond { get; private set; } = 0;
-        public byte MinUpdatesPerSecond { get; private set; } = byte.MaxValue;
+        ///<summary>Gets the maximum updates in a cycle.</summary>
+        public byte MaxFramesPerSecond { get; private set; } = 0;
+        ///<summary>Gets the minimum updates in a cycle.</summary>
+        public byte MinFramesPerSecond { get; private set; } = byte.MaxValue;
+        ///<summary>Get the start time of this component.</summary>
         public long StartTime { get; private set; } = 0;
+        ///<summary>Get the end time of this component.</summary>
         public long EndTime { get; private set; } = 0;
 
-        public KDebugger()
+        #endregion
+
+        #region Constructors 
+
+        public KDebugger() => Order = 0;
+
+        public KDebugger(bool submitToFile) : this() => SubmitToFile = submitToFile;
+
+        public KDebugger(string filePath) : this(true) => FileDirectory = filePath;
+
+        #endregion
+
+        #region Logging
+
+        ///<summary>Submit a message to a specified log.</summary>
+        public static void Log(string logID, string message)
         {
-            Order = 0;
+            if (!logs.ContainsKey(logID))
+            {
+                ErrorLog($"Log {logID} doesn't exist.\n\t{message}");
+                return;
+            }
+            logs[logID].Add(message);
         }
 
-        public override void Init()
-        {
+        ///<summary>Submit a message to the debug log.</summary>
+        public static void DebugLog(string message) => Log(DEBUG, message);
 
+        ///<summary>Submit a message to the error log.</summary>
+        public static void ErrorLog(string message) => Log(ERROR, message);
+
+        ///<summary>Clear a specified log.</summary>
+        public static void ClearLog(string logID) => logs[logID].Clear();
+
+        ///<summary>Get a specified log as an enumerable collection.</summary>
+        public static IEnumerable<string> GetLog(string logID)
+        {
+            if (!logs.ContainsKey(logID))
+            {
+                ErrorLog($"Log {logID} doesn't exist.");
+                return null;
+            }
+            return logs[logID];
         }
 
-        public override void Start()
-        {
-            StartTime = DateTime.Now.Ticks;
-        }
+        ///<summary>Get a specified log as an enumerable collection.</summary>
+        public static IEnumerable<string> GetLog(string logID, ushort maxLines) => 
+            GetLog(logID)?.Skip(logs[logID].Count - maxLines);
+
+        #endregion
+
+        #region Logic 
+
+        public override void Init() { }
+
+        public override void Start() => StartTime = timerStart = DateTime.UtcNow.Ticks;
 
         public override void End()
         {
-            EndTime = DateTime.Now.Ticks;
+            EndTime = DateTime.UtcNow.Ticks;
 
-            if (submitToFile)
-            {
-                DumpToFile();
-            }
+            if (SubmitToFile) DumpToFile();
         }
 
-        public override void Update(uint currentTick)
-        {
-
-        }
+        public override void Update(uint currentFrame) { }
 
         public override void FrameUpdate(uint currentFrame)
         {
-            _updatesThisCycle++;
+            updatesThisCycle++;
 
             //The last few lines are to keep track of debug info.
-            if ((DateTime.UtcNow.Ticks - _timerStart) / TimeSpan.TicksPerSecond >= 1)
+            if ((DateTime.UtcNow.Ticks - timerStart) / TimeSpan.TicksPerSecond >= 1)
             {
-                UpdateRate = _updatesThisCycle;
+                UpdateRate = updatesThisCycle;
 
-                if (_updatesThisCycle >= MaxUpdatesPerSecond) MaxUpdatesPerSecond = _updatesThisCycle;
-                if (_updatesThisCycle < MinUpdatesPerSecond) MinUpdatesPerSecond = _updatesThisCycle;
+                if (updatesThisCycle >= MaxFramesPerSecond) MaxFramesPerSecond = updatesThisCycle;
+                if (updatesThisCycle < MinFramesPerSecond) MinFramesPerSecond = updatesThisCycle;
 
-                _updatesThisCycle = 0;
-                _timerStart = DateTime.UtcNow.Ticks;
+                updatesThisCycle = 0;
+                timerStart = DateTime.UtcNow.Ticks;
             }
         }
 
-        public void Draw(RenderTarget target)
-        {
+        ///<summary>Draw a frame.</summary>
+        public void Draw(RenderTarget target) { }
 
-        }
+        #endregion
 
-        public static void Log(string logID, string message)
-        {
-            if (!s_logs.ContainsKey(logID))
-            {
-                ErrorLog($"Log {logID} doesn't exist.\n\t" + message);
-                return;
-            }
-            s_logs[logID].Add(message);
-        }
-
-        public static void DebugLog(string message)
-        {
-            Log(DEBUG, message);
-        }
-
-        public static void ErrorLog(string message)
-        {
-            Log(ERROR, $"{CurrentTime}, Err: {message}");
-        }
-
-        public static void ClearLog(string logID)
-        {
-            s_logs[logID].Clear();
-        }
-
-        public static IReadOnlyList<string> GetLog(string logID)
-        {
-            if (!s_logs.ContainsKey(logID))
-            {
-                ErrorLog($"Log {logID} doesn't exist.");
-                return null;
-            }
-            return s_logs[logID];
-        }
-
-        public static IReadOnlyList<string> GetLog(string logID, ushort maxLines)
-        {
-            if (!s_logs.ContainsKey(logID))
-            {
-                ErrorLog($"Log {logID} doesn't exist.");
-                return null;
-            }
-
-            //Gets the start index to return the specified amount of lines.
-            int startIndex = s_logs[logID].Count - maxLines;
-
-            if (startIndex < 0)
-            {
-                return s_logs[logID];
-            }
-
-            if (startIndex > s_logs[logID].Count - 1)
-            {
-                return new List<string>();
-            }
-
-            return s_logs[logID].Skip(startIndex).ToList();
-        }
-
-        ///<summary>
-        ///Function to dump debug info to a .txt file. Override for custom implementation.
-        ///</summary>
+        ///<summary>Dump debug info to a .txt file. Override for custom implementation.</summary>
         public virtual void DumpToFile()
         {
-            int count = 0;
-            string startTime = new DateTime(StartTime).ToString();
-            string endTime = new DateTime(EndTime).ToString();
-            string sessionTime = new DateTime(StartTime - EndTime).ToString("dd:hh:mm:ss");
-            string DebugFilePath;
+            int logNum = 0;
+            string path = $"{FileDirectory}\\Log_{CurrentDate}";
             StreamWriter writer;
 
             Directory.CreateDirectory(FileDirectory);
-            do
-            {
-                DebugFilePath = $"{FileDirectory}\\Debug_{CurrentDate}_{count}.txt";
-                count++;
-            }
-            while (File.Exists(DebugFilePath));
 
-            writer = new StreamWriter(File.Create(DebugFilePath));
-            writer.WriteLine(CurrentDateTime);
-            writer.WriteLine($"Start Time: {startTime}");
-            writer.WriteLine($"End Time: {endTime}");
-            writer.WriteLine($"Session time: {sessionTime}");
-            writer.WriteLine($"Last tick: {Engine.CurrentTick}");
+            while (File.Exists($"{path}({logNum})")) logNum++;
+
+            writer = new(File.Create($"{path}({logNum})"));
+            writer.WriteLine($"Start time: {new DateTime(StartTime).ToString("MM-dd-yy H:mm:ss")}");
+            writer.WriteLine($"End time: {new DateTime(EndTime).ToString("MM-dd-yy H:mm:ss")}");
+            writer.WriteLine($"AverageFrameRate: {AverageFrameRate}");
+            writer.WriteLine($"MaxFramesPerSecond: {MaxFramesPerSecond}");
+            writer.WriteLine($"MinFramesPerSecond: {MinFramesPerSecond}");
             writer.WriteLine($"Last Frame: {Engine.CurrentFrame}");
-            writer.WriteLine($"Max Update Rate: {MaxUpdatesPerSecond}");
-            writer.WriteLine($"Min Update Rate: {MinUpdatesPerSecond}");
-            writer.WriteLine($"Average Update Rate: {AverageUpdateRate}");
 
-            foreach (var logID in s_logs.Keys)
+            foreach (var log in logs)
             {
-                writer.WriteLine($"\n{GetLog(logID)}");
-            }
+                writer.WriteLine($"\n{log.Key}:");
+
+                foreach (var line in log.Value) writer.WriteLine(line);
+            }            
 
             writer.Close();
         }

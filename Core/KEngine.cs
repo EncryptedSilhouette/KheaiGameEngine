@@ -1,18 +1,28 @@
-﻿using KheaiGameEngine.Debug;
-using SFML.Graphics;
+﻿using SFML.Graphics;
 using SFML.Window;
+
+using KheaiGameEngine.Components;
+using KheaiGameEngine.Debug;
 
 namespace KheaiGameEngine.Core
 {
     public interface IKEngine 
     {
+        ///<summary>Starting point for the engine.</summary>
         void Start();
     }
 
     public interface IKEngineManaged
     {
+        ///<summary>Executes any starting tasks.</summary>
         void Start();
-        void Update(uint currentTick);
+
+        ///<summary>Executes tasks every tick.</summary>
+        ///<param name="currentFrame">Keeps track of the current frame.</param>
+        void Update(uint currentFrame);
+
+        ///<summary>Executes tasks every frame.</summary>
+        ///<param name="currentFrame">Keeps track of the current frame.</param>
         void FrameUpdate(uint currentFrame);
     }
 
@@ -31,28 +41,29 @@ namespace KheaiGameEngine.Core
         public abstract void Init();
         public abstract void Start();
         public abstract void End();
-        public abstract void Update(uint currentTick);
+        public abstract void Update(uint currentFrame);
         public abstract void FrameUpdate(uint currentFrame);
     }
 
     public sealed class KEngine : IKComponentContainer<KEngineComponent>, IKEngine
     {
-        public const byte UpdateRateTarget = 60;
-
+        private byte _frameRateTarget = 30;
         private KComponentSorter<KEngineComponent> _componentSorter;
         private SortedSet<KEngineComponent> _engineComponents;
 
-        public byte TicksInASecond => UpdateRateTarget;
-        public byte updateInterval { get; } = UpdateRateTarget / 1000;
-        public uint CurrentTick { get; private set; } = 0;
+        public byte FrameRateTarget => _frameRateTarget;
+        public double FrameInterval => 1000d / _frameRateTarget;
         public uint CurrentFrame { get; private set; } = 0;
         public bool IsRunning { get; private set; } = true;
         public bool IsPaused { get; private set; } = false;
         public RenderWindow Window { get; private set; }
+        public KDrawHandler DrawHandler { get; private set; }
         public IKApplication Application { get; private set; } 
 
         public KEngineComponent this[string id] => GetComponent(id);
         public KEngineComponent this[Type id] => GetComponent(id.Name);
+
+        #region Constructors
 
         public KEngine(IKApplication app)
         {
@@ -64,42 +75,31 @@ namespace KheaiGameEngine.Core
             _engineComponents = new(_componentSorter);
         }
 
+        public KEngine(IKApplication app, KDrawHandler renderer) : this(app) => AddComponent(renderer);
+        public KEngine(IKApplication app, KDrawHandler renderer, byte frameRateTarget) : this(app, renderer) => 
+            _frameRateTarget = frameRateTarget;
+
+        #endregion
+
         #region Game logic
+
         public void Init()
         {
-            //Add required components if they don't already exist.
-            if (!HasComponent<KResourceHandler>())
-            {
-                AddComponent(new KResourceHandler(new KDefaultLoader()));
-            }
             if (!HasComponent<KDebugger>())
-            {
                 AddComponent(new KDebugger());
-            }
-            if (!HasComponent<KDrawHandler>())
-            {
-                AddComponent(new KDrawHandler());
-            }
 
-            foreach (KEngineComponent component in _engineComponents)
-            {
-                component.Start();
-            }
+            foreach (KEngineComponent component in _engineComponents) component.Start();
         }
 
         #region Gameloop
+
         public void Start()
         {
-            long lastTime, newTime;
+            double lastTime, newTime;
             double updateUnprocessedTime = 0;
-            KDebugger debugger;
-            KDrawHandler drawHandler;
 
             Init();
-
-            debugger = GetComponent<KDebugger>();
-            drawHandler = GetComponent<KDrawHandler>();
-
+            
             lastTime = DateTime.UtcNow.Ticks;
 
             while (IsRunning) //Core game-loop
@@ -109,51 +109,39 @@ namespace KheaiGameEngine.Core
                 lastTime = newTime;
 
                 //Keeps track of time between updates and catches up on updates in case of lag.
-                if (updateUnprocessedTime >= updateInterval)
+                if (updateUnprocessedTime >= FrameInterval)
                 {
-                    updateUnprocessedTime -= updateInterval;
-
-                    if (!IsPaused)
-                    {
-                        Update();
-                        CurrentTick++;
-                    }
-                    FrameUpdate();
-
-                    Window.Clear(Color.Black);
-                    drawHandler.Draw(Window);
-                    Window.Display();
-
+                    updateUnprocessedTime -= FrameInterval;
                     CurrentFrame++;
+
+                    Update();
+                    FrameUpdate();
+                    Draw();
                 }
                 Window.DispatchEvents();
             }
+
+            foreach (KEngineComponent component in _engineComponents) component.End();
         }
         #endregion
 
-        public void End()
-        {
-            IsRunning = false;
-        }
+        public void End() => IsRunning = false;
 
         public void Update()
         {
-            foreach (KEngineComponent component in _engineComponents)
-            {
-                component.Update(CurrentTick);
-            }
+            foreach (KEngineComponent component in _engineComponents) component.Update(CurrentFrame);
         }
 
         public void FrameUpdate()
         {
-            foreach (KEngineComponent component in _engineComponents)
-            {
-                component.FrameUpdate(CurrentFrame);
-            }
+            foreach (KEngineComponent component in _engineComponents) component.FrameUpdate(CurrentFrame);
         }
+
+        public void Draw() => DrawHandler.Draw(Window);
         #endregion
 
         #region Component management
+
         public void AddComponent(KEngineComponent component)
         {
             component.Engine = this;
@@ -163,10 +151,7 @@ namespace KheaiGameEngine.Core
 
         public void AddComponents(KEngineComponent[] components)
         {
-            foreach (var component in components) 
-            {
-                AddComponent(component);
-            }
+            foreach (var component in components) AddComponent(component);
         }
 
         public void RemoveComponent(string id)
@@ -196,38 +181,31 @@ namespace KheaiGameEngine.Core
         public bool HasComponent<Component>()
         {
             foreach (var component in _engineComponents)
-            {
                 if (component is Component) return true;
-            }
             return false;
         }
 
         public bool HasComponent(string id)
         {
             foreach (var component in _engineComponents)
-            {
                 if (component.ID.Equals(id)) return true;
-            }
             return false;
         }
 
         public Component GetComponent<Component>() where Component : KEngineComponent
         {
             foreach (IKComponent component in _engineComponents)
-            {
                 if (component is Component) return (Component) component;
-            }
             return null;
         }
 
         public KEngineComponent GetComponent(string id)
         {
             foreach (var component in _engineComponents)
-            {
                 if (component.ID.Equals(id)) return component;
-            }
             return null;
         }
+
         #endregion
     }
 }

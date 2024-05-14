@@ -1,4 +1,6 @@
 ﻿using KheaiGameEngine.Core;
+using KheaiGameEngine.Components;
+
 using System.Text.Json.Serialization;
 
 namespace KheaiGameEngine.GameObjects
@@ -173,13 +175,13 @@ namespace KheaiGameEngine.GameObjects
             return null;
         }
 
-        public void Update(uint currentTick)
+        public void Update(uint currentFrame)
         {
             foreach (var component in objectComponents)
             {
                 if (component.Enabled) 
                 {
-                    component.Update(currentTick);
+                    component.Update(currentFrame);
                 }
             }
         }
