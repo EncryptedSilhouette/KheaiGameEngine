@@ -42,7 +42,7 @@ namespace KheaiGameEngine.Debug
 
         #endregion
 
-        #region ClassData
+        #region Class data
 
         //Variables to keep track of updates per second
         private byte updatesThisCycle = 0;

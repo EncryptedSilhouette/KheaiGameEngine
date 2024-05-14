@@ -1,70 +1,76 @@
 ﻿using SFML.Graphics;
 using SFML.Window;
 
-using KheaiGameEngine.Components;
 using KheaiGameEngine.Debug;
 
-namespace KheaiGameEngine.Core
+namespace KheaiGameEngine
 {
-    public interface IKEngine 
+    #region KEngineComponent
+
+    public abstract class KEngineComponent : IKComponent
     {
-        ///<summary>Starting point for the engine.</summary>
-        void Start();
-    }
-
-    public interface IKEngineManaged
-    {
-        ///<summary>Executes any starting tasks.</summary>
-        void Start();
-
-        ///<summary>Executes tasks every tick.</summary>
-        ///<param name="currentFrame">Keeps track of the current frame.</param>
-        void Update(uint currentFrame);
-
-        ///<summary>Executes tasks every frame.</summary>
-        ///<param name="currentFrame">Keeps track of the current frame.</param>
-        void FrameUpdate(uint currentFrame);
-    }
-
-    public abstract class KEngineComponent : IKComponent, IKEngineManaged
-    {
-        public ushort Order { get; set; }
+        ///<summary>The order the component will be updated.</summary>
+        public ushort Order { get; set; } = 0;
+        ///<summary>The ID for the component.</summary>
         public string ID { get; set; }
+        ///<summary>The reference for the engine.</summary>
         public KEngine Engine { get; set; }
 
-        public KEngineComponent()
-        {
-            Order = 5;
-            ID = GetType().Name;
-        }
+        ///Sets the component's ID to the type name.</summary>
+        public KEngineComponent() => ID = GetType().Name;
 
+        //Methods implemented from IKComponent
         public abstract void Init();
         public abstract void Start();
         public abstract void End();
+
+        ///<summary>Executes code every update.</summary>
+        ///<param name="currentFrame">Keeps track of the current frame.</param>
         public abstract void Update(uint currentFrame);
+
+        ///<summary>Executes pre-draw code every update. This method is meant to be called after the update method.</summary>
+        ///<param name="currentFrame">Keeps track of the current frame.</param>
         public abstract void FrameUpdate(uint currentFrame);
     }
 
-    public sealed class KEngine : IKComponentContainer<KEngineComponent>, IKEngine
+    #endregion
+
+    #region KEngine
+
+    public sealed class KEngine : IKComponentContainer<KEngineComponent>
     {
-        private byte _frameRateTarget = 30;
+        #region Class data
+
         private KComponentSorter<KEngineComponent> _componentSorter;
         private SortedSet<KEngineComponent> _engineComponents;
 
-        public byte FrameRateTarget => _frameRateTarget;
-        public double FrameInterval => 1000d / _frameRateTarget;
+        ///<summary>The target number of updates in a second.</summary>
+        public byte FrameRateTarget { get; private set; } = 30;
+        ///<summary>The current number of frames.</summary>
         public uint CurrentFrame { get; private set; } = 0;
+        ///<summary>Gets the update interval in milliseconds.</summary>
+        public double FrameInterval => 1000d / FrameRateTarget;
+        ///<summary>Whether or not the engine is running.</summary>
         public bool IsRunning { get; private set; } = true;
-        public bool IsPaused { get; private set; } = false;
+        ///<summary>The reference to the application.</summary>
+        public IKApplication Application { get; private set; }
+        ///<summary>The reference to the render window.</summary>
         public RenderWindow Window { get; private set; }
-        public KDrawHandler DrawHandler { get; private set; }
-        public IKApplication Application { get; private set; } 
 
+        //TODO
+        public KDrawHandler DrawHandler { get; private set; }
+
+        ///<summary>Indexer to retrive an engine component given an the component id.</summary>
         public KEngineComponent this[string id] => GetComponent(id);
-        public KEngineComponent this[Type id] => GetComponent(id.Name);
+        ///<summary>Indexer to retrive an engine component given the component's type.</summary>
+        public KEngineComponent this[Type type] => GetComponent(type.Name);
+
+        #endregion
 
         #region Constructors
 
+        ///<summary>Creates the window and sets the refrence to the application.</summary>
+        ///<param name="app">Refrence to the KApplication.</param>
         public KEngine(IKApplication app)
         {
             Application = app;
@@ -75,14 +81,17 @@ namespace KheaiGameEngine.Core
             _engineComponents = new(_componentSorter);
         }
 
-        public KEngine(IKApplication app, KDrawHandler renderer) : this(app) => AddComponent(renderer);
-        public KEngine(IKApplication app, KDrawHandler renderer, byte frameRateTarget) : this(app, renderer) => 
-            _frameRateTarget = frameRateTarget;
+        ///<summary>Creates the window and sets the refrence to the application and the framerate target.</summary>
+        ///<param name="app">Refrence to the KApplication.</param>  
+        ///<param name="frameRateTarget">The target framerate.</param>
+        public KEngine(IKApplication app, byte frameRateTarget) : this(app) => 
+            FrameRateTarget = frameRateTarget;
 
         #endregion
 
-        #region Game logic
+        #region Logic
 
+        ///<summary>Executes any initilization code for the component. Should be called in the "Start" method</summary>
         public void Init()
         {
             if (!HasComponent<KDebugger>())
@@ -93,6 +102,7 @@ namespace KheaiGameEngine.Core
 
         #region Gameloop
 
+        ///<summary>Executes starting code for the component.</summary>
         public void Start()
         {
             double lastTime, newTime;
@@ -116,7 +126,7 @@ namespace KheaiGameEngine.Core
 
                     Update();
                     FrameUpdate();
-                    Draw();
+                    DrawHandler.Draw(Window);
                 }
                 Window.DispatchEvents();
             }
@@ -125,21 +135,24 @@ namespace KheaiGameEngine.Core
         }
         #endregion
 
+        ///<summary>Executes code for the end of execution.</summary>
         public void End() => IsRunning = false;
 
+        ///<summary>Executes code every update.</summary>
         public void Update()
         {
             foreach (KEngineComponent component in _engineComponents) component.Update(CurrentFrame);
         }
 
+        ///<summary>Executes pre-draw code every update.
         public void FrameUpdate()
         {
             foreach (KEngineComponent component in _engineComponents) component.FrameUpdate(CurrentFrame);
         }
 
-        public void Draw() => DrawHandler.Draw(Window);
         #endregion
 
+        //Component management implemented from IKComponentContainer
         #region Component management
 
         public void AddComponent(KEngineComponent component)
@@ -208,4 +221,6 @@ namespace KheaiGameEngine.Core
 
         #endregion
     }
+
+    #endregion
 }

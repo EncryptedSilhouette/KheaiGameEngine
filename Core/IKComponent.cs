@@ -1,29 +1,21 @@
-﻿namespace KheaiGameEngine.Components
+﻿namespace KheaiGameEngine
 {
     ///<summary>Interface for creating components using the KComponent structure.</summary>
     public interface IKComponent
     {
-        ///<summary>
-        ///The order the component will be updated in the default game loop.
-        ///Components are ordered from least to greatest based on their order, with the greatest value being updated last.
-        ///</summary>
+        ///<summary>The order the component will be updated.</summary>
         public ushort Order { get; set; }
 
-        ///<summary>
-        ///The ID for the component. 
-        ///This is normally utilized by a IKComponentContainer that uses a hashset or some form of one.
-        ///The general idea is there cannot be 2 or more components with the same ID. 
-        ///However, the implementation is not limited to that idea, and is open to an alternative implementation.
-        ///</summary>
+        ///<summary>/The ID for the component.</summary>
         public string ID { get; set; }
 
-        ///<summary>Handle any initilization for the component</summary>
+        ///<summary>Executes any initilization code for the component. Should be called in the "Start" method</summary>
         public void Init();
 
-        ///<summary>Handle any pre-run tasks.</summary>
+        ///<summary>Executes starting code for the component.</summary>
         public void Start();
 
-        ///<summary>Handle any tasks for the end of execution.</summary>
+        ///<summary>Executes code for the end of execution.</summary>
         public void End();
     }
 
@@ -55,7 +47,7 @@
         public Component GetComponent<Component>() where Component : KComponent;
     }
 
-    ///<summary>A class for sorting components that implement the IKComponent interface for a SortedSet.</summary>
+    ///<summary>A class for sorting components that implement the IKComponent interface in a SortedSet.</summary>
     public class KComponentSorter<KComponent> : IComparer<KComponent> where KComponent : IKComponent
     {
         ///<summary>
