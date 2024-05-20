@@ -25,12 +25,12 @@ namespace KheaiGameEngine
         public abstract void End();
 
         ///<summary>Executes code every update.</summary>
-        ///<param name="currentFrame">Keeps track of the current frame.</param>
-        public abstract void Update(uint currentFrame);
+        ///<param name="currentUpdate">Keeps track of the current frame.</param>
+        public abstract void Update(uint currentUpdate);
 
         ///<summary>Executes pre-draw code every update. This method is meant to be called after the update method.</summary>
-        ///<param name="currentFrame">Keeps track of the current frame.</param>
-        public abstract void FrameUpdate(uint currentFrame);
+        ///<param name="currentUpdate">Keeps track of the current frame.</param>
+        public abstract void FrameUpdate(uint currentUpdate);
     }
 
     #endregion
@@ -45,11 +45,11 @@ namespace KheaiGameEngine
         private SortedSet<KEngineComponent> _engineComponents;
 
         ///<summary>The target number of updates in a second.</summary>
-        public byte FrameRateTarget { get; private set; } = 30;
+        public byte UpdateRateTarget { get; private set; } = 30;
         ///<summary>The current number of frames.</summary>
-        public uint CurrentFrame { get; private set; } = 0;
+        public uint CurrentUpdate { get; private set; } = 0;
         ///<summary>Gets the update interval in milliseconds.</summary>
-        public double FrameInterval => 1000d / FrameRateTarget;
+        public double UpdateInterval => 1000d / UpdateRateTarget;
         ///<summary>Whether or not the engine is running.</summary>
         public bool IsRunning { get; private set; } = true;
         ///<summary>The reference to the application.</summary>
@@ -83,9 +83,9 @@ namespace KheaiGameEngine
 
         ///<summary>Creates the window and sets the refrence to the application and the framerate target.</summary>
         ///<param name="app">Refrence to the KApplication.</param>  
-        ///<param name="frameRateTarget">The target framerate.</param>
-        public KEngine(IKApplication app, byte frameRateTarget) : this(app) => 
-            FrameRateTarget = frameRateTarget;
+        ///<param name="updateRateTarget">The target framerate.</param>
+        public KEngine(IKApplication app, byte updateRateTarget) : this(app) => 
+            UpdateRateTarget = updateRateTarget;
 
         #endregion
 
@@ -106,7 +106,7 @@ namespace KheaiGameEngine
         public void Start()
         {
             double lastTime, newTime;
-            double updateUnprocessedTime = 0;
+            double unprocessedTime = 0;
 
             Init();
             
@@ -115,18 +115,21 @@ namespace KheaiGameEngine
             while (IsRunning) //Core game-loop
             {
                 newTime = DateTime.UtcNow.Ticks;
-                updateUnprocessedTime += (newTime - lastTime) / TimeSpan.TicksPerMillisecond;
+                unprocessedTime += (newTime - lastTime) / TimeSpan.TicksPerMillisecond;
                 lastTime = newTime;
 
                 //Keeps track of time between updates and catches up on updates in case of lag.
-                if (updateUnprocessedTime >= FrameInterval)
+                if (unprocessedTime >= UpdateInterval)
                 {
-                    updateUnprocessedTime -= FrameInterval;
-                    CurrentFrame++;
+                    while (unprocessedTime >= UpdateInterval) 
+                    {
+                        unprocessedTime -= UpdateInterval;
+                        CurrentUpdate++;
 
-                    Update();
+                        Update();
+                    }
                     FrameUpdate();
-                    DrawHandler.Draw(Window);
+                    //DrawHandler.Draw(Window);
                 }
                 Window.DispatchEvents();
             }
@@ -141,13 +144,13 @@ namespace KheaiGameEngine
         ///<summary>Executes code every update.</summary>
         public void Update()
         {
-            foreach (KEngineComponent component in _engineComponents) component.Update(CurrentFrame);
+            foreach (KEngineComponent component in _engineComponents) component.Update(CurrentUpdate);
         }
 
         ///<summary>Executes pre-draw code every update.
         public void FrameUpdate()
         {
-            foreach (KEngineComponent component in _engineComponents) component.FrameUpdate(CurrentFrame);
+            foreach (KEngineComponent component in _engineComponents) component.FrameUpdate(CurrentUpdate);
         }
 
         #endregion

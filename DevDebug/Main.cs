@@ -1,13 +1,12 @@
 ﻿#if DEBUG
 
 using KheaiGameEngine;
-using KheaiGameEngine.Core;
 using System.Collections;
 
-Console.WriteLine($"Processors: {Environment.ProcessorCount}");
+Console.WriteLine($"Test: {1 % 5}");
 
-Application application = new Application();
-application.Start();
+//Application application = new Application();
+//application.Start();
 
 class Application : IKApplication
 {

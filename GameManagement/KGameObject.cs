@@ -1,12 +1,11 @@
 ﻿using KheaiGameEngine.Core;
-using KheaiGameEngine.Components;
 
 using System.Text.Json.Serialization;
 
 namespace KheaiGameEngine.GameObjects
 {
     #region ObjectComponent
-    public abstract class KObjectComponent : IKComponent, IKEngineManaged
+    public abstract class KObjectComponent : IKComponent
     {
         public bool Enabled { get; set; }
 
@@ -59,13 +58,13 @@ namespace KheaiGameEngine.GameObjects
     #endregion
 
     #region GameObject
-    public class KGameObject : IKComponentContainer<KObjectComponent>, IKEngineManaged
+    public class KGameObject : IKComponentContainer<KObjectComponent>
     {
         public string ID { get; protected set; }
         public string Name { get; set; }
         public bool Enabled { get; set; }
         public KGameObject Parent { get; set; }
-        public KSceneHandler Handler { get; set; }
+
 
         protected SortedSet<KObjectComponent> objectComponents = new(new KComponentSorter<KObjectComponent>());
 

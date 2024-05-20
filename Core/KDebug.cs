@@ -52,13 +52,13 @@ namespace KheaiGameEngine.Debug
         ///<summary>Get the current time in ticks.</summary>
         public double SessionTime => DateTime.UtcNow.Ticks - StartTime;
         ///<summary>Gets the average updates per second.</summary>
-        public double AverageFrameRate => Engine.CurrentFrame / (SessionTime / TimeSpan.TicksPerSecond);
+        public double AverageUpdateRate => Engine.CurrentUpdate / (SessionTime / TimeSpan.TicksPerSecond);
         ///<summary>Get the current update rate.</summary>
         public byte UpdateRate { get; private set; } = 0;
         ///<summary>Gets the maximum updates in a cycle.</summary>
-        public byte MaxFramesPerSecond { get; private set; } = 0;
+        public byte MaxUpdatesPerSecond { get; private set; } = 0;
         ///<summary>Gets the minimum updates in a cycle.</summary>
-        public byte MinFramesPerSecond { get; private set; } = byte.MaxValue;
+        public byte MinUpdatesPerSecond { get; private set; } = byte.MaxValue;
         ///<summary>Get the start time of this component.</summary>
         public long StartTime { get; private set; } = 0;
         ///<summary>Get the end time of this component.</summary>
@@ -130,7 +130,7 @@ namespace KheaiGameEngine.Debug
 
         public override void Update(uint currentFrame) { }
 
-        public override void FrameUpdate(uint currentFrame)
+        public override void FrameUpdate(uint currentUpdate)
         {
             updatesThisCycle++;
 
@@ -139,8 +139,8 @@ namespace KheaiGameEngine.Debug
             {
                 UpdateRate = updatesThisCycle;
 
-                if (updatesThisCycle >= MaxFramesPerSecond) MaxFramesPerSecond = updatesThisCycle;
-                if (updatesThisCycle < MinFramesPerSecond) MinFramesPerSecond = updatesThisCycle;
+                if (updatesThisCycle >= MaxUpdatesPerSecond) MaxUpdatesPerSecond = updatesThisCycle;
+                if (updatesThisCycle < MinUpdatesPerSecond) MinUpdatesPerSecond = updatesThisCycle;
 
                 updatesThisCycle = 0;
                 timerStart = DateTime.UtcNow.Ticks;
@@ -166,10 +166,10 @@ namespace KheaiGameEngine.Debug
             writer = new(File.Create($"{path}({logNum})"));
             writer.WriteLine($"Start time: {new DateTime(StartTime).ToString("MM-dd-yy H:mm:ss")}");
             writer.WriteLine($"End time: {new DateTime(EndTime).ToString("MM-dd-yy H:mm:ss")}");
-            writer.WriteLine($"AverageFrameRate: {AverageFrameRate}");
-            writer.WriteLine($"MaxFramesPerSecond: {MaxFramesPerSecond}");
-            writer.WriteLine($"MinFramesPerSecond: {MinFramesPerSecond}");
-            writer.WriteLine($"Last Frame: {Engine.CurrentFrame}");
+            writer.WriteLine($"AverageFrameRate: {AverageUpdateRate}");
+            writer.WriteLine($"MaxFramesPerSecond: {MaxUpdatesPerSecond}");
+            writer.WriteLine($"MinFramesPerSecond: {MinUpdatesPerSecond}");
+            writer.WriteLine($"Last Frame: {Engine.CurrentUpdate}");
 
             foreach (var log in logs)
             {

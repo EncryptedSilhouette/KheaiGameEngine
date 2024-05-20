@@ -14,8 +14,19 @@ namespace KheaiGameEngine.Core
 
         public KTileMap(KGrid<ushort> grid, Texture texture)
         {
+            ushort count = 0;
+
             Texture = texture;
             Grid = grid;
+
+            for (ushort i = 0; i < Rows; i++)
+            {
+                for (ushort j = 0; j < Columns; j++)
+                {
+                    grid[i, j] = count;
+                    count++;
+                }
+            }
         }
 
         public KTileMap(ushort cellSizeX, ushort cellSizeY, ushort rows, ushort columns, Texture texture) :

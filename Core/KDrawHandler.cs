@@ -11,6 +11,11 @@ namespace KheaiGameEngine
 
     }
 
+    public class KSpriteCluster 
+    {
+
+    }
+
     public class SpriteBatch 
     {
         Texture texture;

@@ -7,14 +7,18 @@
         public ushort CellSizeY { get; private set; }
         public ushort Rows { get; private set; }
         public ushort Columns { get; private set; }
-        public T this[ushort x, ushort y] => Grid[x, y];
+        public T this[ushort row, ushort collumn] 
+        {
+            get => Grid[row, collumn];
+            set => Grid[row, collumn] = value;
+        }
 
         public KGrid(ushort cellSizeX, ushort cellSizeY, ushort rows, ushort columns)
         {
-            CellSizeX = cellSizeX;
-            CellSizeY = cellSizeY;
             Rows = rows;
             Columns = columns;
+            CellSizeX = cellSizeX;
+            CellSizeY = cellSizeY;
             Grid = new T[rows, columns];
         }
     }
