@@ -14,7 +14,7 @@ class Application : IKApplication
     public string AppName { get; set; }
     public string configFilePath { get; set; }
     public Hashtable appConfig { get; set; }
-    public IKEngine Engine { get; set; }
+    public KEngine Engine { get; set; }
 
     public void Init()
     {

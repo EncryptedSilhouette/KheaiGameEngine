@@ -1,7 +1,7 @@
 ﻿using SFML.System;
 using System.Text.Json.Serialization;
 
-namespace KheaiGameEngine.GameObjects
+namespace KheaiGameEngine.Core
 {
     //TODO Apply positional math for parent rotation.
     public class KTransform

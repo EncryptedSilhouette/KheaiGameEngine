@@ -1,7 +1,8 @@
-﻿using KheaiGameEngine.GameObjects;
-using System.Text.Json;
+﻿using System.Text.Json;
 
-namespace KheaiGameEngine.Core
+using KheaiGameEngine.GameObjects;
+
+namespace KheaiGameEngine
 {
     #region Scene
 
