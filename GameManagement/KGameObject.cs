@@ -1,68 +1,14 @@
 ﻿using KheaiGameEngine.Core;
 
-using System.Text.Json.Serialization;
-
 namespace KheaiGameEngine.GameObjects
 {
-    #region ObjectComponent
-    public abstract class KObjectComponent : IKComponent
-    {
-        public bool Enabled { get; set; }
-
-        [JsonInclude][JsonPropertyOrder(1)]
-        public ushort Order { get; set; }
-
-        [JsonInclude][JsonPropertyOrder(0)]
-        public string ID { get; set; }
-
-        [JsonInclude][JsonPropertyOrder(2)]
-        public KGameObject Owner { get; set; }
-        
-        public KObjectComponent()
-        {
-            ID = GetType().Name;
-            Enabled = true;
-        }
-
-        public abstract void Init();
-        public abstract void Start();
-        public abstract void End();
-        public abstract void Update(uint currentTick);
-        public abstract void FrameUpdate(uint currentFrame);
-    }
-    #endregion
-
-    #region ObjectData
-    public class KObjectData
-    {
-        public string ID { get; set; }
-        public List<KObjectComponent> Components { get; set; }
-
-        public KGameObject CreateObject()
-        {
-            return CreateObject(ID);
-        }
-
-        public KGameObject CreateObject(string name)
-        {
-            KGameObject gameObject = new(ID, name);
-
-            foreach (var component in Components)
-            {
-
-            }
-
-            return gameObject;
-        }
-    }
-    #endregion
-
     #region GameObject
     public class KGameObject : IKComponentContainer<KObjectComponent>
     {
         public string ID { get; protected set; }
         public string Name { get; set; }
         public bool Enabled { get; set; }
+        public KTransform Transform { get; set; }
         public KGameObject Parent { get; set; }
 
 
@@ -98,19 +44,18 @@ namespace KheaiGameEngine.GameObjects
             }
         }
 
-        public void AddComponent(KObjectComponent component)
+        public KObjectComponent AddComponent(KObjectComponent component)
         {
             component.Owner = this;
             component.Init();
             objectComponents.Add(component);
+            return component;
         }
 
-        public void AddComponents(KObjectComponent[] components)
+        public KObjectComponent[] AddComponents(KObjectComponent[] components)
         {
-            foreach (var component in components)
-            {
-                AddComponent(component);
-            }
+            foreach (var component in components) AddComponent(component);
+            return components;
         }
 
         public void RemoveComponent(string id)

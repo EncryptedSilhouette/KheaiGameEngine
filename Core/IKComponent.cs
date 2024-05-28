@@ -23,10 +23,10 @@
     public interface IKComponentContainer<KComponent> where KComponent : IKComponent
     {
         ///<summary>Add a component to a collection.</summary>
-        public void AddComponent(KComponent component);
+        public KComponent AddComponent(KComponent component);
 
         ///<summary>Add an array of components to a collection.</summary>
-        public void AddComponents(KComponent[] components);
+        public KComponent[] AddComponents(KComponent[] components);
 
         ///<summary>Remove an array of components to a collection.</summary>
         public void RemoveComponent(string id);

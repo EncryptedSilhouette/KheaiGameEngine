@@ -1,5 +1,4 @@
 ﻿using SFML.System;
-using System.Text.Json.Serialization;
 
 namespace KheaiGameEngine.Core
 {
@@ -11,28 +10,27 @@ namespace KheaiGameEngine.Core
         private Vector2f _truePos = new(0, 0);
         private KTransform _parent;
 
-        [JsonInclude]
         public float rotation = 0.0f;
-        [JsonInclude]
         public Vector2f RelativePos = new(0, 0);
-        [JsonInclude]
         public Vector2f Dimentions = new(1, 1);
 
-        [JsonIgnore]
+        public float Left => _truePos.X - Width / 2;
+        public float Right => _truePos.X + Width / 2;
+        public float Top => _truePos.Y - Height / 2;
+        public float Bottom => _truePos.Y + Height / 2;
+
         public float Width
         {
             get => Dimentions.X;
             set => Dimentions.X = value;
         }
 
-        [JsonIgnore]
         public float Height
         {
             get => Dimentions.Y;
             set => Dimentions.Y = value;
         }
 
-        [JsonIgnore]
         public float PosX
         {
             get => _truePos.X;
@@ -43,7 +41,6 @@ namespace KheaiGameEngine.Core
             }
         }
 
-        [JsonIgnore]
         public float PosY
         {
             get => _truePos.Y;
@@ -54,7 +51,6 @@ namespace KheaiGameEngine.Core
             }
         }
 
-        [JsonIgnore]
         public Vector2f Position
         {
             get => _truePos;
@@ -65,30 +61,14 @@ namespace KheaiGameEngine.Core
             }
         }
 
-        [JsonIgnore]
         public KTransform parent
         {
             get
             {
-                if (_parent == null)
-                {
-                    _parent = this;
-                }
+                if (_parent == null) _parent = this;
                 return _parent;
             }
             set => _parent = value;
         }
-
-        [JsonIgnore]
-        public float Left => _truePos.X - Width / 2;
-
-        [JsonIgnore]
-        public float Right => _truePos.X + Width / 2;
-
-        [JsonIgnore]
-        public float Top => _truePos.Y - Height / 2;
-
-        [JsonIgnore]
-        public float Bottom => _truePos.Y + Height / 2;
     }
 }

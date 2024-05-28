@@ -57,9 +57,6 @@ namespace KheaiGameEngine
         ///<summary>The reference to the render window.</summary>
         public RenderWindow Window { get; private set; }
 
-        //TODO
-        public KDrawHandler DrawHandler { get; private set; }
-
         ///<summary>Indexer to retrive an engine component given an the component id.</summary>
         public KEngineComponent this[string id] => GetComponent(id);
         ///<summary>Indexer to retrive an engine component given the component's type.</summary>
@@ -96,6 +93,8 @@ namespace KheaiGameEngine
         {
             if (!HasComponent<KDebugger>())
                 AddComponent(new KDebugger());
+            if (!HasComponent<KDrawHandler>())
+
 
             foreach (KEngineComponent component in _engineComponents) component.Start();
         }
@@ -119,9 +118,9 @@ namespace KheaiGameEngine
                 lastTime = newTime;
 
                 //Keeps track of time between updates and catches up on updates in case of lag.
-                if (unprocessedTime >= UpdateInterval)
+                if (unprocessedTime > UpdateInterval)
                 {
-                    while (unprocessedTime >= UpdateInterval) 
+                    while (unprocessedTime > UpdateInterval) 
                     {
                         unprocessedTime -= UpdateInterval;
                         CurrentUpdate++;
@@ -129,7 +128,7 @@ namespace KheaiGameEngine
                         Update();
                     }
                     FrameUpdate();
-                    //DrawHandler.Draw(Window);
+                    KDrawHandler.ActiveInstance.Draw(Window);
                 }
                 Window.DispatchEvents();
             }
@@ -158,16 +157,18 @@ namespace KheaiGameEngine
         //Component management implemented from IKComponentContainer
         #region Component management
 
-        public void AddComponent(KEngineComponent component)
+        public KEngineComponent AddComponent(KEngineComponent component)
         {
             component.Engine = this;
             component.Init();
             _engineComponents.Add(component);
+            return component;
         }
 
-        public void AddComponents(KEngineComponent[] components)
+        public KEngineComponent[] AddComponents(KEngineComponent[] components)
         {
             foreach (var component in components) AddComponent(component);
+            return components;
         }
 
         public void RemoveComponent(string id)
