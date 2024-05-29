@@ -1,5 +1,6 @@
 ﻿using KheaiGameEngine.Core;
 using KheaiGameEngine.GameObjects;
+using SFML.Graphics;
 
 namespace KheaiGameEngine.GameManagement
 {
@@ -7,11 +8,12 @@ namespace KheaiGameEngine.GameManagement
     {
         KTransform transform { get; set; }
 
-        public abstract void SubmitDraw();
+        void SubmitDraw();
     }
 
     public class KSprite : KObjectComponent, IKDrawableObject
     {
+        public Texture texture { get; set; }    
         public KTransform transform { get; set; }
 
         public override void Init() { }
