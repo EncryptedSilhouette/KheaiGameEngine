@@ -93,7 +93,7 @@ namespace KheaiGameEngine
         {
             if (!HasComponent<KDebugger>())
                 AddComponent(new KDebugger());
-            if (!HasComponent<KDrawHandler>())
+            if (!HasComponent<KRenderer>())
 
 
             foreach (KEngineComponent component in _engineComponents) component.Start();
@@ -128,7 +128,7 @@ namespace KheaiGameEngine
                         Update();
                     }
                     FrameUpdate();
-                    KDrawHandler.ActiveInstance.Draw(Window);
+                    KRenderer.ActiveInstance.RenderFrame(Window);
                 }
                 Window.DispatchEvents();
             }
