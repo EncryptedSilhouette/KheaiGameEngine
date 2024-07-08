@@ -128,7 +128,7 @@ namespace KheaiGameEngine.Debug
             if (SubmitToFile) DumpToFile();
         }
 
-        public override void Update(uint currentFrame) { }
+        public override void Update(uint currentUpdate) { }
 
         public override void FrameUpdate(uint currentUpdate)
         {

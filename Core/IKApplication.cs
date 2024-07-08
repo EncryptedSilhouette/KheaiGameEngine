@@ -5,6 +5,7 @@
     {
         ///<summary>The name of the app.</summary>
         public string AppName { get; set; }
+
         ///<summary>The reference for the engine.</summary>
         public KEngine Engine { get; set; }
 

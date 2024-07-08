@@ -1,4 +1,6 @@
-﻿using SFML.Graphics;
+﻿#if DEBUG
+
+using SFML.Graphics;
 using SFML.System;
 
 namespace KheaiGameEngine.Core
@@ -40,3 +42,5 @@ namespace KheaiGameEngine.Core
         }
     }
 }
+
+#endif

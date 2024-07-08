@@ -128,7 +128,10 @@ namespace KheaiGameEngine
                         Update();
                     }
                     FrameUpdate();
-                    KRenderer.ActiveInstance.RenderFrame(Window);
+
+                    Window.Clear(Color.Black); 
+                    KRenderer.RenderFrame(Window);
+                    Window.Display();
                 }
                 Window.DispatchEvents();
             }

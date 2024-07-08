@@ -2,47 +2,28 @@
 
 namespace KheaiGameEngine
 {
-    public class KDrawArgs : EventArgs
+    public abstract class KRenderer
     {
-        public RenderStates RenderStates;
-    }
+        #region Static
 
-    public class KRenderer
-    {
-        #region Staic
+        private static KRenderer s_activeInstance;
 
-        public static event EventHandler<KRenderer> OnInstanceChanged;
+        public static event Action OnInstanceChanged;
 
-        private static KRenderer _activeInstance;
-
-        public static void RenderFrame(RenderTarget target)
+        public static KRenderer ActiveInstance
         {
-
-        }
-
-        #endregion
-
-        public KDrawArgs drawArgs;
-
-        public event EventHandler<KDrawArgs> onPreDraw;
-        public event EventHandler<KDrawArgs> onDraw;
-        public event EventHandler<KDrawArgs> onPostDraw;
-
-        public KRenderer ActiveInstance 
-        {
-            get => _activeInstance;
-            set 
+            get => s_activeInstance;
+            set
             {
-                OnInstanceChanged?.Invoke(this, value);
-                _activeInstance = value;
+                OnInstanceChanged?.Invoke();
+                s_activeInstance = value;
             }
         }
 
-        public void Draw(RenderTarget renderTarget) 
-        {
-            onPreDraw.Invoke(this, drawArgs);
-            onDraw.Invoke(this, drawArgs);
-            onPostDraw.Invoke(this, drawArgs);
-        }
+        public static void RenderFrame(RenderTarget target) => s_activeInstance.Draw(target);
+
+        #endregion
+
+        public abstract void Draw(RenderTarget renderTarget);
     }
 }
