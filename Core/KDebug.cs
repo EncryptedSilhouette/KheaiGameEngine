@@ -1,5 +1,4 @@
-﻿using KheaiGameEngine.Core;
-using SFML.Graphics;
+﻿using SFML.Graphics;
 
 namespace KheaiGameEngine.Debug
 {
@@ -10,16 +9,16 @@ namespace KheaiGameEngine.Debug
 
         #region LogIDs
 
-        ///<summary>Constant id for the "debug" log.</summary>
+        ///<summary>Constant id for the debug log.</summary>
         public static readonly string DEBUG = "debug";
 
-        ///<summary>Constant id for the "error" log.</summary>
+        ///<summary>Constant id for the error log.</summary>
         public static readonly string ERROR = "error";
 
         #endregion
 
-        ///<summary>Whether or not to dump debug information to a .txt file when the end method is called.</summary>
-        public static bool SubmitToFile = true;
+        ///<summary>Whether or not the program will dump debug information to a .txt file when the end method is called.</summary>
+        public static bool DumpToFile = true;
 
         ///<summary>The file directory for debug text files.</summary>
         public static string FileDirectory = "Debug";
@@ -70,7 +69,7 @@ namespace KheaiGameEngine.Debug
 
         public KDebugger() => Order = 0;
 
-        public KDebugger(bool submitToFile) : this() => SubmitToFile = submitToFile;
+        public KDebugger(bool submitToFile) : this() => DumpToFile = submitToFile;
 
         public KDebugger(string filePath) : this(true) => FileDirectory = filePath;
 
@@ -117,7 +116,7 @@ namespace KheaiGameEngine.Debug
 
         #region Logic 
 
-        public override void Init() { }
+        public override void Init() { /*Unimplemented*/ }
 
         public override void Start() => StartTime = timerStart = DateTime.UtcNow.Ticks;
 
@@ -125,7 +124,7 @@ namespace KheaiGameEngine.Debug
         {
             EndTime = DateTime.UtcNow.Ticks;
 
-            if (SubmitToFile) DumpToFile();
+            if (DumpToFile) DumpLogsToFile();
         }
 
         public override void Update(uint currentUpdate) { }
@@ -147,13 +146,10 @@ namespace KheaiGameEngine.Debug
             }
         }
 
-        ///<summary>Draw a frame.</summary>
-        public void Draw(RenderTarget target) { }
-
         #endregion
 
         ///<summary>Dump debug info to a .txt file. Override for custom implementation.</summary>
-        public virtual void DumpToFile()
+        public virtual void DumpLogsToFile()
         {
             int logNum = 0;
             string path = $"{FileDirectory}\\Log_{CurrentDate}";

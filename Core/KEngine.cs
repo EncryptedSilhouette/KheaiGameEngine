@@ -28,7 +28,7 @@ namespace KheaiGameEngine
         ///<param name="currentUpdate">Keeps track of the current frame.</param>
         public abstract void Update(uint currentUpdate);
 
-        ///<summary>Executes pre-draw code every update. This method is meant to be called after the update method.</summary>
+        ///<summary>Executes pre-draw code every update. This method is called after the update method.</summary>
         ///<param name="currentUpdate">Keeps track of the current frame.</param>
         public abstract void FrameUpdate(uint currentUpdate);
     }

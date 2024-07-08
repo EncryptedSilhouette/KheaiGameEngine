@@ -1,6 +1,8 @@
-﻿using SFML.System;
+﻿#if DEBUG
 
-namespace KheaiGameEngine.Core
+using SFML.System;
+
+namespace KheaiGameEngine.GameManagement
 {
     //TODO Apply positional math for parent rotation.
     public class KTransform
@@ -72,3 +74,5 @@ namespace KheaiGameEngine.Core
         }
     }
 }
+
+#endif

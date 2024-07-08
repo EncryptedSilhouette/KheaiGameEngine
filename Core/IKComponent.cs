@@ -9,7 +9,7 @@
         ///<summary>/The ID for the component.</summary>
         public string ID { get; set; }
 
-        ///<summary>Executes any initilization code for the component. Should be called in the "Start" method</summary>
+        ///<summary>Executes initilization code for the component. Should be called in the "Start" method</summary>
         public void Init();
 
         ///<summary>Executes starting code for the component.</summary>

@@ -3,7 +3,7 @@
 using SFML.Graphics;
 using SFML.System;
 
-namespace KheaiGameEngine.Core
+namespace KheaiGameEngine.GameManagement
 {
     public class KTileMap
     {
@@ -32,7 +32,8 @@ namespace KheaiGameEngine.Core
         }
 
         public KTileMap(ushort cellSizeX, ushort cellSizeY, ushort rows, ushort columns, Texture texture) :
-            this(new KGrid<ushort>(cellSizeX, cellSizeY, rows, columns), texture) { }
+            this(new KGrid<ushort>(cellSizeX, cellSizeY, rows, columns), texture)
+        { }
 
         public Vector2f GetCoordinates(uint value)
         {

@@ -1,6 +1,6 @@
-﻿using KheaiGameEngine.Core;
+﻿#if DEBUG
 
-namespace KheaiGameEngine.GameObjects
+namespace KheaiGameEngine.GameManagement
 {
     #region GameObject
     public class KGameObject : IKComponentContainer<KObjectComponent>
@@ -143,3 +143,5 @@ namespace KheaiGameEngine.GameObjects
     }
     #endregion
 }
+
+#endif
