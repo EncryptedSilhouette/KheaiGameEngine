@@ -2,23 +2,23 @@
 
 namespace KheaiGameEngine
 {
-    public interface IKDrawHandeler 
+    #region KRenderer
+
+    public interface IKDrawHandler
     {
         ///<summary>Defines the behavior for drawing.</summary>
         public void Render(RenderTarget target);
     }
 
-    #region KRenderer
-
     public static class KRenderer
     {
-        private static IKDrawHandeler s_activeInstance;
+        private static IKDrawHandler s_activeInstance;
 
         ///<summary>Event handler for when the active instance is changed</summary>
         public static event Action OnInstanceChanged;
 
         ///<summary>Property for the static refrence to the active instance. Fires an event when the instance is changed.</summary>
-        public static IKDrawHandeler ActiveInstance
+        public static IKDrawHandler ActiveInstance
         {
             get => s_activeInstance;
             set
@@ -28,54 +28,44 @@ namespace KheaiGameEngine
             }
         }
 
+        static KRenderer() => s_activeInstance = new KStandardRenderer(new());
+
         ///<summary>Static method to render a frame using the active KRenderer instance.</summary>
         public static void RenderFrame(RenderTarget target) => s_activeInstance.Render(target);
     }
 
     #endregion
 
+    #region KStandardRenderer
 
-    public class TextureAtlas 
+    public class KStandardRenderer : KEngineComponent, IKDrawHandler
     {
-        List
-    }
+        private VertexArray _vertexArray;
 
-    public class Sprite 
-    {
-        public Sprite() 
+        public RenderStates RenderStates { get; set; }
+
+        public KStandardRenderer(RenderStates renderStates) => RenderStates = renderStates;
+
+        public override void Init() { }
+        public override void Start() { }
+        public override void End() { }
+        public override void Update(uint currentUpdate) { }
+        public override void FrameUpdate(uint currentUpdate) { }
+
+        public void Render(RenderTarget target)
         {
-
+            target.Draw(_vertexArray, RenderStates);
+            _vertexArray.Clear();
         }
-    }
-
-    public class SpriteBatch 
-    {
-        int verticies;
-        Texture textureAtlas; 
-        VertexBuffer VertexBuffer;
-
-        public SpriteBatch()
+        
+        public void Draw(Vertex[] vertices) 
         {
-
-        }
-
-        public void StartBatch() 
-        {
-
-        }
-
-        public void Draw(Vertex[] vertices, Texture texture) 
-        {
-
-        }
-
-        public void EndBatch()
-        {
-
+            foreach (var vertex in vertices) _vertexArray.Append(vertex);
         }
     }
 
-    public class KStandardRenderer : KRenderer
+#if false
+    public class TODO : KEngineComponent, KRenderer
     {
         RenderStates renderStates;
         VertexBuffer vertexBuffer;
@@ -83,7 +73,7 @@ namespace KheaiGameEngine
         List<(int order, string taskID, Action task)> _preRenderTasks = new();
         List<(int order, string taskID, Action task)> _postRenderTasks = new();
 
-        public KStandardRenderer(uint vertexCount)
+        public TODO(uint vertexCount)
         {
             vertexBuffer = new(vertexCount, PrimitiveType.Quads, VertexBuffer.UsageSpecifier.Stream);
         }
@@ -123,6 +113,9 @@ namespace KheaiGameEngine
             _postRenderTasks.RemoveAt(
                 _postRenderTasks.FindIndex((task) => (task.taskID == taskID) ? true : false));
     }
+#endif
+
+#endregion
 }
 
 

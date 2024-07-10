@@ -93,8 +93,8 @@ namespace KheaiGameEngine
         {
             if (!HasComponent<KDebugger>())
                 AddComponent(new KDebugger());
-            if (!HasComponent<KRenderer>())
-
+            if (!HasComponent<IKDrawHandler>())
+                KDebugger.ErrorLog("There is no draw handler attatched");
 
             foreach (KEngineComponent component in _engineComponents) component.Start();
         }
@@ -128,11 +128,6 @@ namespace KheaiGameEngine
                         Update();
                     }
                     FrameUpdate();
-
-                    Vertex[] vertices = { };
-                    VertexBuffer buffer = new(10, PrimitiveType.Quads, VertexBuffer.UsageSpecifier.Dynamic);
-
-                    Window.Draw(buffer, 0, 10, PrimitiveType.Quads);
 
                     Window.Clear(Color.Black); 
                     KRenderer.RenderFrame(Window);
