@@ -129,6 +129,11 @@ namespace KheaiGameEngine
                     }
                     FrameUpdate();
 
+                    Vertex[] vertices = { };
+                    VertexBuffer buffer = new(10, PrimitiveType.Quads, VertexBuffer.UsageSpecifier.Dynamic);
+
+                    Window.Draw(buffer, 0, 10, PrimitiveType.Quads);
+
                     Window.Clear(Color.Black); 
                     KRenderer.RenderFrame(Window);
                     Window.Display();
