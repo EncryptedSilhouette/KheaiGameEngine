@@ -21,7 +21,7 @@ namespace KheaiGameEngine
         public static IKDrawHandler ActiveInstance
         {
             get => s_activeInstance;
-            set
+            set 
             {
                 OnInstanceChanged?.Invoke();
                 s_activeInstance = value;
@@ -58,62 +58,11 @@ namespace KheaiGameEngine
             _vertexArray.Clear();
         }
         
-        public void Draw(Vertex[] vertices) 
+        public void Draw(ref Vertex[] vertices) 
         {
             foreach (var vertex in vertices) _vertexArray.Append(vertex);
         }
     }
-
-#if false
-    public class TODO : KEngineComponent, KRenderer
-    {
-        RenderStates renderStates;
-        VertexBuffer vertexBuffer;
-
-        List<(int order, string taskID, Action task)> _preRenderTasks = new();
-        List<(int order, string taskID, Action task)> _postRenderTasks = new();
-
-        public TODO(uint vertexCount)
-        {
-            vertexBuffer = new(vertexCount, PrimitiveType.Quads, VertexBuffer.UsageSpecifier.Stream);
-        }
-
-        public void Render(RenderTarget target)
-        {
-           
-        }
-
-        public void AddPreRenderTask(int order, string taskID, Action task) 
-        {
-            _preRenderTasks.Add((order, taskID, task));
-            _preRenderTasks.Sort((a, b) => 
-            {
-                if (a.order > b.order) return 1;
-                if (a.order < b.order) return -1;
-                return 0;
-            });
-        }
-
-        public void AddPostRenderTask(int order, string taskID, Action task)
-        {
-            _postRenderTasks.Add((order, taskID, task));
-            _postRenderTasks.Sort((a, b) =>
-            {
-                if (a.order > b.order) return 1;
-                if (a.order < b.order) return -1;
-                return 0;
-            });
-        }
-
-        public void RemovePreRenderTask(string taskID) => 
-            _preRenderTasks.RemoveAt(
-                _preRenderTasks.FindIndex((task) => (task.taskID == taskID) ? true : false));
-
-        public void RemovePostRenderTask(string taskID) =>
-            _postRenderTasks.RemoveAt(
-                _postRenderTasks.FindIndex((task) => (task.taskID == taskID) ? true : false));
-    }
-#endif
 
 #endregion
 }
