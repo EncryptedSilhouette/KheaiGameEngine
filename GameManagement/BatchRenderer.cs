@@ -1,41 +1,83 @@
 ﻿using KheaiGameEngine;
 using SFML.Graphics;
-using SFML.System;
-using System.Runtime.CompilerServices;
-using System.Security.Cryptography.X509Certificates;
 
 namespace KheaiUtils
 {
     public class KTextureAtlas 
     {
+        private record class TextureData(string id, Image image);
+
         private Texture _atlas;
-        private Dictionary<string, Vector2f> _texCoords = new();
+        private Dictionary<string, Vertex[]> _texCoords;
+        private List<TextureData> _textureData; 
 
-        public List<(string id, Image image)> images = new(); 
+        public Texture Atlas => _atlas;
 
-        private Texture Atlas => _atlas;
+        public Vertex[] this[string textureID] => GetTexCoords(textureID);
 
-        public Vector2f this[string textureID] => GetTexCoords(textureID);
+        public Vertex[] GetTexCoords(string textureID) => _texCoords[textureID];
 
-        public Vector2f GetTexCoords(string textureID) => _texCoords[textureID];
+        public void StartAtlas() 
+        {
+            _texCoords = new();
+            _textureData = new();
+        }
 
         public void SubmitTexture(string filePath) 
         {
             string textureID = Path.GetFileNameWithoutExtension(filePath);
-
+            //_images.Add(textureID, )
         }
 
         public void CreateAtlas() 
         {
+            uint rowHeight;
+            uint rowXOffset = 0;
+            uint rowYOffset = 0;
+            Stack<TextureData> baseImages = new(); 
 
+            _textureData.Sort((a, b) => 
+            {
+                //Sort by height.
+                if (a.image.Size.Y > b.image.Size.Y) return 1;
+                if (a.image.Size.Y < b.image.Size.Y) return -1;
+
+                //If height is the same sort by width.
+                if (a.image.Size.X > b.image.Size.X) return 1;
+                if (a.image.Size.X < b.image.Size.X) return -1;
+
+                //return 0 if both width & height are the same.
+                return 0;
+            });
+
+            Image image;
+            rowHeight = _textureData[0].image.Size.Y;
+
+            for (int i = 0; i < _textureData.Count; i++)
+            {
+                baseImages.Push(_textureData[i]);
+                rowYOffset = _textureData[i].image.Size.Y; 
+
+                for (int j = i + 1; j < rowHeight; j++)
+                {
+                    if (rowYOffset >= rowHeight) break;
+                }
+
+
+            }
+
+            _textureData.Clear();
+            _textureData.TrimExcess();
         }
     }
 
     public class BatchRenderer : KEngineComponent, IKDrawHandler
     {
+        public static readonly int BACKGROUND = 0;
+
         private int _cycleVertexCount = 0;
         private VertexBuffer _vertexBuffer;
-        private List<(int layer, Vertex[] vertices)> _drawCalls = new();
+        private List<List<Vertex>> _drawCalls = new(8);
 
         public RenderStates RenderStates;
 
@@ -56,27 +98,22 @@ namespace KheaiUtils
             int offset = 0;
             Vertex[] vertices = new Vertex[_cycleVertexCount];
 
-            _drawCalls.Sort((a, b) => 
+            foreach (var layer in _drawCalls) 
             {
-                if (a.layer > b.layer) return 1;
-                if (a.layer < b.layer) return -1;
-                return 0;
-            });
-
-            foreach (var vertexArray in _drawCalls)
-            {
-                vertexArray.vertices.CopyTo(vertices, offset);
-                offset += vertexArray.vertices.Length;
+                layer.CopyTo(vertices, offset);
+                offset += vertices.Length;
             }
 
             _vertexBuffer.Update(vertices);
             _vertexBuffer.Draw(target, 0, (uint) _cycleVertexCount, RenderStates);
-            _drawCalls.Clear();
+
+            foreach (var layer in _drawCalls) layer.Clear();
         }
 
         public void Draw(int layer, in Vertex[] vertices) 
         {
-            _drawCalls.Add((layer, vertices));
+            if (_drawCalls.Capacity < layer + 1) _drawCalls.Capacity = layer + 1;
+            _drawCalls[layer].AddRange(vertices);
             _cycleVertexCount += vertices.Length;
         }
     }
