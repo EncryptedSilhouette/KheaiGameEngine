@@ -1,73 +1,163 @@
 ﻿using KheaiGameEngine;
+using KheaiGameEngine.Debug;
 using SFML.Graphics;
+using SFML.System;
 
 namespace KheaiUtils
 {
     public class KTextureAtlas 
     {
-        private record class TextureData(string id, Image image);
+        private record class TextureData(string id, Texture texture);
 
         private Texture _atlas;
-        private Dictionary<string, Vertex[]> _texCoords;
+        private Dictionary<string, Vector2f[]> textureCoords;
         private List<TextureData> _textureData; 
 
         public Texture Atlas => _atlas;
 
-        public Vertex[] this[string textureID] => GetTexCoords(textureID);
+        public Vector2f[] this[string textureID] => GetTexCoords(textureID);
 
-        public Vertex[] GetTexCoords(string textureID) => _texCoords[textureID];
+        public Vector2f[] GetTexCoords(string textureID) => textureCoords[textureID];
 
         public void StartAtlas() 
         {
-            _texCoords = new();
+            textureCoords = new();
             _textureData = new();
         }
 
         public void SubmitTexture(string filePath) 
         {
-            string textureID = Path.GetFileNameWithoutExtension(filePath);
-            //_images.Add(textureID, )
+            try
+            {
+                _textureData.Add(new TextureData(Path.GetFileNameWithoutExtension(filePath), new(filePath)));
+            }
+            catch (SFML.LoadingFailedException e)
+            {
+                KDebugger.ErrorLog(e.Message);
+            }
         }
 
-        public void CreateAtlas() 
+        public Texture CreateAtlas() 
         {
-            uint rowHeight;
-            uint rowXOffset = 0;
-            uint rowYOffset = 0;
-            Stack<TextureData> baseImages = new(); 
+            uint rowLength, rowHeight;
+            Texture atlas;
 
-            _textureData.Sort((a, b) => 
+            //Sort textures by height and then by width
+            _textureData.Sort((a, b) =>
             {
-                //Sort by height.
-                if (a.image.Size.Y > b.image.Size.Y) return 1;
-                if (a.image.Size.Y < b.image.Size.Y) return -1;
+                //The one with the greater height should always be 1st
+                if (a.texture.Size.Y < b.texture.Size.Y) return 1;
+                if (a.texture.Size.Y > b.texture.Size.Y) return -1;
 
-                //If height is the same sort by width.
-                if (a.image.Size.X > b.image.Size.X) return 1;
-                if (a.image.Size.X < b.image.Size.X) return -1;
+                //If the height is equal 
+                //The one with the greater width will be 1st
+                if (a.texture.Size.X < b.texture.Size.X) return 1;
+                if (a.texture.Size.X > b.texture.Size.X) return -1;
 
-                //return 0 if both width & height are the same.
+                //Only remaining case is both dimentions are equal to the other's
                 return 0;
             });
 
-            Image image;
-            rowHeight = _textureData[0].image.Size.Y;
+            rowLength = 0;
+            rowHeight = _textureData[0].texture.Size.Y;
 
+            //Iterate over sorted all images
             for (int i = 0; i < _textureData.Count; i++)
             {
-                baseImages.Push(_textureData[i]);
-                rowYOffset = _textureData[i].image.Size.Y; 
+                uint sectionXOffset, sectionYOffset, sectionXOrigin;
+                uint sectionLength, sectionHeight;
+                bool canFitAnother = false;
 
-                for (int j = i + 1; j < rowHeight; j++)
+                //Skip any image already added
+                if (textureCoords.ContainsKey(_textureData[i].id)) continue;
+
+                //Adds the texture coords to the lookup 
+                textureCoords.Add(_textureData[i].id, new Vector2f[]
                 {
-                    if (rowYOffset >= rowHeight) break;
+                    new(rowLength, 0),
+                    new(rowLength + _textureData[i].texture.Size.X, 0),
+                    new(rowLength + _textureData[i].texture.Size.X, _textureData[i].texture.Size.Y),
+                    new(rowLength, _textureData[i].texture.Size.Y)
+                });
+
+                //Set bounds
+                sectionXOrigin = rowLength;
+                sectionXOffset = 0;
+                sectionYOffset = _textureData[i].texture.Size.Y;
+                sectionLength = _textureData[i].texture.Size.X;
+                sectionHeight = _textureData[i].texture.Size.Y;
+                rowLength += _textureData[i].texture.Size.X;
+
+                //Checks the next images ahead to try to fill in the section.
+                for (int j = i + 1; j < _textureData.Count; j++)
+                {
+                    //Skip any image already added
+                    if (textureCoords.ContainsKey(_textureData[j].id)) continue;
+
+                    //Given that the list is sorted by height and then length, this has been simplified with that in mind.
+                    //That is to say the next image will always be the same height or shorter.
+                    //The "section" that is mentioned is the empty space between the base image and the height of the row.
+                    //The height of the row is the height of the first image.
+                    //The following checks will check if the current image will fit into that section.
+                    //If an image is too tall it is skipped;
+                    //If an image is too long, check if it can fit in another row.
+                    //If an image can fit in a row, then on the last index, reset the counter and increase the Y offset
+
+                    //If the image is too tall then move onto the next
+                    if (sectionYOffset + _textureData[j].texture.Size.Y > rowHeight) continue;
+
+                    //If the image fits vertically check if it horizontally fits into the section
+                    if (sectionXOffset + _textureData[j].texture.Size.X > sectionLength)
+                    {
+                        //Check if the image can fit in a higher row
+                        if (_textureData[j].texture.Size.X <= sectionLength &&
+                            _textureData[j].texture.Size.Y + sectionHeight <= rowHeight)
+                            canFitAnother = true;
+
+                        //If an image can fit in a higher row, on the last index reset the counter,
+                        //and set the bounds for the next row
+                        if (j == _textureData.Count - 1 && canFitAnother)
+                        {
+                            j = i - 1;
+                            sectionXOffset = 0;
+                            sectionYOffset = sectionHeight;
+                            canFitAnother = false;
+                        }
+                        continue;
+                    }
+
+                    //Add the texure coords to the lookup
+                    textureCoords.Add(_textureData[j].id, new Vector2f[]
+                    {
+                        new(sectionXOrigin + sectionXOffset, sectionYOffset),
+                        new(sectionXOrigin + sectionXOffset + _textureData[j].texture.Size.X, sectionYOffset),
+                        new(sectionXOrigin + sectionXOffset + _textureData[j].texture.Size.X, sectionYOffset + _textureData[j].texture.Size.Y),
+                        new(sectionXOrigin + sectionXOffset, sectionYOffset + _textureData[j].texture.Size.Y)
+                    });
+
+                    //If starting a new row (sectionXOffset == 0),
+                    //set the section height to the offset plus the height of first image in the row
+                    if (sectionXOffset == 0) sectionHeight = sectionYOffset + _textureData[j].texture.Size.Y;
+
+                    //Increment the offset by the image length
+                    sectionXOffset += _textureData[j].texture.Size.X;
+
+                    //Reset the iterator counter 
+                    j = i;
                 }
-
-
             }
 
-            _textureData.Clear();
-            _textureData.TrimExcess();
+            //Create a textureAtlas with given bounds
+            atlas = new(rowLength, rowHeight);
+
+            //Append each image to the texture
+            foreach (var textureData in _textureData)
+            {
+                Vector2f coordinates = textureCoords[textureData.id][0];
+                atlas.Update(textureData.texture, (uint)coordinates.X, (uint)coordinates.Y);
+            }
+
+            return atlas;
         }
     }
 

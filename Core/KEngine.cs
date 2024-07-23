@@ -5,8 +5,6 @@ using KheaiGameEngine.Debug;
 
 namespace KheaiGameEngine
 {
-    #region KEngineComponent
-
     public abstract class KEngineComponent : IKComponent
     {
         ///<summary>The order the component will be updated.</summary>
@@ -33,14 +31,8 @@ namespace KheaiGameEngine
         public abstract void FrameUpdate(uint currentUpdate);
     }
 
-    #endregion
-
-    #region KEngine
-
     public sealed class KEngine : IKComponentContainer<KEngineComponent>
     {
-        #region Class data
-
         private KComponentSorter<KEngineComponent> _componentSorter;
         private SortedSet<KEngineComponent> _engineComponents;
 
@@ -62,10 +54,6 @@ namespace KheaiGameEngine
         ///<summary>Indexer to retrive an engine component given the component's type.</summary>
         public KEngineComponent this[Type type] => GetComponent(type.Name);
 
-        #endregion
-
-        #region Constructors
-
         ///<summary>Creates the window and sets the refrence to the application.</summary>
         ///<param name="app">Refrence to the KApplication.</param>
         public KEngine(IKApplication app)
@@ -83,10 +71,6 @@ namespace KheaiGameEngine
         ///<param name="updateRateTarget">The target framerate.</param>
         public KEngine(IKApplication app, byte updateRateTarget) : this(app) => 
             UpdateRateTarget = updateRateTarget;
-
-        #endregion
-
-        #region Logic
 
         ///<summary>Executes any initilization code for the component. Should be called in the "Start" method</summary>
         public void Init()
@@ -155,11 +139,6 @@ namespace KheaiGameEngine
             foreach (KEngineComponent component in _engineComponents) component.FrameUpdate(CurrentUpdate);
         }
 
-        #endregion
-
-        //Component management implemented from IKComponentContainer
-        #region Component management
-
         public KEngineComponent AddComponent(KEngineComponent component)
         {
             component.Engine = this;
@@ -225,9 +204,5 @@ namespace KheaiGameEngine
                 if (component.ID.Equals(id)) return component;
             return null;
         }
-
-        #endregion
     }
-
-    #endregion
 }

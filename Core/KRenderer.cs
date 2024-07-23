@@ -2,8 +2,6 @@
 
 namespace KheaiGameEngine
 {
-    #region KRenderer
-
     public interface IKDrawHandler
     {
         ///<summary>Defines the behavior for drawing.</summary>
@@ -34,10 +32,6 @@ namespace KheaiGameEngine
         public static void RenderFrame(RenderTarget target) => s_activeInstance.Render(target);
     }
 
-    #endregion
-
-    #region KStandardRenderer
-
     public class KStandardRenderer : KEngineComponent, IKDrawHandler
     {
         private VertexArray _vertexArray;
@@ -63,8 +57,6 @@ namespace KheaiGameEngine
             foreach (var vertex in vertices) _vertexArray.Append(vertex);
         }
     }
-
-#endregion
 }
 
 

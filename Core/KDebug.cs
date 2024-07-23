@@ -7,15 +7,11 @@ namespace KheaiGameEngine.Debug
     {
         #region Static 
 
-        #region LogIDs
-
         ///<summary>Constant id for the debug log.</summary>
         public static readonly string DEBUG = "debug";
 
         ///<summary>Constant id for the error log.</summary>
         public static readonly string ERROR = "error";
-
-        #endregion
 
         ///<summary>Whether or not the program will dump debug information to a .txt file when the end method is called.</summary>
         public static bool DumpToFile = true;
@@ -41,8 +37,6 @@ namespace KheaiGameEngine.Debug
 
         #endregion
 
-        #region Class data
-
         //Variables to keep track of updates per second
         private byte updatesThisCycle = 0;
         private long timerStart = 0;
@@ -63,19 +57,11 @@ namespace KheaiGameEngine.Debug
         ///<summary>Get the end time of this component.</summary>
         public long EndTime { get; private set; } = 0;
 
-        #endregion
-
-        #region Constructors 
-
         public KDebugger() => Order = 0;
 
         public KDebugger(bool submitToFile) : this() => DumpToFile = submitToFile;
 
         public KDebugger(string filePath) : this(true) => FileDirectory = filePath;
-
-        #endregion
-
-        #region Logging
 
         ///<summary>Submit a message to a specified log.</summary>
         public static void Log(string logID, string message)
@@ -112,10 +98,6 @@ namespace KheaiGameEngine.Debug
         public static IEnumerable<string> GetLog(string logID, ushort maxLines) => 
             GetLog(logID)?.Skip(logs[logID].Count - maxLines);
 
-        #endregion
-
-        #region Logic 
-
         public override void Init() { /*Unimplemented*/ }
 
         public override void Start() => StartTime = timerStart = DateTime.UtcNow.Ticks;
@@ -145,8 +127,6 @@ namespace KheaiGameEngine.Debug
                 timerStart = DateTime.UtcNow.Ticks;
             }
         }
-
-        #endregion
 
         ///<summary>Dump debug info to a .txt file. Override for custom implementation.</summary>
         public virtual void DumpLogsToFile()
