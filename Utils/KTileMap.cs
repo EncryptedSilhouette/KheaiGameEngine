@@ -5,41 +5,38 @@ using SFML.System;
 
 namespace KheaiGameEngine.GameManagement
 {
-    public class KTileMap
+    public class KTileMap : KGrid<uint>
     {
-        public ushort CellSizeX => Grid.CellSizeX;
-        public ushort CellSizeY => Grid.CellSizeY;
-        public ushort Rows => Grid.Rows;
-        public ushort Columns => Grid.Columns;
-        public Texture Texture { get; private set; }
-        public KGrid<ushort> Grid { get; private set; }
+        public Texture Texture;
 
-        public KTileMap(KGrid<ushort> grid, Texture texture)
+        public uint[,] Grid { get; set; }
+        public uint CellWidth { get; set; }
+        public uint CallHeight { get; set; }
+        public uint Rows { get; set; }
+        public uint Columns { get; set; }
+
+        public KTileMap(uint cellSizeX, uint cellSizeY, uint rows, uint columns, Texture texture)
         {
-            ushort count = 0;
+            ulong  count = 0;
 
             Texture = texture;
-            Grid = grid;
 
-            for (ushort i = 0; i < Rows; i++)
+            for (uint i = 0; i < Rows; i++)
             {
-                for (ushort j = 0; j < Columns; j++)
+                for (uint j = 0; j < Columns; j++)
                 {
-                    grid[i, j] = count;
+                    Grid[i, j] = count;
                     count++;
                 }
             }
         }
 
-        public KTileMap(ushort cellSizeX, ushort cellSizeY, ushort rows, ushort columns, Texture texture) :
-            this(new KGrid<ushort>(cellSizeX, cellSizeY, rows, columns), texture)
-        { }
-
-        public Vector2f GetCoordinates(uint value)
+        //TODO: revise this
+        public Vector2f GetTextureCoords(uint value)
         {
             uint x = value / Columns;
             uint y = value % Columns;
-            return new Vector2f(x * CellSizeX, y * CellSizeY);
+            return new Vector2f(x * CellWidth, y * CallHeight);
         }
     }
 }

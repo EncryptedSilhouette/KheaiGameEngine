@@ -1,6 +1,4 @@
-﻿#if DEBUG
-
-using SFML.System;
+﻿using SFML.System;
 
 namespace KheaiGameEngine.GameManagement
 {
@@ -74,5 +72,3 @@ namespace KheaiGameEngine.GameManagement
         }
     }
 }
-
-#endif

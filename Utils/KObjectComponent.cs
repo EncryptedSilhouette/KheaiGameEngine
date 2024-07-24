@@ -1,6 +1,5 @@
 ﻿namespace KheaiGameEngine.GameManagement
 {
-    #region ObjectComponent
     public abstract class KObjectComponent : IKComponent
     {
         public bool Enabled { get; set; }
@@ -20,30 +19,4 @@
         public abstract void Update(uint currentTick);
         public abstract void FrameUpdate(uint currentFrame);
     }
-    #endregion
-
-    #region ObjectData
-    public class KObjectData
-    {
-        public string ID { get; set; }
-        public List<KObjectComponent> Components { get; set; }
-
-        public KGameObject CreateObject()
-        {
-            return CreateObject(ID);
-        }
-
-        public KGameObject CreateObject(string name)
-        {
-            KGameObject gameObject = new(ID, name);
-
-            foreach (var component in Components)
-            {
-
-            }
-
-            return gameObject;
-        }
-    }
-    #endregion
 }
