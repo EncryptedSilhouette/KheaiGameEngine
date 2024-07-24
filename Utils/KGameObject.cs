@@ -1,47 +1,43 @@
-﻿#if DEBUG
-
-namespace KheaiGameEngine.GameManagement
+﻿namespace KheaiGameEngine.GameManagement
 {
-    #region GameObject
     public class KGameObject : IKComponentContainer<KObjectComponent>
     {
-        public string ID { get; protected set; }
-        public string Name { get; set; }
-        public bool Enabled { get; set; }
-        public KTransform Transform { get; set; }
-        public KGameObject Parent { get; set; }
-
+        public string ID;
+        public string Name;
+        public bool Enabled;
+        public KTransform Transform;
+        public KGameObject Parent;
+        public event Action<KGameObject> OnInit;
+        public event Action<KGameObject> PreStart;
+        public event Action<KGameObject> PostStart;
+        public event Action<KGameObject> OnEnd;
 
         protected SortedSet<KObjectComponent> objectComponents = new(new KComponentSorter<KObjectComponent>());
 
-        public KGameObject(string id) : this(id, id) { }
-
-        public KGameObject(string id, string name)
+        public KGameObject(string id, string name = null)
         {
             ID = id;
-            Name = name;
             Enabled = true;
+            if (name == null) Name = id;
+            else Name = name;
         }
 
-        public void Init()
-        {
-
-        }
+        public void Init() => OnInit?.Invoke(this);
 
         public void Start()
         {
-            foreach (KObjectComponent component in objectComponents)
-            {
-                component.Start();
-            }
+            PreStart?.Invoke(this); 
+
+            foreach (KObjectComponent component in objectComponents) component.Start();
+            
+            PostStart?.Invoke(this);
         }
 
         public void End()
         {
-            foreach (KObjectComponent component in objectComponents)
-            {
-                component.End();
-            }
+            OnEnd?.Invoke(this);
+            
+            foreach (KObjectComponent component in objectComponents) component.End();
         }
 
         public KObjectComponent AddComponent(KObjectComponent component)
@@ -86,62 +82,41 @@ namespace KheaiGameEngine.GameManagement
         public bool HasComponent<Component>()
         {
             foreach (var component in objectComponents)
-            {
                 if (component is Component) return true;
-            }
             return false;
         }
 
         public bool HasComponent(string id)
         {
             foreach (var component in objectComponents)
-            {
                 if (component.ID.Equals(id)) return true;
-            }
             return false;
         }
 
         public Component GetComponent<Component>() where Component : KObjectComponent
         {
             foreach (IKComponent component in objectComponents)
-            {
                 if (component is Component) return (Component) component;
-            }
             return null;
         }
 
         public KObjectComponent GetComponent(string id)
         {
             foreach (var component in objectComponents)
-            {
                 if (component.ID.Equals(id)) return component;
-            }
             return null;
         }
 
         public void Update(uint currentFrame)
         {
             foreach (var component in objectComponents)
-            {
-                if (component.Enabled) 
-                {
-                    component.Update(currentFrame);
-                }
-            }
+                if (component.Enabled) component.Update(currentFrame);
         }
 
         public void FrameUpdate(uint currentFrame)
         {
             foreach (var component in objectComponents)
-            {
-                if (component.Enabled)
-                {
-                    component.FrameUpdate(currentFrame);
-                }
-            }
+                if (component.Enabled) component.FrameUpdate(currentFrame);
         }
     }
-    #endregion
 }
-
-#endif

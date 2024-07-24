@@ -36,6 +36,7 @@ namespace KheaiGameEngine
     {
         private VertexArray _vertexArray;
 
+        ///<summary>Defines parameters for rendering.</summary>
         public RenderStates RenderStates { get; set; }
 
         public KStandardRenderer(RenderStates renderStates) => RenderStates = renderStates;
@@ -51,7 +52,8 @@ namespace KheaiGameEngine
             target.Draw(_vertexArray, RenderStates);
             _vertexArray.Clear();
         }
-        
+
+        ///<summary>Submit a draw call to renderer.</summary>
         public void Draw(ref Vertex[] vertices) 
         {
             foreach (var vertex in vertices) _vertexArray.Append(vertex);
