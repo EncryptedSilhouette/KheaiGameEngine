@@ -1,6 +1,4 @@
-﻿#if DEBUG
-
-namespace KheaiGameEngine.GameManagement
+﻿namespace KheaiGameEngine.GameManagement
 {
     #region ObjectComponent
     public abstract class KObjectComponent : IKComponent
@@ -49,5 +47,3 @@ namespace KheaiGameEngine.GameManagement
     }
     #endregion
 }
-
-#endif
