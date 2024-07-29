@@ -39,7 +39,7 @@ namespace KheaiGameEngine.Debug
         public static string CurrentTime => DateTime.UtcNow.ToString("HH:mm:ss");
 
         ///<summary>Submit a message to a specified log. Returns the log id.</summary>
-        ///<param name="maxLength">The max character count for a log.</param>
+        ///<param name = "maxLength">The max character count for a log.</param>
         public static int AddLog(ushort maxLength) 
         {            
             logs.Add(new KTextLog(maxLength, new StringBuilder(maxLength)));
@@ -48,11 +48,11 @@ namespace KheaiGameEngine.Debug
         }
 
         ///<summary>Clear a specified log.</summary>
-        ///<param name="logID">The id of the log to clear.</param>
+        ///<param name = "logID">The id of the log to clear.</param>
         public static void ClearLog(ushort logID) => logs[logID].StringBuilder.Clear();
 
         ///<summary>Retrieves a specified log as an enumerable collection.</summary>
-        ///<param name="logID">The id of the log to retrieve.</param>
+        ///<param name = "logID">The id of the log to retrieve.</param>
         public static string GetLog(ushort logID)
         {
             if (logs.Capacity < logID)
@@ -64,8 +64,8 @@ namespace KheaiGameEngine.Debug
         }
 
         ///<summary>Submit a message to a specified log.</summary>
-        ///<param name="logID">The id of the target log.</param>
-        ///<param name="message">The message to submit to the log.</param>
+        ///<param name = "logID">The id of the target log.</param>
+        ///<param name = "message">The message to submit to the log.</param>
         public static void Log(ushort logID, string message)
         {
             if (logs.Capacity < logID)
@@ -93,11 +93,11 @@ namespace KheaiGameEngine.Debug
         }
 
         ///<summary>Submit a message to the debug log.</summary>
-        ///<param name="message">The message to submit to the log.</param>
+        ///<param name = "message">The message to submit to the log.</param>
         public static void DebugLog(string message) => Log(DEBUG_LOG, message);
 
         ///<summary>Submit a message to the error log.</summary>
-        ///<param name="message">The message to submit to the log.</param>
+        ///<param name = "message">The message to submit to the log.</param>
         public static void ErrorLog(string message) => Log(ERROR_LOG, message);
 
         #endregion
@@ -108,11 +108,6 @@ namespace KheaiGameEngine.Debug
         protected uint updates = 0;
         protected uint frames = 0;
         protected long timerStart = 0;
-
-        //Implemented from KEngineComponent.
-        public string ID { get; init; }
-        public short Order { get; init; }
-        public KEngine Engine { get; set; }
 
         ///<summary>Fires when component is initalized.</summary>
         public event Action<KDebugger> OnDebugInit;
@@ -125,7 +120,11 @@ namespace KheaiGameEngine.Debug
         ///<summary>Fires when the component is updated for drawing.</summary>
         public event Action<KDebugger> OnDebugFrameUpdate;
 
-        //Time related properties for debugging.
+        //Implemented from KEngineComponent.
+        public string ID { get; init; }
+        public short Order { get; init; }
+        public KEngine Engine { get; set; }
+
         ///<summary>The current time in ticks.</summary>
         public double SessionTime => DateTime.UtcNow.Ticks - StartTime;
         ///<summary>The average update rate.</summary>
@@ -151,6 +150,7 @@ namespace KheaiGameEngine.Debug
             OnDebugStart += (ignored) => StartTime = timerStart = DateTime.UtcNow.Ticks;
             //Set the end time.
             OnDebugEnd += (ignored) => EndTime = DateTime.UtcNow.Ticks;
+
             //Dump debug logs to file if true.
             if (DumpToFile) OnDebugEnd += (ignored) => DumpLogsToFile();
         }

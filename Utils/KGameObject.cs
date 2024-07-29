@@ -54,7 +54,6 @@ namespace KheaiUtils
             else Name = name;
         }
 
-
         public void Init()
         {
             OnInit.Invoke(this);
@@ -155,5 +154,25 @@ namespace KheaiUtils
 
         public KObjectComponent[] GetComponents<ComponentT>() where ComponentT : KObjectComponent =>
             objectComponents.Where((comp) => comp is ComponentT).ToArray();
+
+        bool IKComponentContainer<KObjectComponent>.RemoveComponent(string id)
+        {
+            throw new NotImplementedException();
+        }
+
+        bool IKComponentContainer<KObjectComponent>.RemoveComponent<TComponent>()
+        {
+            throw new NotImplementedException();
+        }
+
+        public uint RemoveComponents<TComponent>()
+        {
+            throw new NotImplementedException();
+        }
+
+        public uint HasComponents<TComponent>()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

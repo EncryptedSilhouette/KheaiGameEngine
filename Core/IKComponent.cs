@@ -23,15 +23,15 @@
     public interface IKComponentContainer<Component> where Component : IKComponent
     {
         ///<summary>Add a component to a collection.</summary>
-        ///<param name="component">Component to be added to the component container.</param>
+        ///<param name = "component">Component to be added to the component container.</param>
         public Component AddComponent(Component component);
 
         ///<summary>Add an array of components to a collection.</summary>
-        ///<param name="components">Components to be added to the component container.</param>
+        ///<param name = "components">Components to be added to the component container.</param>
         public Component[] AddComponents(Component[] components);
 
         ///<summary>Remove a component  from a collection. Returns true if component is successfully removed.</summary>
-        ///<param name="id">Component's id.</param>
+        ///<param name = "id">Component's id.</param>
         public bool RemoveComponent(string id);
 
         ///<summary>Remove a component of a specified type or subtype from a collection. Returns true if component is successfully removed.</summary>
@@ -41,7 +41,7 @@
         public uint RemoveComponents<TComponent>();
 
         ///<summary>Check if a component with a specifed id exists in a collection.</summary>
-        ///<param name="id">Component's id.</param>
+        ///<param name = "id">Component's id.</param>
         public bool HasComponent(string id);
 
         ///<summary>Check if a component with a specified type or subtype exists in a collection.</summary>
@@ -52,7 +52,7 @@
         public uint HasComponents<TComponent>();
 
         ///<summary>Retrieve a component with a specifed id from a collection.</summary>
-        ///<param name="id">Component's id.</param>
+        ///<param name = "id">Component's id.</param>
         public Component GetComponent(string id);
 
         ///<summary>Retrieve a component of a specifed type or subtype from a collection.</summary>

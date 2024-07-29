@@ -11,11 +11,11 @@ namespace KheaiGameEngine
         public KEngine Engine { get; set; }
 
         ///<summary>Executes code every update.</summary>
-        ///<param name="currentUpdate">Keeps track of the current frame.</param>
+        ///<param name = "currentUpdate">Keeps track of the current frame.</param>
         public abstract void Update(uint currentUpdate);
 
         ///<summary>Executes pre-draw code every update. This method is called after the update method.</summary>
-        ///<param name="currentUpdate">Keeps track of the current frame.</param>
+        ///<param name = "currentUpdate">Keeps track of the current frame.</param>
         public abstract void FrameUpdate(uint currentUpdate);
     }
 
@@ -41,7 +41,6 @@ namespace KheaiGameEngine
         #endregion
 
         private SortedSet<IKEngineComponent> _engineComponents; //The collection for the engine's components.
-        private KComponentSorter<IKEngineComponent> _componentSorter; //The sorter for the sorted set.
 
         ///<summary>The target number of updates in a second.</summary>
         public byte UpdateRateTarget { get; private set; }
@@ -60,17 +59,16 @@ namespace KheaiGameEngine
         public IKEngineComponent this[Type type] => GetComponent(type.Name);
 
         ///<summary>Creates the window, sets the update rate, and sets a refrence to the application.</summary>
-        ///<param name="app">Refrence to the application.</param>
-        ///<param name="updateRateTarget">The target framerate.</param>
-        public KEngine(IKApplication app, byte updateRateTarget = 30)
+        ///<param name = "app">Refrence to the application.</param>
+        ///<param name = "updateRateTarget">The target framerate.</param>
+        public KEngine(IKApplication app, IKRenderer renderer, byte updateRateTarget = 30)
         {
             Application = app;
             UpdateRateTarget = updateRateTarget;
             Window = new(VideoMode.DesktopMode, app.AppName);
             Window.Closed += (ignoreA, ignoreB) => End();
 
-            _componentSorter = new KComponentSorter<IKEngineComponent>();
-            _engineComponents = new SortedSet<IKEngineComponent>(_componentSorter);
+            _engineComponents = new(new KComponentSorter<IKEngineComponent>());
         }
 
         ///<summary>Executes initilization tasks for the engine. Should be called in the "Start" method</summary>
@@ -125,14 +123,14 @@ namespace KheaiGameEngine
         public void End() => IsRunning = false;
 
         ///<summary>Executes code every update.</summary>
-        ///<param name="currentUpdate">Keeps track of the current frame.</param>
+        ///<param name = "currentUpdate">Keeps track of the current frame.</param>
         public void Update(uint currentUpdate)
         {
             foreach (IKEngineComponent component in _engineComponents) component.Update(currentUpdate);
         }
 
         ///<summary>Executes pre-draw code every update. This method is called after the update method.</summary>
-        ///<param name="currentUpdate">Keeps track of the current frame.</param>
+        ///<param name = "currentUpdate">Keeps track of the current frame.</param>
         public void FrameUpdate(uint currentUpdate)
         {
             foreach (IKEngineComponent component in _engineComponents) component.FrameUpdate(currentUpdate);

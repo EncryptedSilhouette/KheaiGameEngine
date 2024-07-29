@@ -10,6 +10,7 @@ namespace KheaiUtils
         //Wrapper to associate an id with a texture
         private record class TextureData(string id, Texture texture);
 
+        //Atlasing variables
         private Texture _atlas;
         private Dictionary<string, Vector2f[]> _textureCoords;
         private List<TextureData> _textureData;
@@ -23,15 +24,13 @@ namespace KheaiUtils
         ///<summary>Gets the texture coords of a given texture.</summary>
         public Vector2f[] GetTexCoords(string textureID) => _textureCoords[textureID];
 
-        ///<summary>Starts the creation of a new atlas.</summary>
-        public void StartAtlas() 
-        {
-            _textureCoords = new();
-            _textureData = new();
-        }
-
         ///<summary>Submit a texture with an associated id to be atlased.</summary>
-        public void SubmitTexture(string id, Texture texture) => _textureData.Add(new TextureData(id, texture));
+        public void SubmitTexture(string id, Texture texture)
+        {
+            if (_textureData == null) _textureData = new();
+
+            _textureData.Add(new TextureData(id, texture));
+        }
 
         ///<summary>Load and submit a texture; Associates an id based on the filepath. 
         ///Returns true if the texture was sucessfully loaded.</summary>
@@ -54,9 +53,10 @@ namespace KheaiUtils
         {
             uint rowLength, rowHeight;
 
-            //Sort textures by height and then by width
+            _textureCoords = new();
             _textureData.Sort((a, b) =>
             {
+                //Sort textures by height and then by width
                 //The one with the greater height should always be 1st
                 if (a.texture.Size.Y < b.texture.Size.Y) return 1;
                 if (a.texture.Size.Y > b.texture.Size.Y) return -1;
@@ -168,13 +168,14 @@ namespace KheaiUtils
                 Vector2f coordinates = _textureCoords[textureData.id][0];
                 _atlas.Update(textureData.texture, (uint)coordinates.X, (uint)coordinates.Y);
             }
+            _textureData = null; //Free the refrence for garbage collection.
 
             return _atlas;
         }
     }
 
     ///<summary>A Renderer that batches multiple draw calls into one.</summary>
-    public class BatchRenderer : IKEngineComponent, IKRenderer
+    public class KBatchRenderer : IKEngineComponent, IKRenderer
     {
         public static readonly int BACKGROUND = 0;
 
@@ -189,22 +190,22 @@ namespace KheaiUtils
         public KTextureAtlas TextureAtlas;
         public RenderStates RenderStates;
 
+        public short Order { get; init; }
+        public string ID { get; init; }
         public KEngine Engine { get; set; }
-        public short Order { get; set; }
-        public string ID { get; set; }
 
-        public BatchRenderer(uint vertexCount, in RenderStates renderStates, PrimitiveType primitiveType = PrimitiveType.Quads) : base() 
+        public KBatchRenderer(uint vertexCount, in RenderStates renderStates, PrimitiveType primitiveType = PrimitiveType.Quads) : base() 
         {
             RenderStates = renderStates;
             _vertexBuffer = new(vertexCount, primitiveType, VertexBuffer.UsageSpecifier.Stream);
         }
         
-        public  void Init() { } 
-        public  void Start() { }
-        public  void End() { }
+        public void Init() { } 
+        public void Start() { }
+        public void End() { }
 
-        public  void Update(uint currentUpdate) { }
-        public  void FrameUpdate(uint currentUpdate) { }
+        public void Update(uint currentUpdate) { }
+        public void FrameUpdate(uint currentUpdate) { }
 
         ///<summary>Draws batch to render target.</summary>
         public void Render(RenderTarget target)

@@ -4,10 +4,10 @@
     public interface IKApplication
     {
         ///<summary>The name of the application.</summary>
-        public string AppName { get; set; }
+        public string AppName { get; init; }
 
         ///<summary>A reference to the engine.</summary>
-        public KEngine Engine { get; set; }
+        public KEngine Engine { get; init; }
 
         ///<summary>Executes tasks for loading resources.</summary>
         public void Load();
