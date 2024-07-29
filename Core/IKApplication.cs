@@ -9,10 +9,10 @@
         ///<summary>A reference to the engine.</summary>
         public KEngine Engine { get; set; }
 
-        ///<summary>Executes code for loading resources.</summary>
+        ///<summary>Executes tasks for loading resources.</summary>
         public void Load();
 
-        ///<summary>Executes initilization code for the application</summary>
+        ///<summary>Executes initilization tasks for the application</summary>
         public void Init();
 
         ///<summary>Starting point for the engine.</summary>

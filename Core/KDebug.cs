@@ -1,17 +1,19 @@
-﻿using SFML.Graphics;
+﻿using System.Text;
 
 namespace KheaiGameEngine.Debug
-{
+{ 
     ///<summary>/Debug component for the KEngine. Contains static methods for managing debug logs.</summary>
-    public class KDebugger : KEngineComponent
+    public class KDebugger : IKEngineComponent
     {
+        protected record class KTextLog(ushort maxLength, StringBuilder StringBuilder);
+
         #region Static 
 
         ///<summary>Constant id for the debug log.</summary>
-        public static readonly string DEBUG = "debug";
+        public static readonly ushort DEBUG_LOG = 0;
 
         ///<summary>Constant id for the error log.</summary>
-        public static readonly string ERROR = "error";
+        public static readonly ushort ERROR_LOG = 1;
 
         ///<summary>Whether or not the program will dump debug information to a .txt file when the end method is called.</summary>
         public static bool DumpToFile = true;
@@ -20,10 +22,11 @@ namespace KheaiGameEngine.Debug
         public static string FileDirectory = "Debug";
 
         ///<summary>Dictionary for containing text logs.</summary>
-        protected static Dictionary<string, List<string>> logs = new()
+        protected static List<KTextLog> logs = new(4)
         {
-            { DEBUG, new() },
-            { ERROR, new() }
+            //Debug log (index 0), Error log (index 1)
+            new KTextLog(512, new StringBuilder(512)), 
+            new KTextLog(512, new StringBuilder(512))
         };
 
         ///<summary>Get the current date and time as a string.</summary>
@@ -35,97 +38,152 @@ namespace KheaiGameEngine.Debug
         ///<summary>Get the current time as a formatted string ("HH:mm:ss").</summary>
         public static string CurrentTime => DateTime.UtcNow.ToString("HH:mm:ss");
 
-        #endregion
-
-        //Variables to keep track of updates per second
-        private byte updatesThisCycle = 0;
-        private long timerStart = 0;
-
-        //Time related properties for debugging.
-        ///<summary>Get the current time in ticks.</summary>
-        public double SessionTime => DateTime.UtcNow.Ticks - StartTime;
-        ///<summary>Gets the average updates per second.</summary>
-        public double AverageUpdateRate => Engine.CurrentUpdate / (SessionTime / TimeSpan.TicksPerSecond);
-        ///<summary>Get the current update rate.</summary>
-        public byte UpdateRate { get; private set; } = 0;
-        ///<summary>Gets the maximum updates in a cycle.</summary>
-        public byte MaxUpdatesPerSecond { get; private set; } = 0;
-        ///<summary>Gets the minimum updates in a cycle.</summary>
-        public byte MinUpdatesPerSecond { get; private set; } = byte.MaxValue;
-        ///<summary>Get the start time of this component.</summary>
-        public long StartTime { get; private set; } = 0;
-        ///<summary>Get the end time of this component.</summary>
-        public long EndTime { get; private set; } = 0;
-
-        public KDebugger() => Order = 0;
-
-        public KDebugger(bool submitToFile) : this() => DumpToFile = submitToFile;
-
-        public KDebugger(string filePath) : this(true) => FileDirectory = filePath;
-
-        ///<summary>Submit a message to a specified log.</summary>
-        public static void Log(string logID, string message)
-        {
-            if (!logs.ContainsKey(logID))
-            {
-                ErrorLog($"Log {logID} doesn't exist.\n\t{message}");
-                return;
-            }
-            logs[logID].Add(message);
+        ///<summary>Submit a message to a specified log. Returns the log id.</summary>
+        ///<param name="maxLength">The max character count for a log.</param>
+        public static int AddLog(ushort maxLength) 
+        {            
+            logs.Add(new KTextLog(maxLength, new StringBuilder(maxLength)));
+            //returns the index of the most recently added log (this one)
+            return logs.Count - 1;
         }
 
-        ///<summary>Submit a message to the debug log.</summary>
-        public static void DebugLog(string message) => Log(DEBUG, message);
-
-        ///<summary>Submit a message to the error log.</summary>
-        public static void ErrorLog(string message) => Log(ERROR, message);
-
         ///<summary>Clear a specified log.</summary>
-        public static void ClearLog(string logID) => logs[logID].Clear();
+        ///<param name="logID">The id of the log to clear.</param>
+        public static void ClearLog(ushort logID) => logs[logID].StringBuilder.Clear();
 
-        ///<summary>Get a specified log as an enumerable collection.</summary>
-        public static IEnumerable<string> GetLog(string logID)
+        ///<summary>Retrieves a specified log as an enumerable collection.</summary>
+        ///<param name="logID">The id of the log to retrieve.</param>
+        public static string GetLog(ushort logID)
         {
-            if (!logs.ContainsKey(logID))
+            if (logs.Capacity < logID)
             {
                 ErrorLog($"Log {logID} doesn't exist.");
                 return null;
             }
-            return logs[logID];
+            return logs[logID].ToString();
         }
 
-        ///<summary>Get a specified log as an enumerable collection.</summary>
-        public static IEnumerable<string> GetLog(string logID, ushort maxLines) => 
-            GetLog(logID)?.Skip(logs[logID].Count - maxLines);
-
-        public override void Init() { /*Unimplemented*/ }
-
-        public override void Start() => StartTime = timerStart = DateTime.UtcNow.Ticks;
-
-        public override void End()
+        ///<summary>Submit a message to a specified log.</summary>
+        ///<param name="logID">The id of the target log.</param>
+        ///<param name="message">The message to submit to the log.</param>
+        public static void Log(ushort logID, string message)
         {
-            EndTime = DateTime.UtcNow.Ticks;
+            if (logs.Capacity < logID)
+            {
+                ErrorLog($"Log {logID} doesn't exist.\n\t{message}");
+                return;
+            }
 
-            if (DumpToFile) DumpLogsToFile();
+            ushort overflowBuffer = 512;
+            KTextLog log;
+
+            log = logs[logID];
+            log.StringBuilder.AppendLine(message);
+
+            if (log.maxLength == 0) return;
+
+            //Checks if the length of the string builder is greater than the max length plus half the overflow buffer. 
+            //Culls any text beyond the max amount of characters in FIFO order.
+            if (log.StringBuilder.Length > log.maxLength + overflowBuffer / 2)
+            {
+                //Cull text and resize capacity
+                log.StringBuilder.Remove(0, log.StringBuilder.Length - log.maxLength);
+                log.StringBuilder.EnsureCapacity(log.maxLength + overflowBuffer);
+            }
         }
 
-        public override void Update(uint currentUpdate) { }
+        ///<summary>Submit a message to the debug log.</summary>
+        ///<param name="message">The message to submit to the log.</param>
+        public static void DebugLog(string message) => Log(DEBUG_LOG, message);
 
-        public override void FrameUpdate(uint currentUpdate)
+        ///<summary>Submit a message to the error log.</summary>
+        ///<param name="message">The message to submit to the log.</param>
+        public static void ErrorLog(string message) => Log(ERROR_LOG, message);
+
+        #endregion
+
+        //Variables to keep track of preformance.
+        protected byte updateRateCounter = 0;
+        protected byte frameRateCounter = 0;
+        protected uint updates = 0;
+        protected uint frames = 0;
+        protected long timerStart = 0;
+
+        //Implemented from KEngineComponent.
+        public string ID { get; init; }
+        public short Order { get; init; }
+        public KEngine Engine { get; set; }
+
+        ///<summary>Fires when component is initalized.</summary>
+        public event Action<KDebugger> OnDebugInit;
+        ///<summary>Fires when component is started.</summary>
+        public event Action<KDebugger> OnDebugStart;
+        ///<summary>Fires when component's execution ends.</summary>
+        public event Action<KDebugger> OnDebugEnd;
+        ///<summary>Fires when the component is updated.</summary>
+        public event Action<KDebugger> OnDebugUpdate;
+        ///<summary>Fires when the component is updated for drawing.</summary>
+        public event Action<KDebugger> OnDebugFrameUpdate;
+
+        //Time related properties for debugging.
+        ///<summary>The current time in ticks.</summary>
+        public double SessionTime => DateTime.UtcNow.Ticks - StartTime;
+        ///<summary>The average update rate.</summary>
+        public double AverageUpdateRate => UpdateRate / SessionTime / TimeSpan.TicksPerSecond;
+        ///<summary>The average frame rate.</summary>
+        public double AverageFrameRate => FrameRate / SessionTime / TimeSpan.TicksPerSecond;
+        ///<summary>The current update rate.</summary>
+        public byte UpdateRate { get; private set; } = 0;
+        ///<summary>The current frame rate.</summary>
+        public byte FrameRate { get; private set; } = 0;
+        ///<summary>The start time of this component.</summary>
+        public long StartTime { get; private set; } = 0;
+        ///<summary>The end time of this component.</summary>
+        public long EndTime { get; private set; } = 0;
+
+        public KDebugger()
         {
-            updatesThisCycle++;
+            ID = GetType().Name;
+            Order = -1;   
+            StringBuilder sb = new StringBuilder();
 
-            //The last few lines are to keep track of debug info.
+            //Set the start time and start the timer to track updates/frames every second.
+            OnDebugStart += (ignored) => StartTime = timerStart = DateTime.UtcNow.Ticks;
+            //Set the end time.
+            OnDebugEnd += (ignored) => EndTime = DateTime.UtcNow.Ticks;
+            //Dump debug logs to file if true.
+            if (DumpToFile) OnDebugEnd += (ignored) => DumpLogsToFile();
+        }
+
+        public virtual void Init() => OnDebugInit?.Invoke(this);
+
+        public virtual void Start() => OnDebugStart?.Invoke(this);
+
+        public virtual void End() => OnDebugEnd?.Invoke(this);
+
+        public virtual void Update(uint currentUpdate) 
+        {
+            //Track updates.
+            updates++;
+            updateRateCounter++;
+            OnDebugUpdate.Invoke(this);
+        }
+
+        public virtual void FrameUpdate(uint currentUpdate)
+        {
+            //Track frames
+            frames++;
+            frameRateCounter++;
+
+            //Get update/frame rate and reset timer
             if ((DateTime.UtcNow.Ticks - timerStart) / TimeSpan.TicksPerSecond >= 1)
             {
-                UpdateRate = updatesThisCycle;
-
-                if (updatesThisCycle >= MaxUpdatesPerSecond) MaxUpdatesPerSecond = updatesThisCycle;
-                if (updatesThisCycle < MinUpdatesPerSecond) MinUpdatesPerSecond = updatesThisCycle;
-
-                updatesThisCycle = 0;
+                UpdateRate = updateRateCounter;
+                FrameRate = frameRateCounter;
+                updateRateCounter = frameRateCounter = 0;
                 timerStart = DateTime.UtcNow.Ticks;
             }
+            OnDebugFrameUpdate?.Invoke(this);
         }
 
         ///<summary>Dump debug info to a .txt file. Override for custom implementation.</summary>
@@ -142,18 +200,16 @@ namespace KheaiGameEngine.Debug
             writer = new(File.Create($"{path}({logNum})"));
             writer.WriteLine($"Start time: {new DateTime(StartTime).ToString("MM-dd-yy H:mm:ss")}");
             writer.WriteLine($"End time: {new DateTime(EndTime).ToString("MM-dd-yy H:mm:ss")}");
-            writer.WriteLine($"AverageFrameRate: {AverageUpdateRate}");
-            writer.WriteLine($"MaxFramesPerSecond: {MaxUpdatesPerSecond}");
-            writer.WriteLine($"MinFramesPerSecond: {MinUpdatesPerSecond}");
-            writer.WriteLine($"Last Frame: {Engine.CurrentUpdate}");
+            writer.WriteLine($"Average update rate: {AverageUpdateRate}");
+            writer.WriteLine($"Average frame rate: {AverageFrameRate}");
+            writer.WriteLine($"Last frame: {updates}\n");
 
-            foreach (var log in logs)
+            for (int i = 0; i < logs.Count; i++)
             {
-                writer.WriteLine($"\n{log.Key}:");
-
-                foreach (var line in log.Value) writer.WriteLine(line);
-            }            
-
+                if (i == 0) writer.WriteLine("Debug Log");
+                if (i == 1) writer.WriteLine("Error Log");
+                writer.Write($"{logs[i].StringBuilder.ToString()}\n");
+            }      
             writer.Close();
         }
     }

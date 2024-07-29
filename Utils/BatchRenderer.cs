@@ -53,7 +53,6 @@ namespace KheaiUtils
         public Texture CreateAtlas() 
         {
             uint rowLength, rowHeight;
-            Texture atlas;
 
             //Sort textures by height and then by width
             _textureData.Sort((a, b) =>
@@ -161,21 +160,21 @@ namespace KheaiUtils
             }
 
             //Create a textureAtlas with given bounds
-            atlas = new(rowLength, rowHeight);
+            _atlas = new(rowLength, rowHeight);
 
             //Append each texture to the texture atlas
             foreach (var textureData in _textureData)
             {
                 Vector2f coordinates = _textureCoords[textureData.id][0];
-                atlas.Update(textureData.texture, (uint)coordinates.X, (uint)coordinates.Y);
+                _atlas.Update(textureData.texture, (uint)coordinates.X, (uint)coordinates.Y);
             }
 
-            return atlas;
+            return _atlas;
         }
     }
 
     ///<summary>A Renderer that batches multiple draw calls into one.</summary>
-    public class BatchRenderer : KEngineComponent, IKDrawHandler
+    public class BatchRenderer : IKEngineComponent, IKRenderer
     {
         public static readonly int BACKGROUND = 0;
 
@@ -190,17 +189,22 @@ namespace KheaiUtils
         public KTextureAtlas TextureAtlas;
         public RenderStates RenderStates;
 
+        public KEngine Engine { get; set; }
+        public short Order { get; set; }
+        public string ID { get; set; }
+
         public BatchRenderer(uint vertexCount, in RenderStates renderStates, PrimitiveType primitiveType = PrimitiveType.Quads) : base() 
         {
             RenderStates = renderStates;
             _vertexBuffer = new(vertexCount, primitiveType, VertexBuffer.UsageSpecifier.Stream);
         }
         
-        public override void Init() { } 
-        public override void Start() { }
-        public override void End() { }
-        public override void Update(uint currentUpdate) { }
-        public override void FrameUpdate(uint currentUpdate) { }
+        public  void Init() { } 
+        public  void Start() { }
+        public  void End() { }
+
+        public  void Update(uint currentUpdate) { }
+        public  void FrameUpdate(uint currentUpdate) { }
 
         ///<summary>Draws batch to render target.</summary>
         public void Render(RenderTarget target)

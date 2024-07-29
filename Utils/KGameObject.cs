@@ -1,42 +1,74 @@
-﻿namespace KheaiGameEngine.GameManagement
+﻿using KheaiGameEngine;
+
+namespace KheaiUtils
 {
     public class KGameObject : IKComponentContainer<KObjectComponent>
     {
-        public string ID;
-        public string Name;
-        public bool Enabled;
-        public KTransform Transform;
-        public KGameObject Parent;
-        public event Action<KGameObject> OnInit;
-        public event Action<KGameObject> PreStart;
-        public event Action<KGameObject> PostStart;
-        public event Action<KGameObject> OnEnd;
+        private bool _enabled = false;
+        private List<KGameObject> _children = new();
 
+        ///<summary>The entity id for this gameobject.</summary>
+        public string ID;
+        ///<summary>The entity name for this gameobject.</summary>
+        public string Name;
+        ///<summary>The parent object for this gameobject.</summary>
+        public KGameObject Parent;
+        ///<summary>The transform for this gameobject.</summary>
+        public KTransform Transform;
+
+        ///<summary>Fires when the gameobject is initialized.</summary>
+        public event Action<KGameObject> OnInit;
+        ///<summary>Fires when the gameobject is enabled.</summary>
+        public event Action<KGameObject> OnEnable;
+        ///<summary>Fires when the gameobject is disabled.</summary>
+        public event Action<KGameObject> OnDisable;
+
+        ///<summary>Gets the child object at the specifed index.</summary>
+        public KGameObject this[int index] => _children[index];
+        ///<summary>Gets the child object with the specifed name.</summary>
+        public KGameObject this[string name] => _children.Find(child => child.Name == name);
+
+        ///<summary>Container for objectComponents.</summary>
         protected SortedSet<KObjectComponent> objectComponents = new(new KComponentSorter<KObjectComponent>());
+
+        ///<summary>Activates or deactivates a gameobject.</summary>
+        public bool Enabled 
+        {
+            get => _enabled;
+            set
+            {
+                //prevents code from being fired if it is being set to the same state
+                if (_enabled == value) return;
+                
+                if (value == true) OnEnable.Invoke(this);
+                else OnDisable.Invoke(this);
+                
+                _enabled = value;
+            }
+        }
 
         public KGameObject(string id, string name = null)
         {
             ID = id;
-            Enabled = true;
             if (name == null) Name = id;
             else Name = name;
         }
 
-        public void Init() => OnInit?.Invoke(this);
+
+        public void Init()
+        {
+            OnInit.Invoke(this);
+            OnEnable += (gameobject) => { foreach (var child in _children) child.Enabled = true; };
+        }
 
         public void Start()
         {
-            PreStart?.Invoke(this); 
-
             foreach (KObjectComponent component in objectComponents) component.Start();
-            
-            PostStart?.Invoke(this);
+            Enabled = true;
         }
 
         public void End()
         {
-            OnEnd?.Invoke(this);
-            
             foreach (KObjectComponent component in objectComponents) component.End();
         }
 
@@ -118,5 +150,10 @@
             foreach (var component in objectComponents)
                 if (component.Enabled) component.FrameUpdate(currentFrame);
         }
+
+        public KObjectComponent[] GetAllComponents() => objectComponents.ToArray();
+
+        public KObjectComponent[] GetComponents<ComponentT>() where ComponentT : KObjectComponent =>
+            objectComponents.Where((comp) => comp is ComponentT).ToArray();
     }
 }

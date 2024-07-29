@@ -1,10 +1,15 @@
-﻿namespace KheaiGameEngine.GameManagement
+﻿using KheaiGameEngine;
+
+namespace KheaiUtils
 {
     public abstract class KObjectComponent : IKComponent
     {
+        ///<summary>The active state of the component.</summary>
         public bool Enabled { get; set; }
-        public ushort Order { get; set; }
+        public short Order { get; set; }
         public string ID { get; set; }
+
+        ///<summary>The owner of the component.</summary>
         public KGameObject Owner { get; set; }
 
         public KObjectComponent()

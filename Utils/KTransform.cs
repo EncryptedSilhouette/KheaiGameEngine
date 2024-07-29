@@ -1,36 +1,47 @@
 ﻿using SFML.System;
 
-namespace KheaiGameEngine.GameManagement
+namespace KheaiUtils
 {
     //TODO Apply positional math for parent rotation.
     public class KTransform
-    {
-        public static float GameUnit = 1;
-
+    {   
+        //The true coordiantes
         private Vector2f _truePos = new(0, 0);
+
+        //Refrence to parent transform
         private KTransform _parent;
 
-        public float rotation = 0.0f;
+        ///<summary>The transform's rotation in degrees.</summary>
+        public float Rotation = 0.0f;
+        ///<summary>position relative to parent.</summary>
         public Vector2f RelativePos = new(0, 0);
+        ///<summary>The dimentions for the transform.</summary>
         public Vector2f Dimentions = new(1, 1);
 
+        ///<summary>The left coordiates for the transform.</summary>
         public float Left => _truePos.X - Width / 2;
+        ///<summary>The right coordiates for the transform.</summary>
         public float Right => _truePos.X + Width / 2;
+        ///<summary>The top coordiates for the transform.</summary>
         public float Top => _truePos.Y - Height / 2;
+        ///<summary>The bottom coordiates for the transform.</summary>
         public float Bottom => _truePos.Y + Height / 2;
 
+        ///<summary>The width of this transforms.</summary>
         public float Width
         {
             get => Dimentions.X;
             set => Dimentions.X = value;
         }
 
+        ///<summary>The height of this transforms.</summary>
         public float Height
         {
             get => Dimentions.Y;
             set => Dimentions.Y = value;
         }
 
+        ///<summary>The transform's X position.</summary>
         public float PosX
         {
             get => _truePos.X;
@@ -41,6 +52,7 @@ namespace KheaiGameEngine.GameManagement
             }
         }
 
+        ///<summary>The transform's Y position.</summary>
         public float PosY
         {
             get => _truePos.Y;
@@ -51,6 +63,7 @@ namespace KheaiGameEngine.GameManagement
             }
         }
 
+        ///<summary>The transform's position.</summary>
         public Vector2f Position
         {
             get => _truePos;
@@ -61,6 +74,7 @@ namespace KheaiGameEngine.GameManagement
             }
         }
 
+        ///<summary>The transform's parent transform.</summary>
         public KTransform parent
         {
             get

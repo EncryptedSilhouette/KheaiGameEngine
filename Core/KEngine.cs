@@ -5,22 +5,10 @@ using KheaiGameEngine.Debug;
 
 namespace KheaiGameEngine
 {
-    public abstract class KEngineComponent : IKComponent
+    public interface IKEngineComponent : IKComponent
     {
-        ///<summary>The order the component will be updated.</summary>
-        public ushort Order { get; set; } = 0;
-        ///<summary>The ID for the component.</summary>
-        public string ID { get; set; }
         ///<summary>The reference for the engine.</summary>
         public KEngine Engine { get; set; }
-
-        ///Sets the component's ID to the type name.</summary>
-        public KEngineComponent() => ID = GetType().Name;
-
-        //Methods implemented from IKComponent
-        public abstract void Init();
-        public abstract void Start();
-        public abstract void End();
 
         ///<summary>Executes code every update.</summary>
         ///<param name="currentUpdate">Keeps track of the current frame.</param>
@@ -31,16 +19,33 @@ namespace KheaiGameEngine
         public abstract void FrameUpdate(uint currentUpdate);
     }
 
-    public sealed class KEngine : IKComponentContainer<KEngineComponent>
+    public sealed class KEngine : IKComponentContainer<IKEngineComponent>
     {
-        private KComponentSorter<KEngineComponent> _componentSorter;
-        private SortedSet<KEngineComponent> _engineComponents;
+        #region Static 
+
+        private static IKRenderer s_activeRenderer; //The active renderer for drawing.
+
+        ///<summary>Event handler for when the active instance is changed</summary>
+        public static event Action OnInstanceChanged;
+
+        ///<summary>Property for the static refrence to the active instance. Fires an event when the instance is changed.</summary>
+        public static IKRenderer ActiveRenderer
+        {
+            get => s_activeRenderer;
+            set
+            {
+                s_activeRenderer = value;
+                OnInstanceChanged?.Invoke();
+            }
+        }
+        #endregion
+
+        private SortedSet<IKEngineComponent> _engineComponents; //The collection for the engine's components.
+        private KComponentSorter<IKEngineComponent> _componentSorter; //The sorter for the sorted set.
 
         ///<summary>The target number of updates in a second.</summary>
-        public byte UpdateRateTarget { get; private set; } = 30;
+        public byte UpdateRateTarget { get; private set; }
         ///<summary>The current number of frames.</summary>
-        public uint CurrentUpdate { get; private set; } = 0;
-        ///<summary>Gets the update interval in milliseconds.</summary>
         public double UpdateInterval => 1000d / UpdateRateTarget;
         ///<summary>Whether or not the engine is running.</summary>
         public bool IsRunning { get; private set; } = true;
@@ -50,50 +55,43 @@ namespace KheaiGameEngine
         public RenderWindow Window { get; private set; }
 
         ///<summary>Indexer to retrive an engine component given an the component id.</summary>
-        public KEngineComponent this[string id] => GetComponent(id);
+        public IKEngineComponent this[string id] => GetComponent(id);
         ///<summary>Indexer to retrive an engine component given the component's type.</summary>
-        public KEngineComponent this[Type type] => GetComponent(type.Name);
+        public IKEngineComponent this[Type type] => GetComponent(type.Name);
 
-        ///<summary>Creates the window and sets the refrence to the application.</summary>
-        ///<param name="app">Refrence to the KApplication.</param>
-        public KEngine(IKApplication app)
+        ///<summary>Creates the window, sets the update rate, and sets a refrence to the application.</summary>
+        ///<param name="app">Refrence to the application.</param>
+        ///<param name="updateRateTarget">The target framerate.</param>
+        public KEngine(IKApplication app, byte updateRateTarget = 30)
         {
             Application = app;
+            UpdateRateTarget = updateRateTarget;
             Window = new(VideoMode.DesktopMode, app.AppName);
             Window.Closed += (ignoreA, ignoreB) => End();
 
-            _componentSorter = new KComponentSorter<KEngineComponent>();
-            _engineComponents = new(_componentSorter);
+            _componentSorter = new KComponentSorter<IKEngineComponent>();
+            _engineComponents = new SortedSet<IKEngineComponent>(_componentSorter);
         }
 
-        ///<summary>Creates the window and sets the refrence to the application and the framerate target.</summary>
-        ///<param name="app">Refrence to the KApplication.</param>  
-        ///<param name="updateRateTarget">The target framerate.</param>
-        public KEngine(IKApplication app, byte updateRateTarget) : this(app) => 
-            UpdateRateTarget = updateRateTarget;
-
-        ///<summary>Executes any initilization code for the component. Should be called in the "Start" method</summary>
+        ///<summary>Executes initilization tasks for the engine. Should be called in the "Start" method</summary>
         public void Init()
         {
-            if (!HasComponent<KDebugger>())
-                AddComponent(new KDebugger());
-            if (!HasComponent<IKDrawHandler>())
-                KDebugger.ErrorLog("There is no draw handler attatched");
+            if (!HasComponent<KDebugger>()) AddComponent(new KDebugger());
+            if (ActiveRenderer == null) KDebugger.ErrorLog("There is no active renderer.");
 
-            foreach (KEngineComponent component in _engineComponents) component.Start();
+            foreach (IKEngineComponent component in _engineComponents) component.Start();
         }
 
-        #region Gameloop
-
-        ///<summary>Executes starting code for the component.</summary>
+        ///<summary>Executes starting tasks, and starts the game loop.</summary>
         public void Start()
         {
+            //Define time variables.
+            uint currentUpdate = 0;
             double lastTime, newTime;
             double unprocessedTime = 0;
 
-            Init();
-            
-            lastTime = DateTime.UtcNow.Ticks;
+            Init(); //Run initilization tasks.
+            lastTime = DateTime.UtcNow.Ticks; //Required for loop timing.
 
             while (IsRunning) //Core game-loop
             {
@@ -101,45 +99,46 @@ namespace KheaiGameEngine
                 unprocessedTime += (newTime - lastTime) / TimeSpan.TicksPerMillisecond;
                 lastTime = newTime;
 
-                //Keeps track of time between updates and catches up on updates in case of lag.
+                //Keeps track of time between updates, if the interval is great enough, allows another update.
                 if (unprocessedTime > UpdateInterval)
                 {
-                    while (unprocessedTime > UpdateInterval) 
+                    //Loops to compensate for any lag, skipping pre-draw and render tasks. 
+                    while (unprocessedTime > UpdateInterval && IsRunning) 
                     {
                         unprocessedTime -= UpdateInterval;
-                        CurrentUpdate++;
+                        currentUpdate++;
 
-                        Update();
+                        Update(currentUpdate);
                     }
-                    FrameUpdate();
+                    FrameUpdate(currentUpdate);
 
-                    Window.Clear(Color.Black); 
-                    KRenderer.RenderFrame(Window);
+                    Window.Clear(Color.Black);
+                    ActiveRenderer.Render(Window);
                     Window.Display();
                 }
                 Window.DispatchEvents();
             }
-
-            foreach (KEngineComponent component in _engineComponents) component.End();
+            foreach (IKEngineComponent component in _engineComponents) component.End();
         }
-        #endregion
 
-        ///<summary>Executes code for the end of execution.</summary>
+        ///<summary>Stops the game loop; executing tasks for the end of execution.</summary>
         public void End() => IsRunning = false;
 
         ///<summary>Executes code every update.</summary>
-        public void Update()
+        ///<param name="currentUpdate">Keeps track of the current frame.</param>
+        public void Update(uint currentUpdate)
         {
-            foreach (KEngineComponent component in _engineComponents) component.Update(CurrentUpdate);
+            foreach (IKEngineComponent component in _engineComponents) component.Update(currentUpdate);
         }
 
-        ///<summary>Executes pre-draw code every update.
-        public void FrameUpdate()
+        ///<summary>Executes pre-draw code every update. This method is called after the update method.</summary>
+        ///<param name="currentUpdate">Keeps track of the current frame.</param>
+        public void FrameUpdate(uint currentUpdate)
         {
-            foreach (KEngineComponent component in _engineComponents) component.FrameUpdate(CurrentUpdate);
+            foreach (IKEngineComponent component in _engineComponents) component.FrameUpdate(currentUpdate);
         }
 
-        public KEngineComponent AddComponent(KEngineComponent component)
+        public IKEngineComponent AddComponent(IKEngineComponent component)
         {
             component.Engine = this;
             component.Init();
@@ -147,40 +146,56 @@ namespace KheaiGameEngine
             return component;
         }
 
-        public KEngineComponent[] AddComponents(KEngineComponent[] components)
+        public IKEngineComponent[] AddComponents(IKEngineComponent[] components)
         {
             foreach (var component in components) AddComponent(component);
             return components;
         }
 
-        public void RemoveComponent(string id)
+        public bool RemoveComponent(string id)
         {
             foreach(var component in _engineComponents)
             {
                 if (component.ID.Equals(id))
                 {
                     _engineComponents.Remove(component);
-                    return;
+                    return true;
                 }
             }
+            return false;
         }
 
-        public void RemoveComponent<Component>()
+        public bool RemoveComponent<TComponent>()
         {
             foreach (var component in _engineComponents)
             {
-                if (component is Component)
+                if (component is TComponent)
                 {
                     _engineComponents.Remove(component);
-                    return;
+                    return true;
                 }
             }
+            return false;
         }
 
-        public bool HasComponent<Component>()
+        public uint RemoveComponents<TComponent>()
+        {
+            uint count = 0;
+            foreach (var component in _engineComponents) 
+            {
+                if (component is TComponent)
+                {
+                    _engineComponents.Remove(component);
+                    count++;
+                }
+            }
+            return count;
+        }
+
+        public bool HasComponent<TComponent>()
         {
             foreach (var component in _engineComponents)
-                if (component is Component) return true;
+                if (component is TComponent) return true;
             return false;
         }
 
@@ -191,18 +206,32 @@ namespace KheaiGameEngine
             return false;
         }
 
-        public Component GetComponent<Component>() where Component : KEngineComponent
+        public uint HasComponents<TComponent>()
         {
-            foreach (IKComponent component in _engineComponents)
-                if (component is Component) return (Component) component;
-            return null;
+            uint count = 0;
+
+            foreach (var component in _engineComponents)
+                if (component is TComponent) count++;
+            return count;
         }
 
-        public KEngineComponent GetComponent(string id)
+        public TComponent GetComponent<TComponent>() where TComponent : IKEngineComponent
+        {
+            foreach (IKComponent component in _engineComponents)
+                if (component is TComponent) return (TComponent) component;
+            return default;
+        }
+
+        public IKEngineComponent GetComponent(string id)
         {
             foreach (var component in _engineComponents)
                 if (component.ID.Equals(id)) return component;
-            return null;
+            return default;
         }
+
+        public IKEngineComponent[] GetAllComponents() => _engineComponents.ToArray();
+
+        public IKEngineComponent[] GetComponents<TComponent>() where TComponent : IKEngineComponent =>
+            _engineComponents.Where((comp) => comp is TComponent).ToArray();
     }
 }
