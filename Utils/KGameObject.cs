@@ -4,8 +4,11 @@ namespace KheaiUtils
 {
     public class KGameObject : IKComponentContainer<KObjectComponent>
     {
-        private bool _enabled = false;
+        private bool _enabled = true;
         private List<KGameObject> _children = new();
+        
+        ///<summary>Container for objectComponents.</summary>
+        protected SortedSet<KObjectComponent> objectComponents = new(new KComponentSorter<KObjectComponent>());
 
         ///<summary>The entity id for this gameobject.</summary>
         public string ID;
@@ -28,9 +31,6 @@ namespace KheaiUtils
         ///<summary>Gets the child object with the specifed name.</summary>
         public KGameObject this[string name] => _children.Find(child => child.Name == name);
 
-        ///<summary>Container for objectComponents.</summary>
-        protected SortedSet<KObjectComponent> objectComponents = new(new KComponentSorter<KObjectComponent>());
-
         ///<summary>Activates or deactivates a gameobject.</summary>
         public bool Enabled 
         {
@@ -50,25 +50,34 @@ namespace KheaiUtils
         public KGameObject(string id, string name = null)
         {
             ID = id;
-            if (name == null) Name = id;
-            else Name = name;
+            Name = name ?? id;
         }
 
         public void Init()
         {
             OnInit.Invoke(this);
-            OnEnable += (gameobject) => { foreach (var child in _children) child.Enabled = true; };
         }
 
         public void Start()
         {
             foreach (KObjectComponent component in objectComponents) component.Start();
-            Enabled = true;
         }
 
         public void End()
         {
             foreach (KObjectComponent component in objectComponents) component.End();
+        }
+
+        public void Update(uint currentFrame)
+        {
+            foreach (var component in objectComponents)
+                if (component.Enabled) component.Update(currentFrame);
+        }
+
+        public void FrameUpdate(uint currentFrame)
+        {
+            foreach (var component in objectComponents)
+                if (component.Enabled) component.FrameUpdate(currentFrame);
         }
 
         public KObjectComponent AddComponent(KObjectComponent component)
@@ -85,7 +94,7 @@ namespace KheaiUtils
             return components;
         }
 
-        public void RemoveComponent(string id)
+        public bool RemoveComponent(string id)
         {
             foreach (var component in objectComponents)
             {
@@ -93,21 +102,37 @@ namespace KheaiUtils
                 {
                     component.End();
                     objectComponents.Remove(component);
-                    return;
+                    return true;
                 }
             }
+            return false;
         }
 
-        public void RemoveComponent<Component>()
+        public bool RemoveComponent<Component>()
         {
             foreach (var component in objectComponents)
             {
                 if (component is Component)
                 {
                     objectComponents.Remove(component);
-                    return;
+                    return true;
                 }
             }
+            return false;
+        }
+
+        public uint RemoveComponents<TComponent>()
+        {
+            uint count = 0;
+            foreach (var component in objectComponents)
+            {
+                if (component is TComponent)
+                {
+                    objectComponents.Remove(component);
+                    count++;
+                }
+            }
+            return count;
         }
 
         public bool HasComponent<Component>()
@@ -124,55 +149,32 @@ namespace KheaiUtils
             return false;
         }
 
+        public uint HasComponents<TComponent>()
+        {
+            uint count = 0;
+
+            foreach (var component in objectComponents)
+                if (component is TComponent) count++;
+            return count;
+        }
+
         public Component GetComponent<Component>() where Component : KObjectComponent
         {
             foreach (IKComponent component in objectComponents)
                 if (component is Component) return (Component) component;
-            return null;
+            return default;
         }
 
         public KObjectComponent GetComponent(string id)
         {
             foreach (var component in objectComponents)
                 if (component.ID.Equals(id)) return component;
-            return null;
-        }
-
-        public void Update(uint currentFrame)
-        {
-            foreach (var component in objectComponents)
-                if (component.Enabled) component.Update(currentFrame);
-        }
-
-        public void FrameUpdate(uint currentFrame)
-        {
-            foreach (var component in objectComponents)
-                if (component.Enabled) component.FrameUpdate(currentFrame);
+            return default;
         }
 
         public KObjectComponent[] GetAllComponents() => objectComponents.ToArray();
 
         public KObjectComponent[] GetComponents<ComponentT>() where ComponentT : KObjectComponent =>
             objectComponents.Where((comp) => comp is ComponentT).ToArray();
-
-        bool IKComponentContainer<KObjectComponent>.RemoveComponent(string id)
-        {
-            throw new NotImplementedException();
-        }
-
-        bool IKComponentContainer<KObjectComponent>.RemoveComponent<TComponent>()
-        {
-            throw new NotImplementedException();
-        }
-
-        public uint RemoveComponents<TComponent>()
-        {
-            throw new NotImplementedException();
-        }
-
-        public uint HasComponents<TComponent>()
-        {
-            throw new NotImplementedException();
-        }
     }
 }

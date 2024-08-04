@@ -5,7 +5,7 @@ using SFML.System;
 
 namespace KheaiUtils
 {
-    public class KTextureAtlas 
+    public class KTextureAtlas
     {
         //Wrapper to associate an id with a texture
         private record class TextureData(string id, Texture texture);

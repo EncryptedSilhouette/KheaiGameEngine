@@ -1,16 +1,17 @@
-﻿namespace KheaiGameEngine
+﻿using KheaiUtils;
+
+namespace KheaiGameEngine
 {
     ///<summary>Interface for creating components using the KComponent structure.</summary>
     public interface IKComponent
     {
         ///<summary>The order the component will be updated.</summary>
         public short Order { get; init; }
-
         ///<summary>The ID for the component.</summary>
         public string ID { get; init; }
 
         ///<summary>Executes initilization tasks for the component. Should be called in the "Start" method</summary>
-        public void Init();
+        public void Init() => Start();
 
         ///<summary>Executes starting tasks for the component.</summary>
         public void Start();
