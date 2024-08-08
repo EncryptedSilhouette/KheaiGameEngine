@@ -11,7 +11,7 @@ namespace KheaiGameEngine
         public string ID { get; init; }
 
         ///<summary>Executes initilization tasks for the component. Should be called in the "Start" method</summary>
-        public void Init() => Start();
+        public void Init();
 
         ///<summary>Executes starting tasks for the component.</summary>
         public void Start();

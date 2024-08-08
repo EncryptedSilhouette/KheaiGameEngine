@@ -1,8 +1,23 @@
 ﻿#if DEBUG
 
+//TODO 
+/* Optimizations:
+ * Optimize before threading.
+ * Free refrences when possible.
+ * Use data types in loops.
+ * Reuse allocations.
+ * Reduce string allocations, especially in loops.
+ * 
+ * Math class:
+ * Vector math extensions.
+ * 
+ * Improved texture atlasing.
+ */
+
 using KheaiGameEngine;
 using KheaiUtils;
 using SFML.Graphics;
+using SFML.Window;
 
 public class GameApp : IKApplication
 {
@@ -26,6 +41,9 @@ public class GameApp : IKApplication
 
     public void Init()
     {
+        KGameManager gameManager = new();
+
+        Engine.AddComponent(gameManager);
         Load();
     }
 
@@ -101,9 +119,11 @@ public class KGameManager : IKEngineComponent
 
 public class KEntity : KObjectComponent
 {
+    private string _textureID = "a";
+    private KTextureAtlas _atlas;
+
     public short Order { get; init; }
     public string ID { get; init; }
-
     public bool Enabled { get; set; }
     public KGameObject Owner { get; set; }
 
@@ -117,7 +137,8 @@ public class KEntity : KObjectComponent
 
     public void Init()
     {
-        
+        _atlas = ((KBatchRenderer) KEngine.ActiveRenderer).TextureAtlas;
+        _atlas.GetTexCoords(_textureID);
     }
 
     public void Start()
@@ -125,12 +146,12 @@ public class KEntity : KObjectComponent
         
     }
 
-    public void Update(uint currentTick)
+    public void End()
     {
-        
+
     }
 
-    public void End()
+    public void Update(uint currentTick)
     {
         
     }
@@ -138,6 +159,59 @@ public class KEntity : KObjectComponent
     public void FrameUpdate(uint currentFrame)
     {
         
+    }
+}
+
+public class KPlayer : KObjectComponent
+{
+    public int MoveSpeed = 5;
+
+    public short Order { get; init; }
+    public bool Enabled { get; set; }
+    public string ID { get; init; }
+    public KGameObject Owner { get; set; }
+
+    public void Init()
+    {
+
+    }
+
+    public void Start()
+    {
+
+    }
+
+    public void End()
+    {
+        
+    }
+
+    public void Update(uint currentTick)
+    {
+        //Horizontal movement
+        if (Keyboard.IsKeyPressed(Keyboard.Key.A))
+        {
+            Owner.Transform.PosX -= MoveSpeed;
+        }
+        if (Keyboard.IsKeyPressed(Keyboard.Key.D))
+        {
+            Owner.Transform.PosX += MoveSpeed;
+        }
+
+        //Vertical movement
+        if (Keyboard.IsKeyPressed(Keyboard.Key.W))
+        {
+            Owner.Transform.PosY -= MoveSpeed;
+        }
+        if (Keyboard.IsKeyPressed(Keyboard.Key.S))
+        {
+            Owner.Transform.PosY += MoveSpeed;
+        }
+    }
+
+    public void FrameUpdate(uint currentFrame)
+    {
+
     }
 }
 
