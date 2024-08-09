@@ -64,6 +64,7 @@ namespace KheaiGameEngine
         public KEngine(IKApplication app, IKRenderer renderer, byte updateRateTarget = 30)
         {
             Application = app;
+            ActiveRenderer = renderer;
             UpdateRateTarget = updateRateTarget;
             Window = new(VideoMode.DesktopMode, app.AppName);
             Window.Closed += (ignoreA, ignoreB) => End();

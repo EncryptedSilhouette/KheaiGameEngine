@@ -68,6 +68,11 @@ namespace KheaiGameEngine.Debug
         ///<param name = "message">The message to submit to the log.</param>
         public static void Log(ushort logID, string message)
         {
+#if DEBUG
+            Console.WriteLine(message);
+            return;
+#endif
+
             if (logs.Capacity < logID)
             {
                 ErrorLog($"Log {logID} doesn't exist.\n\t{message}");
@@ -166,7 +171,7 @@ namespace KheaiGameEngine.Debug
             //Track updates.
             updates++;
             updateRateCounter++;
-            OnDebugUpdate.Invoke(this);
+            OnDebugUpdate?.Invoke(this);
         }
 
         public virtual void FrameUpdate(uint currentUpdate)

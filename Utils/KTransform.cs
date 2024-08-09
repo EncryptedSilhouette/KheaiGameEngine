@@ -1,4 +1,5 @@
-﻿using SFML.System;
+﻿#if DEBUG
+using SFML.System;
 
 namespace KheaiUtils
 {
@@ -26,6 +27,19 @@ namespace KheaiUtils
         public float Top => _truePos.Y - Height / 2;
         ///<summary>The bottom coordiates for the transform.</summary>
         public float Bottom => _truePos.Y + Height / 2;
+
+        ///<summary>.</summary>
+        public Vector2f TopLeft => new(PosX, PosY);
+
+        ///<summary>.</summary>
+        public Vector2f TopRight => new(PosX + Width, PosY);
+
+        ///<summary>.</summary>
+        public Vector2f BottomLeft => new(PosX, PosY + Height);
+
+        ///<summary>.</summary>
+        public Vector2f BottomRight => new(PosX + Width, PosY + Height);
+
 
         ///<summary>The width of this transforms.</summary>
         public float Width
@@ -86,3 +100,4 @@ namespace KheaiUtils
         }
     }
 }
+#endif

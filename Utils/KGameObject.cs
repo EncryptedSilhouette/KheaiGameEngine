@@ -16,8 +16,6 @@ namespace KheaiUtils
         public string Name;
         ///<summary>The parent object for this gameobject.</summary>
         public KGameObject Parent;
-        ///<summary>The transform for this gameobject.</summary>
-        public KTransform Transform;
 
         ///<summary>Fires when the gameobject is initialized.</summary>
         public event Action<KGameObject> OnInit;

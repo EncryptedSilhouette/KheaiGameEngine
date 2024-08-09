@@ -1,4 +1,5 @@
-﻿using SFML.Graphics;
+﻿#if DEBUG
+using SFML.Graphics;
 using SFML.System;
 
 namespace KheaiUtils
@@ -69,3 +70,4 @@ namespace KheaiUtils
         }
     }
 }
+#endif

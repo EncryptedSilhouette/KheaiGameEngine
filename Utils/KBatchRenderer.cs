@@ -1,4 +1,6 @@
-﻿using KheaiGameEngine;
+﻿#if DEBUG
+
+using KheaiGameEngine;
 using KheaiGameEngine.Debug;
 using SFML.Graphics;
 using SFML.System;
@@ -12,8 +14,8 @@ namespace KheaiUtils
 
         //Atlasing variables
         private Texture _atlas;
-        private Dictionary<string, Vector2f[]> _textureCoords;
-        private List<TextureData> _textureData;
+        private Dictionary<string, Vector2f[]> _textureCoords = new();
+        private List<TextureData> _textureData = new();
 
         ///<summary>Gets the current texture atlas.</summary>
         public Texture Atlas => _atlas;
@@ -22,12 +24,23 @@ namespace KheaiUtils
         public Vector2f[] this[string textureID] => GetTexCoords(textureID);
 
         ///<summary>Gets the texture coords of a given texture.</summary>
-        public Vector2f[] GetTexCoords(string textureID) => _textureCoords[textureID];
+        public Vector2f[] GetTexCoords(string textureID)
+        {
+            if (_textureCoords is null || _textureCoords.Count < 1)
+            {
+                KDebugger.Log(KDebugger.ERROR_LOG, "No textures have been submitted to the atlas.");
+                return null;
+            }
+            if (_textureCoords.ContainsKey(textureID)) return _textureCoords[textureID];
+
+            KDebugger.Log(KDebugger.ERROR_LOG, $"Texture does not exist: {textureID}.");
+            return default;
+        }
 
         ///<summary>Submit a texture with an associated id to be atlased.</summary>
         public void SubmitTexture(string id, Texture texture)
         {
-            if (_textureData == null) _textureData = new();
+            if (_textureData is null) _textureData = new();
 
             _textureData.Add(new TextureData(id, texture));
         }
@@ -51,6 +64,12 @@ namespace KheaiUtils
         ///<summary>Creates a texture atlas using the submitted textures.</summary>
         public Texture CreateAtlas() 
         {
+            if (_textureData is null || _textureData.Count < 1)
+            {
+                KDebugger.Log(KDebugger.ERROR_LOG, "No textures have been submitted to the atlas.");
+                return null;
+            }
+
             uint rowLength, rowHeight;
 
             _textureCoords = new();
@@ -177,14 +196,11 @@ namespace KheaiUtils
     ///<summary>A Renderer that batches multiple draw calls into one.</summary>
     public class KBatchRenderer : IKEngineComponent, IKRenderer
     {
-        public static readonly int BACKGROUND = 0;
+        public static readonly int BACKGROUND = 0; //Static ID for background layer.
 
-        //Keeps track of how many verticies are being drawn for the current frame.
-        private int _cycleVertexCount = 0;
-        //A buffer to batch multiple vertexes.
-        private VertexBuffer _vertexBuffer;
-        //A List to keep track of verticies for each layer
-        private List<List<Vertex>> _drawLayer = new(8);
+        private int _frameVertexCount = 0; //Keeps track of how many verticies are being drawn for the current frame.
+        private VertexBuffer _vertexBuffer; //A buffer to batch multiple vertexes.
+        private List<List<Vertex>> _drawLayer = new(8); //A List to keep track of verticies for each layer.
 
         //TODO: Find a better way to go about this
         public KTextureAtlas TextureAtlas;
@@ -213,7 +229,7 @@ namespace KheaiUtils
             //offset to keep track of array position
             int offset = 0;
             //a vertex array to update the vertexbuffer
-            Vertex[] vertices = new Vertex[_cycleVertexCount];
+            Vertex[] vertices = new Vertex[_frameVertexCount];
 
             //copies the verticies from each layer to the vertex array
             foreach (var layer in _drawLayer) 
@@ -224,7 +240,7 @@ namespace KheaiUtils
 
             //Update vertexbuffer and draw verticies using Renderstates. 
             _vertexBuffer.Update(vertices);
-            _vertexBuffer.Draw(target, 0, (uint) _cycleVertexCount, RenderStates);
+            _vertexBuffer.Draw(target, 0, (uint) _frameVertexCount, RenderStates);
 
             //Clear each layer.
             foreach (var layer in _drawLayer) layer.Clear();
@@ -238,7 +254,8 @@ namespace KheaiUtils
             //Adds verticies to layer.
             _drawLayer[layer].AddRange(vertices);
             //Increment vertex count by array length.
-            _cycleVertexCount += vertices.Length;
+            _frameVertexCount += vertices.Length;
         }
     }
 }
+#endif

@@ -1,4 +1,5 @@
-﻿namespace KheaiUtils
+﻿#if DEBUG
+namespace KheaiUtils
 {
     public interface IKGrid<T>
     {
@@ -14,3 +15,4 @@
         uint Columns { get; set; }
     }
 }
+#endif
