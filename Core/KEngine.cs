@@ -11,7 +11,11 @@ namespace KheaiGameEngine.Core
         private uint _updateRateTarget;
         private double _updateInterval;
         private IKRenderer _renderer;
+        private KAppSettings _appSettings;
         private RenderWindow _renderWindow;
+
+        ///<summary>Fires when the load method is called.</summary>
+        public event Action<KAppSettings> OnLoad;
 
         ///<summary>Fires when the start method is called.</summary>
         public event Action<KEngine> OnStart;
@@ -48,9 +52,9 @@ namespace KheaiGameEngine.Core
         ///<summary>Creates a new KEngine instance. Requires a renderer and a target update rate for the game-loop.</summary> 
         ///<param name = "updateRateTarget">The target framerate.</param>
         ///<param name = "renderer">The renderer for the application.</param>
-        public KEngine(IKRenderer renderer, byte updateRateTarget = 30)
+        public KEngine(KAppSettings settings, IKRenderer renderer)
         {
-            (_renderer, UpdateRateTarget, _renderWindow) = (renderer, updateRateTarget, new(VideoMode.DesktopMode, ""));
+            (_appSettings, _renderer, UpdateRateTarget, _renderWindow) = (settings, renderer, settings.UpdateRate, new(VideoMode.DesktopMode, settings.AppName));
             OnStart += engine => KObjects.ForEach(kObject => kObject.Start());
             OnEnd += engine => KObjects.ForEach(kObject => kObject.End());
         }
