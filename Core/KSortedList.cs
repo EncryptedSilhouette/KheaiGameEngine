@@ -13,22 +13,19 @@ namespace KheaiGameEngine.Core
     public class KSortedList<Type> : ICollection<Type>
     {
         private List<Type> _contents;
-
-        protected IComparer<Type> comparer;
+        private IComparer<Type> _comparer;
 
         public bool IsReadOnly => false;
-
         ///<summary>The number of elements in this collection.</summary>
         public int Count => _contents.Count;
-
         ///<summary>The comparer used for sorting.</summary>
         public IComparer<Type> Comparer 
         {
-            get => comparer;
+            get => _comparer;
             set
             {
-                comparer = value;
-                _contents.Sort(comparer);
+                _comparer = value;
+                _contents.Sort(_comparer);
             }
         }
 
@@ -36,10 +33,10 @@ namespace KheaiGameEngine.Core
         public Type this[int index] => _contents[index];
 
         ///<summary>Create a new instance of KSortedList.</summary>
-        public KSortedList(int capacity = 0) => _contents = new(capacity);
+        public KSortedList(IComparer<Type> comparer, int capacity = 0) => (_contents, _comparer) = (new(capacity), comparer);
 
         ///<summary>Adds a value to the collection. Does a binary search before insertion to maintain a sorted collection.</summary>
-        public void Add(Type value) => _contents.BinaryInsert(value, comparer.Compare);
+        public void Add(Type value) => _contents.BinaryInsert(value, _comparer.Compare);
 
         ///<summary>Adds an enumerable collection of values to the collection. Does a binary search before insertion to maintain a sorted collection.</summary>
         public void AddAll(IEnumerable<Type> values) => _contents.AddRange(values);
@@ -72,19 +69,21 @@ namespace KheaiGameEngine.Core
 
     public class KSortedQueuedList<Type> : KSortedList<Type> where Type : IKObject
     {
-        private int removeCount;
-        private PriorityQueue<Type, byte> Queue = new();
+        private int _removeCount;
+        private PriorityQueue<Type, byte> _queue = new();
+
+        public int QueuedChanges => _queue.Count;
 
         ///<summary>Applies the enqueued changes to the collection.</summary>
         public void UpdateContents() 
         {
-            while (Queue.Count > 0)
+            while (_queue.Count > 0)
             {
-                Type item = Queue.Dequeue();
+                Type item = _queue.Dequeue();
 
-                if (removeCount > 0)
+                if (_removeCount > 0)
                 {
-                    removeCount--;
+                    _removeCount--;
                     Remove(item);
                     continue;
                 }
@@ -93,7 +92,7 @@ namespace KheaiGameEngine.Core
         }
 
         ///<summary>Enqueues a value to be added to the collection.</summary>
-        public void QueueAdd(Type value) => Queue.Enqueue(value, 1);
+        public void QueueAdd(Type value) => _queue.Enqueue(value, 1);
 
         ///<summary>Enqueues an enumerable collection of values to be added to the collection.</summary>
         public void QueueAdd(IEnumerable<Type> values) => values.ForEach(QueueAdd);
@@ -101,8 +100,8 @@ namespace KheaiGameEngine.Core
         ///<summary>Enqueues a value to be removed from the collection.</summary>
         public void QueueRemove(Type value)
         {
-            Queue.Enqueue(value, 0);
-            removeCount++;
+            _queue.Enqueue(value, 0);
+            _removeCount++;
         }
 
         ///<summary>Enqueues an enumerable collection of values to be removed from the collection.</summary>

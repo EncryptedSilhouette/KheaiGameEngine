@@ -1,80 +1,70 @@
 ﻿using KheaiGameEngine.Extensions;
-using SFML.Graphics;
-using SFML.Window;
 
 namespace KheaiGameEngine.Core
 {
     ///<summary>A simple game engine that loops over a collection of IKObjects. Calling each one's Update and FrameUpdate method, untill stopped.</summary>
     public class KEngine 
     {
-        private bool _isRunning = false;
-        private uint _updateRateTarget;
-        private double _updateInterval;
-        private IKRenderer _renderer;
-        private KAppSettings _appSettings;
-        private RenderWindow _renderWindow;
+        private uint _updateTarget;
 
-        ///<summary>Fires when the load method is called.</summary>
-        public event Action<KAppSettings> OnLoad;
-
+        //The following 2 events are self explanatory but serve an additional purpose.
+        //They allow KObjects to be added and removed at the start and end of the engine's runtime.
+        //This is useful for a number of cases, one being a situation where the engine needs to restart.
         ///<summary>Fires when the start method is called.</summary>
         public event Action<KEngine> OnStart;
-
         ///<summary>Fires when the stop method is called.</summary>
         public event Action<KEngine> OnEnd;
 
-        ///<summary>Represents the running state of the Engine</summary>
-        public bool IsRunning => _isRunning; 
-
-        ///<summary>The time interval in milliseconds between updates.</summary>
-        public double UpdateInterval => _updateInterval;
-
-        ///<summary>The reference to the render window.</summary>
-        public RenderWindow Window => _renderWindow;
-
         ///<summary>Refrence to the renderer for this engine.</summary>
-        public IKRenderer Renderer => _renderer;
-
+        public IKRenderer Renderer { get; init; }
         ///<summary>A sorted collection of IKObjects that can have its changes queued instead of immediate.</summary>
-        public KSortedQueuedList<IKObject> KObjects { get; init; } = new();
+        public KGameObject Root { get; private set; } = new();
+
+        ///<summary>Represents the running state of the Engine</summary>
+        public bool IsRunning { get; private set; } = false;
+        ///<summary>The time interval in milliseconds between updates.</summary>
+        public double UpdateInterval { get; private set; } = 0;
 
         ///<summary>The target number of updates in a second.</summary>
         public uint UpdateRateTarget
         {
-            get => _updateRateTarget;
+            get => _updateTarget;
             private set
             {
-                _updateRateTarget = value;
-                _updateInterval = 1000d / value;
+                _updateTarget = value;
+                UpdateInterval = 1000d / value;
             }
         }
 
         ///<summary>Creates a new KEngine instance. Requires a renderer and a target update rate for the game-loop.</summary> 
-        ///<param name = "updateRateTarget">The target framerate.</param>
+        ///<param name = "updateTarget">The target framerate.</param>
         ///<param name = "renderer">The renderer for the application.</param>
-        public KEngine(KAppSettings settings, IKRenderer renderer)
+        public KEngine(IKRenderer renderer, uint updateTarget = 30)
         {
-            (_appSettings, _renderer, UpdateRateTarget, _renderWindow) = (settings, renderer, settings.UpdateRate, new(VideoMode.DesktopMode, settings.AppName));
-            OnStart += engine => KObjects.ForEach(kObject => kObject.Start());
-            OnEnd += engine => KObjects.ForEach(kObject => kObject.End());
+            (Renderer, UpdateRateTarget) = (renderer, updateTarget);
+            OnStart += engine => Root.Children.ForEach(kObject => kObject.Start());
+            OnEnd += engine => Root.Children.ForEach(kObject => kObject.End());
         }
 
         ///<summary>Executes starting tasks and starts the game-loop.</summary>
         public void Start()
         {
             //Prevents engine from starting if it's already running.
-            if (_isRunning) return;
+            if (IsRunning) return;
 
             //Timing variables.
             uint currentUpdate = 0;
             double lastTime, newTime, unprocessedTime = 0;
 
             //set the engine's state to running, then executes starting tasks.
-            _isRunning = true;
+            //Updates the contents of KObjects, in the case that any starting tasks have made changes.
+            IsRunning = true;
             OnStart?.Invoke(this);
+            Root.Children.UpdateContents();
+
             lastTime = DateTime.UtcNow.Ticks; //Required for loop timing.
 
-            while (IsRunning) //Core game-loop
+            while (IsRunning) //Game loop
             {
                 newTime = DateTime.UtcNow.Ticks;
                 unprocessedTime += (newTime - lastTime) / TimeSpan.TicksPerMillisecond;
@@ -93,21 +83,25 @@ namespace KheaiGameEngine.Core
                 {
                     currentUpdate++;
                     unprocessedTime -= UpdateInterval;
-                    KObjects.ForEach(kObject => kObject.Update(currentUpdate));
+                    Root.Children.ForEach(kObject => kObject.Update(currentUpdate));
                 }
-                while (unprocessedTime > UpdateInterval && _isRunning);
+                while (unprocessedTime > UpdateInterval && IsRunning);
 
                 //Frame update & render frame
-                KObjects.ForEach(kObject => kObject.FrameUpdate(currentUpdate));
-                Renderer.Render(Window);
+                Root.Children.ForEach(kObject => kObject.FrameUpdate(currentUpdate));
+                Renderer.RenderFrame();
             }
+
+            //Executes ending tasks.
+            //Updates the contents of KObjects, in the case that any ending tasks have made changes.
             OnEnd?.Invoke(this);
+            Root.Children.UpdateContents();
         }
 
         //Only exists to add simplicity.
         //I think it would be odd to call Start to start the engine but change a boolean to stop it.
         //A start method with an accompanying stop method makes more sense i think.
         ///<summary>Finishes the current interation's updates and stops the engine.</summary>
-        public void Stop() => _isRunning = false;
+        public void Stop() => IsRunning = false;
     }
 }

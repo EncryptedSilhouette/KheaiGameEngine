@@ -1,7 +1,6 @@
 ﻿namespace KheaiGameEngine.Core
 {
-    /* 
-     * The purpose of this interface is to give a foundation for any objects that will be updated by a game-loop.
+    /* The purpose of this interface is to give a foundation for any objects that will be updated by a game-loop.
      * All the below summaries suggest the intents I had for them.
      * However, I keep these open for expansion to allow for alternative intentions. 
      */
