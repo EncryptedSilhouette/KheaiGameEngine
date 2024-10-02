@@ -1,6 +1,4 @@
-﻿using SFML.Graphics;
-
-namespace KheaiGameEngine.Core
+﻿namespace KheaiGameEngine.Core
 {
     public interface IKRenderer
     {

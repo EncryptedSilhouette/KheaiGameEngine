@@ -3,7 +3,7 @@
 namespace KheaiGameEngine.Core
 {
     ///<summary>Debugger for the KEngine. Contains static methods for managing logs.</summary>
-    public class KDebugger : IKObject
+    public class KDebugger : IKEngineObject
     {
         ///<summary>Constant ID for the debug log.</summary>
         public const string DEBUG_LOG = "debug";
@@ -74,20 +74,18 @@ namespace KheaiGameEngine.Core
         public static string FileDirectory = "Debug";
 
         ///<summary>Fires when the start method is called.</summary>
-        public event Action<KDebugger> OnDebugStart;
+        public event Action<KDebugger>? OnDebugStart;
         ///<summary>Fires when the end method is called</summary>
-        public event Action<KDebugger> OnDebugEnd;
+        public event Action<KDebugger>? OnDebugEnd;
         ///<summary>Fires every update.</summary>
-        public event Action<KDebugger> OnDebugUpdate;
+        public event Action<KDebugger>? OnDebugUpdate;
         ///<summary>Fires every frame update.</summary>
-        public event Action<KDebugger> OnDebugFrameUpdate;
+        public event Action<KDebugger>? OnDebugFrameUpdate;
 
-        //Implemented from IKObject
+        //Implemented from IKEngineObject
         public bool Enabled => true;
-        public bool IsUnique => true;
         public int Order { get; init; }
         public string ID { get; init; }
-        public IKObject Parent { get; set; }
 
         ///<summary>The current elapsed time in ticks.</summary>
         public double SessionTime => DateTime.UtcNow.Ticks - StartTime;

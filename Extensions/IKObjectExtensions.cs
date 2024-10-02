@@ -1,6 +1,6 @@
 ﻿namespace KheaiGameEngine.Extensions
 {
-    public interface IKObjectExtensions
+    public interface IKEngineObjectExtensions
     {
     }
 }

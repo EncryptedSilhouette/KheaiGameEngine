@@ -5,11 +5,6 @@ using System.Collections;
 
 namespace KheaiGameEngine.Core
 {
-    public class KObjectComparer<T> : IComparer<T> where T : IKObject
-    {
-        public int Compare(T a, T b) => a.Order > b.Order ? 1 : a.Order < b.Order ? -1 : 0;
-    }
-
     public class KSortedList<Type> : ICollection<Type>
     {
         private List<Type> _contents;
@@ -67,12 +62,14 @@ namespace KheaiGameEngine.Core
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
 
-    public class KSortedQueuedList<Type> : KSortedList<Type> where Type : IKObject
+    public class KSortedQueuedList<Type> : KSortedList<Type> where Type : IKEngineObject
     {
         private int _removeCount;
         private PriorityQueue<Type, byte> _queue = new();
 
         public int QueuedChanges => _queue.Count;
+
+        public KSortedQueuedList(IComparer<Type> comparer, int capacity = 0) : base(comparer, capacity) => Comparer = comparer;
 
         ///<summary>Applies the enqueued changes to the collection.</summary>
         public void UpdateContents() 

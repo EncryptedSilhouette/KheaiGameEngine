@@ -1,10 +1,22 @@
-﻿namespace KheaiGameEngine.Extensions
+﻿using System;
+
+namespace KheaiGameEngine.Extensions
 {
     public static class KCollectionExtensions
     {
-        public static void ForEach<T>(this IEnumerable<T> collection, Action<T> action)
+        public static IEnumerable<T> ForEach<T>(this IEnumerable<T> collection, Action<T> action)
         {
             foreach (var value in collection) action.Invoke(value);
+            return collection;
+        }
+
+        public static T? Find<T>(this IEnumerable<T> collection, Predicate<T> match) 
+        {
+            foreach (var value in collection)
+            {
+                if (match(value)) return value;
+            }
+            return default;
         }
 
         ///<summary>Insert's an element into a sorted collection using a binary search.</summary>
@@ -13,6 +25,8 @@
         //For the love of god don't change this. The slightest change fucks it all.
         public static void BinaryInsert<T>(this IList<T> collection, T item, Comparison<T> comparison)
         {
+            if (item is null) return;
+
             //If the list is empty, add the item.
             if (collection.Count < 1)
             {
