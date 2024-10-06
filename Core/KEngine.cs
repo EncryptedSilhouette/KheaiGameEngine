@@ -6,20 +6,12 @@ namespace KheaiGameEngine.Core
     public class KEngine 
     {
         private uint _updateTarget;
+        private IKQueuedOnlyCollection<IKEngineObject> _engineObjects = new KSortedQueuedList<IKEngineObject>(new KEngineObjectComparer<IKEngineObject>());
 
-        //The following 2 events are self explanatory but serve an additional purpose.
-        //They allow IKEngineObjects to be added and removed at the start and end of the engine's runtime.
-        //This is useful for a number of cases, one being a situation where the engine needs to restart.
-        ///<summary>Fires when the start method is called.</summary>
-        public event Action<KEngine>? OnStart;
-        ///<summary>Fires when the stop method is called.</summary>
-        public event Action<KEngine>? OnEnd;
-
+        ///<summary>The IKEngineObjects attached with this engine.</summary>
+        public IEnumerable<IKEngineObject> EngineObjects => _engineObjects;
         ///<summary>Refrence to the renderer for this engine.</summary>
         public IKRenderer Renderer { get; init; }
-        ///<summary>A sorted collection of IKEngineObjects that can have its changes queued instead of immediate.</summary>
-        public KSortedQueuedList<IKEngineObject> EngineObjects { get; init; } = new(new KEngineObjectComparer<IKEngineObject>());
-
         ///<summary>Represents the running state of the Engine</summary>
         public bool IsRunning { get; private set; } = false;
         ///<summary>The time interval in milliseconds between updates.</summary>
@@ -29,26 +21,16 @@ namespace KheaiGameEngine.Core
         public uint UpdateRateTarget
         {
             get => _updateTarget;
-            private set
-            {
-                _updateTarget = value;
-                UpdateInterval = 1000d / value;
-            }
+            private set => UpdateInterval = 1000d / value;
         }
 
         ///<summary>Creates a new KEngine instance. Requires a renderer and a target update rate for the game-loop.</summary> 
         ///<param name = "updateTarget">The target framerate.</param>
         ///<param name = "renderer">The renderer for the application.</param>
-        public KEngine(IKRenderer renderer, uint updateTarget = 30)
-        {
-            (Renderer, UpdateRateTarget) = (renderer, updateTarget);
-            OnStart += engine => IsRunning = true;
-            OnStart += engine => EngineObjects.ForEach(kEngineObject => kEngineObject.Start());
-            OnEnd += engine => EngineObjects.ForEach(kEngineObject => kEngineObject.End());
-        }
+        public KEngine(IKRenderer renderer, uint updateTarget = 30) => (Renderer, UpdateRateTarget) = (renderer, updateTarget);
 
-        public KEngine(IKRenderer renderer, IEnumerable<IKEngineObject> kEngineObjects, uint updateTarget = 30) : 
-            this(renderer, updateTarget) => EngineObjects.AddAll(kEngineObjects);
+        public KEngine(IKRenderer renderer, IEnumerable<IKEngineObject> kEngineObjects, uint updateTarget = 30) :
+            this(renderer, updateTarget) => _engineObjects.QueueAddAll(kEngineObjects);
 
         ///<summary>Executes starting tasks and starts the game-loop.</summary>
         public void Start()
@@ -62,9 +44,7 @@ namespace KheaiGameEngine.Core
 
             //set the engine's state to running, then executes starting tasks.
             //Updates the contents of IKEngineObjects, in the case that any starting tasks have made changes.
-            OnStart?.Invoke(this);
-            EngineObjects.UpdateContents();
-
+            _engineObjects.ForEach(value => value.Start());
             lastTime = DateTime.UtcNow.Ticks; //Required for loop timing.
 
             while (IsRunning) //Game loop
@@ -86,19 +66,16 @@ namespace KheaiGameEngine.Core
                 {
                     currentUpdate++;
                     unprocessedTime -= UpdateInterval;
-                    EngineObjects.ForEach(kEngineObject => kEngineObject.Update(currentUpdate));
+                    _engineObjects.UpdateContents();
+                    _engineObjects.ForEach(kEngineObject => kEngineObject.Update(currentUpdate));
                 }
                 while (unprocessedTime > UpdateInterval && IsRunning);
 
                 //Frame update & render frame
-                EngineObjects.ForEach(kEngineObject => kEngineObject.FrameUpdate(currentUpdate));
+                _engineObjects.ForEach(kEngineObject => kEngineObject.FrameUpdate(currentUpdate));
                 Renderer.RenderFrame();
             }
-
-            //Executes ending tasks.
-            //Updates the contents of kEngineObjects, in the case that any ending tasks have made changes.
-            OnEnd?.Invoke(this);
-            EngineObjects.UpdateContents();
+            _engineObjects.ForEach(value => value.End());
         }
 
         //Only exists to add simplicity.

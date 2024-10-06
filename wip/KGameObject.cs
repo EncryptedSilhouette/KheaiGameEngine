@@ -1,6 +1,8 @@
-﻿using KheaiGameEngine.Extensions;
+﻿#if DEBUG
+using KheaiGameEngine.Core;
+using KheaiGameEngine.Extensions;
 
-namespace KheaiGameEngine.Core
+namespace KheaiGameEngine.wip
 {
     public class KGameObject : IKEngineObject
     {
@@ -60,10 +62,10 @@ namespace KheaiGameEngine.Core
             }
         }
         ///<summary>Refrence to the parent for this GameObject.</summary>
-        public KGameObject? Parent 
+        public KGameObject? Parent
         {
             get => _parent;
-            private set 
+            private set
             {
                 OnParentChanged?.Invoke(_parent, value);
                 _parent = value;
@@ -72,7 +74,7 @@ namespace KheaiGameEngine.Core
 
         public KGameObject(int order, string id) => (Order, ID) = (order, id);
 
-        public KGameObject(int order, string id, IEnumerable<IKEngineObject> kEngineObjects) : 
+        public KGameObject(int order, string id, IEnumerable<IKEngineObject> kEngineObjects) :
             this(order, id) => _children.AddAll(kEngineObjects);
 
         public void Start()
@@ -106,7 +108,7 @@ namespace KheaiGameEngine.Core
             _children.ForEach((value) => value.FrameUpdate(currentFrame));
         }
 
-        public KGameObject AddChild(KGameObject gameObject) 
+        public KGameObject AddChild(KGameObject gameObject)
         {
             gameObject.Parent = this;
             gameObject.Start();
@@ -124,7 +126,8 @@ namespace KheaiGameEngine.Core
         public IEnumerable<KGameObject> AddChildren(IEnumerable<KGameObject> gameObjects) =>
             gameObjects.ForEach(gameObject => AddChild(gameObject));
 
-        public IEnumerable<KGameObject> RemoveChildren(IEnumerable<KGameObject> gameObjects) => 
+        public IEnumerable<KGameObject> RemoveChildren(IEnumerable<KGameObject> gameObjects) =>
             gameObjects.ForEach(gameObject => RemoveChild(gameObject));
     }
 }
+#endif

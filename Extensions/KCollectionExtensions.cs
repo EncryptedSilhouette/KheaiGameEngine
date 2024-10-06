@@ -14,9 +14,29 @@ namespace KheaiGameEngine.Extensions
         {
             foreach (var value in collection)
             {
+                if (value is null) continue;
                 if (match(value)) return value;
             }
             return default;
+        }
+
+        public static IEnumerable<T> FindAll<T>(this IEnumerable<T> collection, Predicate<T> match)
+        {
+            foreach (var value in collection)
+            {
+                if (value is null) continue;
+                if (match(value)) yield return value;
+            }
+        }
+
+        public static bool Contains<T>(this IEnumerable<T> collection, T match)
+        {
+            foreach (var value in collection)
+            {
+                if (value is null) continue;
+                if (value.Equals(match)) return true;
+            }
+            return false;
         }
 
         ///<summary>Insert's an element into a sorted collection using a binary search.</summary>
