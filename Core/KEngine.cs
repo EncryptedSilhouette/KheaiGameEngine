@@ -6,10 +6,10 @@ namespace KheaiGameEngine.Core
     public class KEngine 
     {
         private uint _updateTarget;
-        private IKQueuedOnlyCollection<IKEngineObject> _engineObjects = new KSortedQueuedList<IKEngineObject>(new KEngineObjectComparer<IKEngineObject>());
+        private KSortedList<IKEngineObject> _engineObjects = new(new KEngineObjectComparer<IKEngineObject>());
 
         ///<summary>The IKEngineObjects attached with this engine.</summary>
-        public IEnumerable<IKEngineObject> EngineObjects => _engineObjects;
+        public IKSearchableCollection<IKEngineObject> EngineObjects => _engineObjects;
         ///<summary>Refrence to the renderer for this engine.</summary>
         public IKRenderer Renderer { get; init; }
         ///<summary>Represents the running state of the Engine</summary>
@@ -24,13 +24,10 @@ namespace KheaiGameEngine.Core
             private set => UpdateInterval = 1000d / value;
         }
 
-        ///<summary>Creates a new KEngine instance. Requires a renderer and a target update rate for the game-loop.</summary> 
-        ///<param name = "updateTarget">The target framerate.</param>
-        ///<param name = "renderer">The renderer for the application.</param>
         public KEngine(IKRenderer renderer, uint updateTarget = 30) => (Renderer, UpdateRateTarget) = (renderer, updateTarget);
 
         public KEngine(IKRenderer renderer, IEnumerable<IKEngineObject> kEngineObjects, uint updateTarget = 30) :
-            this(renderer, updateTarget) => _engineObjects.QueueAddAll(kEngineObjects);
+            this(renderer, updateTarget) => _engineObjects.AddAll(kEngineObjects);
 
         ///<summary>Executes starting tasks and starts the game-loop.</summary>
         public void Start()
@@ -66,7 +63,6 @@ namespace KheaiGameEngine.Core
                 {
                     currentUpdate++;
                     unprocessedTime -= UpdateInterval;
-                    _engineObjects.UpdateContents();
                     _engineObjects.ForEach(kEngineObject => kEngineObject.Update(currentUpdate));
                 }
                 while (unprocessedTime > UpdateInterval && IsRunning);

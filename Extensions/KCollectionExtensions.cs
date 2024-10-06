@@ -69,7 +69,7 @@ namespace KheaiGameEngine.Extensions
                 //Compares the item with the previous and current element.
                 //Checks if it will fit between 2 elements.
                 //If the index will be out of range, evaluate expression to true.
-                //This will essentially remove the check.
+
                 if ((i > 0 ? comparison.Invoke(item, collection[i - 1]) >= 0 : true) &&
                     (i < collection.Count ? comparison.Invoke(item, collection[i]) <= 0 : true))
                 {
