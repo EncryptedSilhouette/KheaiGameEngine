@@ -5,6 +5,8 @@ VisualStudioVersion = 17.10.35013.160
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "KheaiGameEngine", "KheaiGameEngine.csproj", "{DC21D798-9B42-4617-916F-4EAEA9CDB2A9}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AtriumGame", "..\AtriumGame\AtriumGame.csproj", "{AE34634D-7B36-4924-9F42-891D3DC58CD5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{DC21D798-9B42-4617-916F-4EAEA9CDB2A9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DC21D798-9B42-4617-916F-4EAEA9CDB2A9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DC21D798-9B42-4617-916F-4EAEA9CDB2A9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AE34634D-7B36-4924-9F42-891D3DC58CD5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AE34634D-7B36-4924-9F42-891D3DC58CD5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AE34634D-7B36-4924-9F42-891D3DC58CD5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AE34634D-7B36-4924-9F42-891D3DC58CD5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

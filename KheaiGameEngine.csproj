@@ -16,7 +16,16 @@
     <Nullable>enable</Nullable>
 	<DebugType>embedded</DebugType>
 	<SignAssembly>False</SignAssembly>
+	<PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
+	<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
   </PropertyGroup>
+	
+  <ItemGroup>
+    <None Include="..\..\..\Desktop\LICENSE.txt">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="SFML.Net" Version="2.6.0" />

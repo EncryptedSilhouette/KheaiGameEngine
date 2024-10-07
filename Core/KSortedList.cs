@@ -96,6 +96,8 @@ namespace KheaiGameEngine.Core
         private int _removeCount;
         private PriorityQueue<Type, byte> _queue = new();
 
+        public event Action<Type> OnRemoved, OnInsertion;
+
         public KSortedQueuedList(IComparer<Type> comparer, int capacity = 0) : base(comparer, capacity) => Comparer = comparer;
 
         public void UpdateContents() 
@@ -107,10 +109,12 @@ namespace KheaiGameEngine.Core
                 if (_removeCount > 0)
                 {
                     _removeCount--;
+                    OnRemoved?.Invoke(item);
                     Remove(item);
                     continue;
                 }
                 Add(item);
+                OnInsertion?.Invoke(item);
             }
         }
 
@@ -127,3 +131,5 @@ namespace KheaiGameEngine.Core
         public void QueueRemoveAll(IEnumerable<Type> values) => values.ForEach(QueueRemove);
     }
 }
+
+#nullable enable

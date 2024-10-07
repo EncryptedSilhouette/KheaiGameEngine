@@ -1,12 +1,13 @@
 ﻿using KheaiGameEngine.Extensions;
+using System.Collections.Frozen;
 
 namespace KheaiGameEngine.Core
 {
     ///<summary>A simple game engine that loops over a collection of IKEngineObjects. Calling each one's Update and FrameUpdate method, untill stopped.</summary>
     public class KEngine 
     {
-        private uint _updateTarget;
-        private KSortedList<IKEngineObject> _engineObjects = new(new KEngineObjectComparer<IKEngineObject>());
+        private uint _updateTarget = 30;
+        private KSortedQueuedList<IKEngineObject> _engineObjects = new(new KEngineObjectComparer<IKEngineObject>());
 
         ///<summary>The IKEngineObjects attached with this engine.</summary>
         public IKSearchableCollection<IKEngineObject> EngineObjects => _engineObjects;
@@ -21,10 +22,15 @@ namespace KheaiGameEngine.Core
         public uint UpdateRateTarget
         {
             get => _updateTarget;
-            private set => UpdateInterval = 1000d / value;
+            private set => UpdateInterval = 1000d / (_updateTarget = value);
         }
 
-        public KEngine(IKRenderer renderer, uint updateTarget = 30) => (Renderer, UpdateRateTarget) = (renderer, updateTarget);
+        public KEngine(IKRenderer renderer, uint updateTarget = 30)
+        {
+            (Renderer, UpdateRateTarget) = (renderer, updateTarget);
+            _engineObjects.OnInsertion += i => i.Start();
+            _engineObjects.OnRemoved += i => i.End();
+        }
 
         public KEngine(IKRenderer renderer, IEnumerable<IKEngineObject> kEngineObjects, uint updateTarget = 30) :
             this(renderer, updateTarget) => _engineObjects.AddAll(kEngineObjects);
@@ -63,6 +69,7 @@ namespace KheaiGameEngine.Core
                 {
                     currentUpdate++;
                     unprocessedTime -= UpdateInterval;
+                    _engineObjects.UpdateContents();
                     _engineObjects.ForEach(kEngineObject => kEngineObject.Update(currentUpdate));
                 }
                 while (unprocessedTime > UpdateInterval && IsRunning);
@@ -79,5 +86,13 @@ namespace KheaiGameEngine.Core
         //A start method with an accompanying stop method makes more sense i think.
         ///<summary>Finishes the current interation's updates and stops the engine.</summary>
         public void Stop() => IsRunning = false;
+
+        public void Attach(IKEngineObject kEngineObject) => _engineObjects.QueueAdd(kEngineObject);
+
+        public void Detach(IKEngineObject kEngineObject) => _engineObjects.QueueRemove(kEngineObject);
+
+        public void AttachAll(IEnumerable<IKEngineObject> kEngineObjects) => kEngineObjects.ForEach(Attach);
+
+        public void DetachAll(IEnumerable<IKEngineObject> kEngineObjects) => kEngineObjects.ForEach(Detach);
     }
 }
