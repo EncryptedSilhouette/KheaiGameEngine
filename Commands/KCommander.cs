@@ -4,7 +4,7 @@
     {
         public delegate int KCommandHandler(string[] args);
 
-        public record KCommand(string id, int argCount, KCommandHandler cmdAction);
+        public record KCommand(string id, string syntax, int argCount, KCommandHandler cmdAction);
 
         public static Dictionary<string, KCommand> commandRegistry = new();
 
