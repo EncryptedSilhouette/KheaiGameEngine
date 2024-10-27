@@ -2,6 +2,7 @@
 
 using KheaiGameEngine.Extensions;
 using System.Collections;
+using System.Collections.Specialized;
 
 namespace KheaiGameEngine.Core
 {
@@ -32,7 +33,7 @@ namespace KheaiGameEngine.Core
         public void QueueRemoveAll(IEnumerable<Type> values);
 
         ///<summary>Applies the enqueued changes to the collection.</summary>
-        public void UpdateContents();
+        public IEnumerable<Type> UpdateContents();
     }
 
     public class KSortedList<Type> : ICollection<Type>, IKSearchableCollection<Type>
@@ -59,7 +60,7 @@ namespace KheaiGameEngine.Core
         public Type this[int index] => _contents[index];
 
         ///<summary>Create a new instance of KSortedList.</summary>                //Sorry i got lazy. Normally i'd never use "this".    
-        public KSortedList(IComparer<Type> comparer, int capacity = 0) => (_contents, this._comparer) = (new(capacity), comparer);
+        public KSortedList(IComparer<Type> comparer, int capacity = 0) => (_contents, _comparer) = (new(capacity), comparer);
 
         ///<summary>Adds a value to the collection. Does a binary search before insertion to maintain a sorted collection.</summary>
         public void Add(Type value) => _contents.BinaryInsert(value, _comparer.Compare);
@@ -100,7 +101,7 @@ namespace KheaiGameEngine.Core
 
         public KSortedQueuedList(IComparer<Type> comparer, int capacity = 0) : base(comparer, capacity) => Comparer = comparer;
 
-        public void UpdateContents() 
+        public IEnumerable<Type> UpdateContents() 
         {
             while (_queue.Count > 0)
             {
@@ -116,6 +117,9 @@ namespace KheaiGameEngine.Core
                 Add(item);
                 OnInsertion?.Invoke(item);
             }
+
+            //Return contents.
+            return this;
         }
 
         public void QueueAdd(Type value) => _queue.Enqueue(value, 1);

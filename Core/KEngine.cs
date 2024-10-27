@@ -5,15 +5,14 @@ namespace KheaiGameEngine.Core
     ///<summary>A simple game engine that loops over a collection of IKEngineObjects. Calling each one's Update and FrameUpdate method, untill stopped.</summary>
     public class KEngine 
     {
+        private bool _isRunning = false;
         private uint _updateTarget = 30;
         private KSortedQueuedList<IKEngineObject> _engineObjects = new(new KEngineObjectComparer<IKEngineObject>());
 
+        ///<summary>Represents the running state of the Engine</summary>
+        public bool IsRunning => _isRunning;
         ///<summary>The IKEngineObjects attached with this engine.</summary>
         public IKSearchableCollection<IKEngineObject> EngineObjects => _engineObjects;
-        ///<summary>Refrence to the renderer for this engine.</summary>
-        public IKRenderer Renderer { get; init; }
-        ///<summary>Represents the running state of the Engine</summary>
-        public bool IsRunning { get; private set; } = false;
         ///<summary>The time interval in milliseconds between updates.</summary>
         public double UpdateInterval { get; private set; } = 0;
 
@@ -24,25 +23,38 @@ namespace KheaiGameEngine.Core
             private set => UpdateInterval = 1000d / (_updateTarget = value);
         }
 
-        public KEngine(IKRenderer renderer, uint updateTarget = 30)
+        public KEngine(uint updateTarget = 30)
         {
-            (Renderer, UpdateRateTarget) = (renderer, updateTarget);
-            _engineObjects.OnInsertion += i => i.Start();
-            _engineObjects.OnRemoved += i => i.End();
+            UpdateRateTarget = updateTarget;
+            _engineObjects.OnInsertion += item => item.Start();
+            _engineObjects.OnRemoved += item => item.End();
         }
 
-        public KEngine(IKRenderer renderer, IEnumerable<IKEngineObject> kEngineObjects, uint updateTarget = 30) :
-            this(renderer, updateTarget) => _engineObjects.AddAll(kEngineObjects);
+        public KEngine(IEnumerable<IKEngineObject> kEngineObjects, uint updateTarget = 30) :
+            this(updateTarget) => _engineObjects.AddAll(kEngineObjects);
 
         ///<summary>Executes starting tasks and starts the game-loop.</summary>
-        public void Start()
+        public int Start()
         {
             //Prevents engine from starting if it's already running.
-            if (IsRunning) return;
+            if (IsRunning)
+            {
+                KDebugger.ErrorLog("Engine err: Cannot start, this engine instance is already running.");
+                return 1;
+            }
 
             //Timing variables.
             uint currentUpdate = 0;
             double lastTime, newTime, unprocessedTime = 0;
+
+            _engineObjects.UpdateContents();
+
+            //It is now i realize how far from god we have gotten.
+            if (_engineObjects.Find(value => value is IKRenderer) is not IKRenderer renderer)
+            {
+                KDebugger.ErrorLog("Fatal engine err: There is no renderer attatched.");
+                return 1;
+            }
 
             //set the engine's state to running, then executes starting tasks.
             //Updates the contents of IKEngineObjects, in the case that any starting tasks have made changes.
@@ -75,16 +87,18 @@ namespace KheaiGameEngine.Core
 
                 //Frame update & render frame
                 _engineObjects.ForEach(kEngineObject => kEngineObject.FrameUpdate(currentUpdate));
-                Renderer.RenderFrame();
+                renderer.RenderFrame();
             }
             _engineObjects.ForEach(value => value.End());
+
+            return 0;
         }
 
         //Only exists to add simplicity.
         //I think it would be odd to call Start to start the engine but change a boolean to stop it.
         //A start method with an accompanying stop method makes more sense i think.
         ///<summary>Finishes the current interation's updates and stops the engine.</summary>
-        public void Stop() => IsRunning = false;
+        public void Stop() => _isRunning = false;
 
         public void Attach(IKEngineObject kEngineObject) => _engineObjects.QueueAdd(kEngineObject);
 
