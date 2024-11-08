@@ -20,18 +20,18 @@ namespace KheaiGameEngine.Core
         string ID { get; }
 
         ///<summary>Executes starting tasks for the IKEngineObject.</summary>
-        void Start();
+        void Start() { }
 
         ///<summary>Executes tasks for the end of execution.</summary>
-        void End();
+        void End() { }
 
         ///<summary>Executes update tasks every update.</summary>
         ///<param name = "currentUpdate">Keeps track of the current frame.</param>
-        void Update(uint currentUpdate);
+        void Update(uint currentUpdate) { }
 
         ///<summary>Executes pre-draw tasks every update. This method is called after the update method.</summary>
         ///<param name = "currentUpdate">Keeps track of the current frame.</param>
-        void FrameUpdate(uint currentUpdate);
+        void FrameUpdate(uint currentUpdate) { }
     }
 
     public class KEngineObjectComparer<T> : IComparer<T> where T : IKEngineObject

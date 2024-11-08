@@ -18,8 +18,4 @@
 		<SignAssembly>False</SignAssembly>
 	</PropertyGroup>
 
-	<ItemGroup>
-		<PackageReference Include="SFML.Net" Version="2.6.0" />
-	</ItemGroup>
-
 </Project>

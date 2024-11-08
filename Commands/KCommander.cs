@@ -1,47 +1,38 @@
-﻿using static KheaiGameEngine.Commands.KCommander;
+﻿using KheaiGameEngine.Core;
 
 namespace KheaiGameEngine.Commands
 {
-    public record KCommand(string id, string syntax, int argCount, KCommandHandler cmdAction);
-    public record KCommandResult(int exitCode, string errOutput)
+    public delegate KCommandResult KCommandEventHandler(string[] args);
+
+    public record KCommandResult(int ExitCode, string? ErrorLog);
+    public record struct KCommandData(int ParameterCount, string ID, string Description, KCommandEventHandler ExecutionAction);
+
+    public class KCommandHandler
     {
-        public KCommandResult(int exitCode = 0) : this(exitCode, string.Empty) { }
-    }
+        public static readonly KCommandResult COMMAND_NOT_FOUND = new(1, "Err: Command not found");
+        protected static readonly Dictionary<string, KCommandData> s_registeredCommands = new();
 
-    public class KCommander
-    {
-        public delegate KCommandResult KCommandHandler(KCommand self, string[] args);
+        public static void RegisterCommand(KCommandData commandData) => s_registeredCommands.Add(commandData.ID, commandData);
 
-        #region Static
+        public static string AutoCompleteCommand(string commandID) => s_registeredCommands.Keys
+                .Where(str => str.StartsWith(commandID))
+                .Order()?
+                .First() ?? commandID;
 
-        private static Dictionary<string, KCommand> s_commandRegistry = new();
-
-        public static IReadOnlyCollection<KCommand> RegisteredCommands => s_commandRegistry.Values;
-
-        public static bool RegisterCommand(KCommand command) 
+        public static KCommandResult ExecuteString(string input)
         {
-            if (s_commandRegistry.ContainsKey(command.id)) return false;
-            s_commandRegistry[command.id] = command;
-            return true;
+            string[] tokens = input.Split(' ');
+            string commandID = AutoCompleteCommand(tokens[0]);
+            KCommandResult result;
+
+            if (!s_registeredCommands.ContainsKey(commandID)) tokens[0] = AutoCompleteCommand(commandID);
+            if (tokens[0] is null)
+            {
+                result = COMMAND_NOT_FOUND;
+                KDebugger.ErrorLog($"{result.ErrorLog!} - {commandID}");
+                return result;
+            }
+            return s_registeredCommands[commandID].ExecutionAction.Invoke(tokens);
         }
-
-        public static KCommand GetCommandStartingWith(string beginning) => s_commandRegistry.Values
-            .Where(value => value.id.StartsWith(beginning)).Order().First();
-
-        #endregion
-
-        public KCommandResult InterpretString(string[] args)
-        {
-            //Return err if args is null or if the array is empty.
-            if (args is null || args.Length < 1) return new(1, "No command provided.");
-
-            //Checks if the command exists, if it doesn't try to find one that matches.
-            KCommand cmd = s_commandRegistry.ContainsKey(args[0]) ? s_commandRegistry[args[0]] : GetCommandStartingWith(args[0]);
-
-            //If command is null return err, otherwise execute command and return result.
-            return cmd is null ? new(1, $"command {args[0]} doesn't exist.") : cmd.cmdAction.Invoke(cmd, args);
-        }
-
-        public KCommandResult InterpretString(string str) => InterpretString(str.Split());
     }
 }
