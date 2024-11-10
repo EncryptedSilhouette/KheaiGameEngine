@@ -10,8 +10,10 @@ namespace KheaiGameEngine.Core
 
         protected KSortedQueuedList<IKEngineObject> _engineObjects = new(new KEngineObjectComparer<IKEngineObject>());
 
-        ///<summary>Represents the running state of the Engine</summary>
+        ///<summary>Represents the running state of the Engine.</summary>
         public bool IsRunning => _isRunning;
+        ///<summary>The renderer for the engine.</summary>
+        public IKRenderer Renderer { get; init; }
         ///<summary>The time interval in milliseconds between updates.</summary>
         public double UpdateInterval { get; private set; } = 0;
 
@@ -22,10 +24,12 @@ namespace KheaiGameEngine.Core
             private set => UpdateInterval = 1000d / (_updateTarget = value);
         }
 
-        public KEngine(uint updateTarget = 30) => UpdateRateTarget = updateTarget;
+        public KEngine(IKRenderer renderer, uint updateTarget = 30) => 
+            (Renderer, UpdateRateTarget) = (renderer, updateTarget);
 
-        public KEngine(IKRenderer renderer, IEnumerable<IKEngineObject> kEngineObjects, uint updateTarget = 30) :
-            this(updateTarget) => _engineObjects.AddAll(kEngineObjects);
+        public KEngine(IKRenderer renderer, IEnumerable<IKEngineObject> engineObjects, uint updateTarget = 30) : 
+            this(renderer, updateTarget) =>
+            _engineObjects.AddAll(engineObjects);
 
         ///<summary>TODO.</summary>
         protected virtual void Load() { }
@@ -39,9 +43,6 @@ namespace KheaiGameEngine.Core
 
         ///<summary>TODO.</summary>
         protected virtual void FrameUpdate(ulong currentUpdate) => _engineObjects.ForEach(kEngineObject => kEngineObject.FrameUpdate(currentUpdate));
-
-        ///<summary>TODO.</summary>
-        protected virtual void RenderFrame() { }
 
         ///<summary>Executes starting tasks and starts the game-loop.</summary>
         public virtual int Start()
@@ -61,13 +62,6 @@ namespace KheaiGameEngine.Core
             _engineObjects.OnInsertion += item => item.Start();
             _engineObjects.OnRemoved += item => item.End();
             _engineObjects.UpdateContents();
-
-            //It is now i realize how far from god we have gotten.
-            if (_engineObjects.Find(value => value is IKRenderer) is not IKRenderer renderer)
-            {
-                KDebugger.ErrorLog("Fatal engine err: There is no renderer attatched.");
-                return 1;
-            }
 
             lastTime = DateTime.UtcNow.Ticks; //Required for loop timing.
 
@@ -95,7 +89,7 @@ namespace KheaiGameEngine.Core
                 while (unprocessedTime > UpdateInterval && IsRunning);
 
                 FrameUpdate(currentUpdate);
-                RenderFrame();
+                Renderer.RenderFrame(currentUpdate);
             }
             _engineObjects.ForEach(value => value.End());
 
