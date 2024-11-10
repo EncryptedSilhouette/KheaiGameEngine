@@ -7,12 +7,13 @@ namespace KheaiGameEngine.Core
     {
         private bool _isRunning = false;
         private uint _updateTarget = 30;
-        private KSortedQueuedList<IKEngineObject> _engineObjects = new(new KEngineObjectComparer<IKEngineObject>());
+
+        protected KSortedQueuedList<IKEngineObject> _engineObjects = new(new KEngineObjectComparer<IKEngineObject>());
 
         ///<summary>Represents the running state of the Engine</summary>
         public bool IsRunning => _isRunning;
-        ///<summary>The IKEngineObjects attached with this engine.</summary>
-        public IKSearchableCollection<IKEngineObject> EngineObjects => _engineObjects;
+        ///<summary>TODO.</summary>
+        public IKRenderer Renderer { get; init; }
         ///<summary>The time interval in milliseconds between updates.</summary>
         public double UpdateInterval { get; private set; } = 0;
 
@@ -23,18 +24,29 @@ namespace KheaiGameEngine.Core
             private set => UpdateInterval = 1000d / (_updateTarget = value);
         }
 
-        public KEngine(uint updateTarget = 30)
+        public KEngine(IKRenderer renderer, uint updateTarget = 30) => (Renderer, UpdateRateTarget) = (renderer, updateTarget);
+
+        public KEngine(IKRenderer renderer, IEnumerable<IKEngineObject> kEngineObjects, uint updateTarget = 30) :
+            this(renderer, updateTarget) => _engineObjects.AddAll(kEngineObjects);
+
+        ///<summary>TODO.</summary>
+        protected virtual void Load() { }
+
+        ///<summary>TODO.</summary>
+        protected virtual void Update(ulong currentUpdate)
         {
-            UpdateRateTarget = updateTarget;
-            _engineObjects.OnInsertion += item => item.Start();
-            _engineObjects.OnRemoved += item => item.End();
+            _engineObjects.UpdateContents();
+            _engineObjects.ForEach(kEngineObject => kEngineObject.Update(currentUpdate));
         }
 
-        public KEngine(IEnumerable<IKEngineObject> kEngineObjects, uint updateTarget = 30) :
-            this(updateTarget) => _engineObjects.AddAll(kEngineObjects);
+        ///<summary>TODO.</summary>
+        protected virtual void FrameUpdate(ulong currentUpdate) => _engineObjects.ForEach(kEngineObject => kEngineObject.FrameUpdate(currentUpdate));
+
+        ///<summary>TODO.</summary>
+        protected virtual void RenderFrame() => Renderer.RenderFrame();
 
         ///<summary>Executes starting tasks and starts the game-loop.</summary>
-        public int Start()
+        public virtual int Start()
         {
             //Prevents engine from starting if it's already running.
             if (IsRunning)
@@ -47,6 +59,9 @@ namespace KheaiGameEngine.Core
             uint currentUpdate = 0;
             double lastTime, newTime, unprocessedTime = 0;
 
+            _engineObjects.ForEach(value => value.Start());
+            _engineObjects.OnInsertion += item => item.Start();
+            _engineObjects.OnRemoved += item => item.End();
             _engineObjects.UpdateContents();
 
             //It is now i realize how far from god we have gotten.
@@ -56,9 +71,6 @@ namespace KheaiGameEngine.Core
                 return 1;
             }
 
-            //set the engine's state to running, then executes starting tasks.
-            //Updates the contents of IKEngineObjects, in the case that any starting tasks have made changes.
-            _engineObjects.ForEach(value => value.Start());
             lastTime = DateTime.UtcNow.Ticks; //Required for loop timing.
 
             while (IsRunning) //Game loop
@@ -78,16 +90,14 @@ namespace KheaiGameEngine.Core
                 //Loops to compensate for any lag, skipping pre-draw and render tasks. 
                 do
                 {
+                    Update(currentUpdate);
                     currentUpdate++;
                     unprocessedTime -= UpdateInterval;
-                    _engineObjects.UpdateContents();
-                    _engineObjects.ForEach(kEngineObject => kEngineObject.Update(currentUpdate));
                 }
                 while (unprocessedTime > UpdateInterval && IsRunning);
 
-                //Frame update & render frame
-                _engineObjects.ForEach(kEngineObject => kEngineObject.FrameUpdate(currentUpdate));
-                renderer.RenderFrame();
+                FrameUpdate(currentUpdate);
+                RenderFrame();
             }
             _engineObjects.ForEach(value => value.End());
 
@@ -98,14 +108,18 @@ namespace KheaiGameEngine.Core
         //I think it would be odd to call Start to start the engine but change a boolean to stop it.
         //A start method with an accompanying stop method makes more sense i think.
         ///<summary>Finishes the current interation's updates and stops the engine.</summary>
-        public void Stop() => _isRunning = false;
+        public virtual void Stop() => _isRunning = false;
 
-        public void Attach(IKEngineObject kEngineObject) => _engineObjects.QueueAdd(kEngineObject);
+        ///<summary>TODO.</summary>
+        public virtual void Attach(IKEngineObject kEngineObject) => _engineObjects.QueueAdd(kEngineObject);
 
-        public void Detach(IKEngineObject kEngineObject) => _engineObjects.QueueRemove(kEngineObject);
+        ///<summary>TODO.</summary>
+        public virtual void Detach(IKEngineObject kEngineObject) => _engineObjects.QueueRemove(kEngineObject);
 
-        public void AttachAll(IEnumerable<IKEngineObject> kEngineObjects) => kEngineObjects.ForEach(Attach);
+        ///<summary>TODO.</summary>
+        public virtual void AttachAll(IEnumerable<IKEngineObject> kEngineObjects) => kEngineObjects.ForEach(Attach);
 
-        public void DetachAll(IEnumerable<IKEngineObject> kEngineObjects) => kEngineObjects.ForEach(Detach);
+        ///<summary>TODO.</summary>
+        public virtual void DetachAll(IEnumerable<IKEngineObject> kEngineObjects) => kEngineObjects.ForEach(Detach);
     }
 }

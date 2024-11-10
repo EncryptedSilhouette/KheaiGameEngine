@@ -27,11 +27,11 @@ namespace KheaiGameEngine.Core
 
         ///<summary>Executes update tasks every update.</summary>
         ///<param name = "currentUpdate">Keeps track of the current frame.</param>
-        void Update(uint currentUpdate) { }
+        void Update(ulong currentUpdate) { }
 
         ///<summary>Executes pre-draw tasks every update. This method is called after the update method.</summary>
         ///<param name = "currentUpdate">Keeps track of the current frame.</param>
-        void FrameUpdate(uint currentUpdate) { }
+        void FrameUpdate(ulong currentUpdate) { }
     }
 
     public class KEngineObjectComparer<T> : IComparer<T> where T : IKEngineObject

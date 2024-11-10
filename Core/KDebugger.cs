@@ -113,14 +113,14 @@ namespace KheaiGameEngine.Core
 
         public virtual void End() => OnDebugEnd?.Invoke(this);
 
-        public virtual void Update(uint currentUpdate)
+        public virtual void Update(ulong currentUpdate)
         {
             updates++;
             updateRateCounter++;
             OnDebugUpdate?.Invoke(this);
         }
 
-        public virtual void FrameUpdate(uint currentUpdate)
+        public virtual void FrameUpdate(ulong currentUpdate)
         {
             //Track frames
             frames++;
