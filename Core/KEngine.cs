@@ -12,8 +12,6 @@ namespace KheaiGameEngine.Core
 
         ///<summary>Represents the running state of the Engine</summary>
         public bool IsRunning => _isRunning;
-        ///<summary>TODO.</summary>
-        public IKRenderer Renderer { get; init; }
         ///<summary>The time interval in milliseconds between updates.</summary>
         public double UpdateInterval { get; private set; } = 0;
 
@@ -24,10 +22,10 @@ namespace KheaiGameEngine.Core
             private set => UpdateInterval = 1000d / (_updateTarget = value);
         }
 
-        public KEngine(IKRenderer renderer, uint updateTarget = 30) => (Renderer, UpdateRateTarget) = (renderer, updateTarget);
+        public KEngine(uint updateTarget = 30) => UpdateRateTarget = updateTarget;
 
         public KEngine(IKRenderer renderer, IEnumerable<IKEngineObject> kEngineObjects, uint updateTarget = 30) :
-            this(renderer, updateTarget) => _engineObjects.AddAll(kEngineObjects);
+            this(updateTarget) => _engineObjects.AddAll(kEngineObjects);
 
         ///<summary>TODO.</summary>
         protected virtual void Load() { }
@@ -43,7 +41,7 @@ namespace KheaiGameEngine.Core
         protected virtual void FrameUpdate(ulong currentUpdate) => _engineObjects.ForEach(kEngineObject => kEngineObject.FrameUpdate(currentUpdate));
 
         ///<summary>TODO.</summary>
-        protected virtual void RenderFrame() => Renderer.RenderFrame();
+        protected virtual void RenderFrame() { }
 
         ///<summary>Executes starting tasks and starts the game-loop.</summary>
         public virtual int Start()
@@ -111,15 +109,15 @@ namespace KheaiGameEngine.Core
         public virtual void Stop() => _isRunning = false;
 
         ///<summary>TODO.</summary>
-        public virtual void Attach(IKEngineObject kEngineObject) => _engineObjects.QueueAdd(kEngineObject);
+        public void Attach(IKEngineObject kEngineObject) => _engineObjects.QueueAdd(kEngineObject);
 
         ///<summary>TODO.</summary>
-        public virtual void Detach(IKEngineObject kEngineObject) => _engineObjects.QueueRemove(kEngineObject);
+        public void Detach(IKEngineObject kEngineObject) => _engineObjects.QueueRemove(kEngineObject);
 
         ///<summary>TODO.</summary>
-        public virtual void AttachAll(IEnumerable<IKEngineObject> kEngineObjects) => kEngineObjects.ForEach(Attach);
+        public void AttachAll(IEnumerable<IKEngineObject> kEngineObjects) => kEngineObjects.ForEach(Attach);
 
         ///<summary>TODO.</summary>
-        public virtual void DetachAll(IEnumerable<IKEngineObject> kEngineObjects) => kEngineObjects.ForEach(Detach);
+        public void DetachAll(IEnumerable<IKEngineObject> kEngineObjects) => kEngineObjects.ForEach(Detach);
     }
 }
