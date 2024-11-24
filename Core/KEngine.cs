@@ -58,6 +58,7 @@ namespace KheaiGameEngine.Core
             uint currentUpdate = 0;
             double lastTime, newTime, unprocessedTime = 0;
 
+            _isRunning = true;
             _engineObjects.ForEach(value => value.Start());
             _engineObjects.OnInsertion += item => item.Start();
             _engineObjects.OnRemoved += item => item.End();
