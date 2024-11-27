@@ -2,11 +2,6 @@
 
 namespace KheaiGameEngine.Core
 {
-    /* The purpose of this interface is to give a foundation for any objects that will be updated by a game-loop.
-     * All the below summaries suggest the intents I had for them.
-     * However, I keep these open for expansion to allow for alternative intentions. 
-     */
-
     ///<summary>Interface for IKEngineObjects.</summary>
     public interface IKEngineObject
     {
@@ -19,19 +14,22 @@ namespace KheaiGameEngine.Core
         ///<summary>The identifier for the IKEngineObject.</summary>
         string ID { get; }
 
+        ///<summary>TODO.</summary>
+        void Init<TParent>(TParent parent);
+
         ///<summary>Executes starting tasks for the IKEngineObject.</summary>
-        void Start() { }
+        void Start();
 
         ///<summary>Executes tasks for the end of execution.</summary>
-        void End() { }
+        void End();
 
         ///<summary>Executes update tasks every update.</summary>
         ///<param name = "currentUpdate">Keeps track of the current frame.</param>
-        void Update(ulong currentUpdate) { }
+        void Update(ulong currentUpdate);
 
         ///<summary>Executes pre-draw tasks every update. This method is called after the update method.</summary>
         ///<param name = "currentUpdate">Keeps track of the current frame.</param>
-        void FrameUpdate(ulong currentUpdate) { }
+        void FrameUpdate(ulong currentUpdate);
     }
 
     public class KEngineObjectComparer<T> : IComparer<T> where T : IKEngineObject

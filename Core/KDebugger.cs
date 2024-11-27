@@ -3,7 +3,7 @@
 namespace KheaiGameEngine.Core
 {
     ///<summary>Debugger for the KEngine. Contains static methods for managing logs.</summary>
-    public class KDebugger : IKEngineObject
+    public sealed class KDebugger : IKEngineObject
     {
         ///<summary>Constant ID for the debug log.</summary>
         public const string DEBUG_LOG = "debug";
@@ -13,7 +13,7 @@ namespace KheaiGameEngine.Core
         #region Static 
 
         ///<summary>Dictionary for containing logs as individual StringBuilders.</summary>
-        protected static Dictionary<string, StringBuilder> logs = new(4) { { DEBUG_LOG, new(512) }, { ERROR_LOG, new(512) } };
+        private static Dictionary<string, StringBuilder> logs = new(4) { { DEBUG_LOG, new(512) }, { ERROR_LOG, new(512) } };
 
         ///<summary>The current date and time as a string.</summary>
         public static string CurrentDateTime => DateTime.UtcNow.ToString();
@@ -66,9 +66,9 @@ namespace KheaiGameEngine.Core
         #endregion
 
         //Variables to keep track of preformance.
-        protected byte updateRateCounter = 0, frameRateCounter = 0;
-        protected uint updates = 0, frames = 0;
-        protected long timerStart = 0;
+        private byte updateRateCounter = 0, frameRateCounter = 0;
+        private uint updates = 0, frames = 0;
+        private long timerStart = 0;
 
         ///<summary>The file directory for log text files.</summary>
         public static string FileDirectory = "Debug";
@@ -106,21 +106,23 @@ namespace KheaiGameEngine.Core
             ID = GetType().Name;
             OnDebugStart += (i) => StartTime = timerStart = DateTime.UtcNow.Ticks / TimeSpan.TicksPerMillisecond;
 
-            if (dumpToFileOnEnd) OnDebugEnd += (i) => DumpLogsToFile();
+            //if (dumpToFileOnEnd) OnDebugEnd += (i) => DumpLogsToFile();
         }
 
-        public virtual void Start() => OnDebugStart?.Invoke(this);
+        public void Init<TParent>(TParent parent) { /*ignore, may be used in the future.*/ } 
 
-        public virtual void End() => OnDebugEnd?.Invoke(this);
+        public void Start() => OnDebugStart?.Invoke(this);
 
-        public virtual void Update(ulong currentUpdate)
+        public void End() => OnDebugEnd?.Invoke(this);
+
+        public void Update(ulong currentUpdate)
         {
             updates++;
             updateRateCounter++;
             OnDebugUpdate?.Invoke(this);
         }
 
-        public virtual void FrameUpdate(ulong currentUpdate)
+        public void FrameUpdate(ulong currentUpdate)
         {
             //Track frames
             frames++;
@@ -137,8 +139,8 @@ namespace KheaiGameEngine.Core
             OnDebugFrameUpdate?.Invoke(this);
         }
 
-        ///<summary>Dump debug info to a .txt file. Override for custom implementation.</summary>
-        public virtual void DumpLogsToFile()
+        ///<summary>TODO.</summary>
+        /*public void DumpLogsToFile()
         {
             string path = $"{FileDirectory}\\Log_{CurrentDateTime}";
             StreamWriter writer;
@@ -157,6 +159,6 @@ namespace KheaiGameEngine.Core
                 writer.WriteLine($"{logKV.Value.ToString()}\n");
             }
             writer.Close();
-        }
+        }*/
     }
 }
