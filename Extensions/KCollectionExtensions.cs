@@ -20,6 +20,20 @@ namespace KheaiGameEngine.Extensions
             return default;
         }
 
+        public static void Find<T>(this IEnumerable<T> collection, out T? item, Predicate<T> match)
+        {
+            foreach (var value in collection)
+            {
+                if (value is null) continue;
+                if (match(value))
+                {
+                    item = value;
+                    return;
+                }
+            }
+            item = default;
+        }
+
         public static IEnumerable<T> FindAll<T>(this IEnumerable<T> collection, Predicate<T> match)
         {
             foreach (var value in collection)
