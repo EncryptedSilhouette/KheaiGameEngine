@@ -15,6 +15,9 @@ namespace KheaiGameEngine.Core
         ///<summary>Represents the running state of the Engine.</summary>
         public bool IsRunning => _isRunning;
 
+        ///<summary>TODO.</summary
+        public IKSearchableCollection<IKEngineObject> EngineObjects => _engineObjects;
+
         ///<summary>The time interval in milliseconds between updates.</summary>
         public double UpdateInterval { get; private set; } = 0;
 
