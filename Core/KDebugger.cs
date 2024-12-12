@@ -34,12 +34,12 @@ namespace KheaiGameEngine.Core
         ///<param name = "logID">The ID of the target log.</param>
         public static string GetLog(string logID)
         {
-            if (!logs.ContainsKey(logID))
+            if (!logs.TryGetValue(logID, out StringBuilder? value))
             {
                 ErrorLog($"Log {logID} doesn't exist.");
                 return string.Empty;
             }
-            else return logs[logID].ToString();
+            else return value.ToString();
         }
 
         ///<summary>Submit a message to a specified log.</summary>
@@ -50,7 +50,7 @@ namespace KheaiGameEngine.Core
 #if DEBUG
             Console.WriteLine(message);
 #elif RELEASE
-            if (logs.ContainsKey(logID)) logs[logID].AppendLine(message);
+            if (logs.TryGetValue(logID, out StringBuilder? value)) value.AppendLine(message);
             else ErrorLog($"Log {logID} doesn't exist.");
 #endif
         }
@@ -100,7 +100,7 @@ namespace KheaiGameEngine.Core
         ///<summary>The start time in ticks.</summary>
         public long StartTime { get; private set; } = 0;
 
-        public KDebugger(bool dumpToFileOnEnd = true)
+        public KDebugger()
         {
             Order = -1;
             ID = GetType().Name;
@@ -108,8 +108,6 @@ namespace KheaiGameEngine.Core
 
             //if (dumpToFileOnEnd) OnDebugEnd += (i) => DumpLogsToFile();
         }
-
-        public void Init<TParent>(TParent parent) { /*ignore, may be used in the future.*/ } 
 
         public void Start() => OnDebugStart?.Invoke(this);
 

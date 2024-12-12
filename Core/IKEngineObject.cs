@@ -14,9 +14,6 @@ namespace KheaiGameEngine.Core
         ///<summary>The identifier for the IKEngineObject.</summary>
         string ID { get; }
 
-        ///<summary>TODO.</summary>
-        void Init<TParent>(TParent parent);
-
         ///<summary>Executes starting tasks for the IKEngineObject.</summary>
         void Start();
 

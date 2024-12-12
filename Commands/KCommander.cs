@@ -10,7 +10,7 @@ namespace KheaiGameEngine.Commands
     public class KCommandHandler
     {
         public static readonly KCommandResult COMMAND_NOT_FOUND = new(1, "Err: Command not found");
-        protected static readonly Dictionary<string, KCommandData> s_registeredCommands = new();
+        protected static readonly Dictionary<string, KCommandData> s_registeredCommands = [];
 
         public static void RegisterCommand(KCommandData commandData) => s_registeredCommands.Add(commandData.ID, commandData);
 

@@ -1,21 +1,19 @@
-﻿using System;
-
-namespace KheaiGameEngine.Extensions
+﻿namespace KheaiGameEngine.Core.KCollections.Extensions
 {
     public static class KCollectionExtensions
     {
         public static IEnumerable<T> ForEach<T>(this IEnumerable<T> collection, Action<T> action)
         {
-            foreach (var value in collection) action.Invoke(value);
+            foreach (var item in collection) action.Invoke(item);
             return collection;
         }
 
-        public static T? Find<T>(this IEnumerable<T> collection, Predicate<T> match) 
+        public static T? Find<T>(this IEnumerable<T> collection, Predicate<T> match)
         {
-            foreach (var value in collection)
+            foreach (var item in collection)
             {
-                if (value is null) continue;
-                if (match(value)) return value;
+                if (item is null) continue;
+                if (match(item)) return item;
             }
             return default;
         }
@@ -36,10 +34,10 @@ namespace KheaiGameEngine.Extensions
 
         public static IEnumerable<T> FindAll<T>(this IEnumerable<T> collection, Predicate<T> match)
         {
-            foreach (var value in collection)
+            foreach (var item in collection)
             {
-                if (value is null) continue;
-                if (match(value)) yield return value;
+                if (item is null) continue;
+                if (match(item)) yield return item;
             }
         }
 
@@ -96,13 +94,13 @@ namespace KheaiGameEngine.Extensions
                 {
                     iE = i; //Set the end index to current index.
                     //Decrement the index by half the range rounded up.
-                    i -= (int) Math.Ceiling((iE - iS) / 2f);
+                    i -= (int)Math.Ceiling((iE - iS) / 2f);
                 }
                 else
                 {
                     iS = i; //Set the start index to current index.
                     //Increment the index by half the range rounded up.
-                    i += (int) Math.Ceiling((iE - iS) / 2f);
+                    i += (int)Math.Ceiling((iE - iS) / 2f);
                 }
             }
         }
